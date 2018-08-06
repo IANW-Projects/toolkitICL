@@ -119,19 +119,26 @@ size_t var_size=0;
 
 switch (datatype_list.at(i)){
 case H5_float: var_size=data_size.at(i)*sizeof(cl_float); tmp_data = new uint8_t[var_size]; h5_read_buffer_float(filename, data_list.at(i).c_str(),(float *)tmp_data); break;
-//case H5_double: var_size=data_size.at(i)*sizeof(cl_double); tmp_data = new uint8_t[var_size]; h5_read_buffer_double(filename, data_list.at(i).c_str(),(double *)tmp_data); break;
+case H5_double: var_size=data_size.at(i)*sizeof(cl_double); tmp_data = new uint8_t[var_size]; h5_read_buffer_double(filename, data_list.at(i).c_str(),(double *)tmp_data); break;
+case H5_uchar: var_size=data_size.at(i)*sizeof(cl_uchar); tmp_data = new uint8_t[var_size]; h5_read_buffer_uchar(filename, data_list.at(i).c_str(),(cl_uchar *)tmp_data); break;
+case H5_char: var_size=data_size.at(i)*sizeof(cl_char); tmp_data = new uint8_t[var_size]; h5_read_buffer_char(filename, data_list.at(i).c_str(),(cl_char *)tmp_data); break;
+case H5_uint: var_size=data_size.at(i)*sizeof(cl_uint); tmp_data = new uint8_t[var_size]; h5_read_buffer_uint(filename, data_list.at(i).c_str(),(cl_uint *)tmp_data); break;
+case H5_int: var_size=data_size.at(i)*sizeof(cl_int); tmp_data = new uint8_t[var_size]; h5_read_buffer_int(filename, data_list.at(i).c_str(),(cl_int *)tmp_data); break;
 //case default: break;
 }
-
+cout<<"Pushing data to device"<<endl;
 				switch ((uint32_t)round(rw_flags_ptr[i])) {
-				case 0:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, var_size)); dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,((float *)tmp_data));  break;
-				case 1:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, var_size));  dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,((float *)tmp_data));  break;
+				case 0:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, var_size)); dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,(tmp_data));  break;
+				case 1:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, var_size));  dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,(tmp_data));  break;
 				case 2:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, var_size)); break;
 				}
-
+cout<<"Setting kernel args: "<<data_in.size()<<endl;
 				for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
+					cout<<"Kernel : ";
+					cout<<kernel_list.at(kernel_idx)<<endl;
 				dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))->setArg(i, data_in.at(data_in.size() - 1));
 				}
+				cout<<"Test"<<endl;
    delete[] tmp_data;                     
     tmp_data = 0;    
 			}
@@ -142,6 +149,8 @@ case H5_float: var_size=data_size.at(i)*sizeof(cl_float); tmp_data = new uint8_t
 }
 
 	dev_mgr.get_queue(0, 0).finish();//Buffer Copy is asynchornous
+
+cout<<"Setting OpenCL Range"<<endl;
 
 cl::NDRange range_start;
 cl::NDRange global_range;
@@ -172,7 +181,7 @@ local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
 h5_write_single_long(out_name,"Kernel_Time",exec_time);
 
 
-h5_create_dir(out_name,"\Data");
+h5_create_dir(out_name,"/Data");
 
 	uint32_t buffer_counter = 0;
   
@@ -185,6 +194,10 @@ size_t var_size=0;
 switch (datatype_list.at(i)){
 case H5_float:  var_size=data_size.at(i)*sizeof(cl_float);   break;
 case H5_double: var_size=data_size.at(i)*sizeof(cl_double); break;
+case H5_char: var_size=data_size.at(i)*sizeof(cl_char); break;
+case H5_uchar: var_size=data_size.at(i)*sizeof(cl_uchar); break;
+case H5_uint: var_size=data_size.at(i)*sizeof(cl_uint); break;
+case H5_int: var_size=data_size.at(i)*sizeof(cl_int); break;
  default:  var_size=data_size.at(buffer_counter)*sizeof(cl_double); break;
 }
 tmp_data = new uint8_t[var_size];
@@ -200,6 +213,11 @@ tmp_data = new uint8_t[var_size];
 	dev_mgr.get_queue(0, 0).finish();//Buffer Copy is asynchornous
 switch (datatype_list.at(i)){
 case H5_float: h5_write_buffer_float(out_name,data_list.at(i).c_str(),(float *)tmp_data,data_size.at(buffer_counter)); break;
+case H5_double: h5_write_buffer_double(out_name,data_list.at(i).c_str(),(double *)tmp_data,data_size.at(buffer_counter)); break;
+case H5_char: h5_write_buffer_char(out_name,data_list.at(i).c_str(),(cl_char *)tmp_data,data_size.at(buffer_counter)); break;
+case H5_uchar: h5_write_buffer_uchar(out_name,data_list.at(i).c_str(),(cl_uchar *)tmp_data,data_size.at(buffer_counter)); break;
+case H5_uint: h5_write_buffer_uint(out_name,data_list.at(i).c_str(),(cl_uint *)tmp_data,data_size.at(buffer_counter)); break;
+case H5_int: h5_write_buffer_int(out_name,data_list.at(i).c_str(),(cl_int *)tmp_data,data_size.at(buffer_counter)); break;
 }
    delete[] tmp_data;                     
    // tmp_data = 0; 

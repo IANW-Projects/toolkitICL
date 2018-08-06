@@ -5,14 +5,18 @@
 #include "hdf5_hl.h"
 #include "../include/main.hpp"
 
-enum HD5_Type { H5_float, H5_double };
+enum HD5_Type { H5_float, H5_double,H5_char,H5_uchar,H5_int,H5_uint,H5_long,H5_ulong };
 
 uint8_t h5_read_buffer_float(const char * filename, const char* varname, void* data);
-
+uint8_t h5_read_buffer_double(const char * filename, const char* varname, void* data);
 // read a single float from an HDF5 File
 float h5_read_single_float(const char* filename, const char* varname);
 
 uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* data);
+uint8_t h5_read_buffer_uint(const char* filename, const char* varname, uint32_t* data);
+
+uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, cl_uchar* data);
+uint8_t h5_read_buffer_char(const char* filename, const char* varname, cl_char* data);
 
 uint8_t h5_write_single_long(const char* filename, const char* varname, long data);
 // write a double4 buffer to an HDF5 File
@@ -30,6 +34,11 @@ uint8_t h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint
 
 // write a float4 buffer to an HDF5 File
 uint8_t h5_write_buffer_float(const char* filename, const char* varname, float* data, cl_ulong size);
+uint8_t h5_write_buffer_double(const char* filename, const char* varname, double* data, cl_ulong size);
+uint8_t h5_write_buffer_uint(const char* filename, const char* varname, cl_uint* data, cl_ulong size);
+uint8_t h5_write_buffer_int(const char* filename, const char* varname, cl_int* data, cl_ulong size);
+uint8_t h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar* data, cl_ulong size);
+uint8_t h5_write_buffer_char(const char* filename, const char* varname, cl_char* data, cl_ulong size);
 
 uint8_t h5_get_content(const char* filename,const char* hdf_dir,std::vector<std::string> &data_list,std::vector<HD5_Type> &datatype_list,std::vector<size_t> &data_size);
 /*

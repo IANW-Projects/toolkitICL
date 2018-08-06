@@ -58,27 +58,103 @@ return 1;
 }
 }
 
-
-uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* data)
+uint8_t h5_read_buffer_double(const char* filename, const char* varname, void* data)
 {
 hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
 hsize_t hdf_dims[4],count[4],offset[4];
-   
 hid_t    plist_id;
 hsize_t  cdims[2]; //chunk size used for compression
 
 
 if (FileExists(filename)){	
-    
 h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-	
+H5LTread_dataset(h5_file_id,varname, H5T_NATIVE_DOUBLE,data);
+////TODO: check if varname was found - no idea what error code to use if not
+H5Fclose(h5_file_id);
+return 1;
+} else {
+    std::cout<<"File not found "<<std::endl;
+    //File not found - no idea what error code to use
+   return 0;
+}
+}
 
+uint8_t h5_read_buffer_uint(const char* filename, const char* varname, uint32_t* data)
+{
+hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
+hsize_t hdf_dims[4],count[4],offset[4];
+hid_t    plist_id;
+hsize_t  cdims[2]; //chunk size used for compression
+
+
+if (FileExists(filename)){	
+h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
+H5LTread_dataset(h5_file_id,varname, H5T_NATIVE_UINT,data);
+////TODO: check if varname was found - no idea what error code to use if not
+H5Fclose(h5_file_id);
+return 1;
+} else {
+    std::cout<<"File not found "<<std::endl;
+    //File not found - no idea what error code to use
+   return 0;
+}
+}
+
+uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* data)
+{
+hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
+hsize_t hdf_dims[4],count[4],offset[4];
+hid_t    plist_id;
+hsize_t  cdims[2]; //chunk size used for compression
+
+
+if (FileExists(filename)){	
+h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
 H5LTread_dataset(h5_file_id,varname, H5T_NATIVE_INT,data);
 ////TODO: check if varname was found - no idea what error code to use if not
-
 H5Fclose(h5_file_id);
+return 1;
+} else {
+    std::cout<<"File not found "<<std::endl;
+    //File not found - no idea what error code to use
+   return 0;
+}
+}
+
+uint8_t h5_read_buffer_char(const char* filename, const char* varname, cl_char* data)
+{
+hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
+hsize_t hdf_dims[4],count[4],offset[4];
+hid_t    plist_id;
+hsize_t  cdims[2]; //chunk size used for compression
 
 
+if (FileExists(filename)){	
+h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
+H5LTread_dataset(h5_file_id,varname, H5T_NATIVE_CHAR,data);
+////TODO: check if varname was found - no idea what error code to use if not
+H5Fclose(h5_file_id);
+return 1;
+} else {
+    std::cout<<"File not found "<<std::endl;
+    //File not found - no idea what error code to use
+   return 0;
+}
+}
+
+uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data)
+{
+hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
+hsize_t hdf_dims[4],count[4],offset[4];
+hid_t    plist_id;
+hsize_t  cdims[2]; //chunk size used for compression
+
+
+if (FileExists(filename)){	
+h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
+H5LTread_dataset(h5_file_id,varname, H5T_NATIVE_UCHAR,data);
+////TODO: check if varname was found - no idea what error code to use if not
+H5Fclose(h5_file_id);
 return 1;
 } else {
     std::cout<<"File not found "<<std::endl;
@@ -400,6 +476,187 @@ uint8_t h5_write_buffer_float(const char* filename, const char* varname, float* 
 return 1;
 }
 
+
+uint8_t h5_write_buffer_double(const char* filename, const char* varname, double* data, cl_ulong size)
+{
+    hid_t    h5_file_id, dataset_id,dataspace_id,memspace_id;
+    hsize_t  hdf_dims[2];
+    hid_t    plist_id;
+    hsize_t  cdims[2]; //chunk size used for compression
+    hdf_dims[0] = size;
+    hdf_dims[1] = 1;
+    if (!FileExists(filename)){	
+        h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    
+    } else {
+        h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
+    }
+	cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+	cdims[1] = 1;
+	plist_id  = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk (plist_id, 2, cdims);
+    H5Pset_deflate (plist_id, 9); 
+	dataspace_id = H5Screate_simple(2, hdf_dims, NULL);	
+	dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    memspace_id = H5Screate_simple (2, hdf_dims, NULL);     
+    H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, memspace_id,dataspace_id, H5P_DEFAULT, data);
+
+    H5Sclose (memspace_id);
+	H5Sclose(dataspace_id);
+    H5Dclose (dataset_id);
+	H5Pclose (plist_id);
+    
+    //The same can be done using H5 High Level API, but without compression
+    //H5LTmake_dataset(h5_file_id,varname,2,hdf_dims,H5T_NATIVE_FLOAT,data);
+        H5Fclose(h5_file_id);
+return 1;
+}
+
+uint8_t h5_write_buffer_uint(const char* filename, const char* varname, cl_uint* data, cl_ulong size)
+{
+    hid_t    h5_file_id, dataset_id,dataspace_id,memspace_id;
+    hsize_t  hdf_dims[2];
+    hid_t    plist_id;
+    hsize_t  cdims[2]; //chunk size used for compression
+    hdf_dims[0] = size;
+    hdf_dims[1] = 1;
+    if (!FileExists(filename)){	
+        h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    
+    } else {
+        h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
+    }
+	cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+	cdims[1] = 1;
+	plist_id  = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk (plist_id, 2, cdims);
+    H5Pset_deflate (plist_id, 9); 
+	dataspace_id = H5Screate_simple(2, hdf_dims, NULL);	
+	dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_UINT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    memspace_id = H5Screate_simple (2, hdf_dims, NULL);     
+    H5Dwrite(dataset_id, H5T_NATIVE_UINT, memspace_id,dataspace_id, H5P_DEFAULT, data);
+
+    H5Sclose (memspace_id);
+	H5Sclose(dataspace_id);
+    H5Dclose (dataset_id);
+	H5Pclose (plist_id);
+    
+    //The same can be done using H5 High Level API, but without compression
+    //H5LTmake_dataset(h5_file_id,varname,2,hdf_dims,H5T_NATIVE_FLOAT,data);
+        H5Fclose(h5_file_id);
+return 1;
+}
+
+
+uint8_t h5_write_buffer_int(const char* filename, const char* varname, cl_int* data, cl_ulong size)
+{
+    hid_t    h5_file_id, dataset_id,dataspace_id,memspace_id;
+    hsize_t  hdf_dims[2];
+    hid_t    plist_id;
+    hsize_t  cdims[2]; //chunk size used for compression
+    hdf_dims[0] = size;
+    hdf_dims[1] = 1;
+    if (!FileExists(filename)){	
+        h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    
+    } else {
+        h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
+    }
+	cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+	cdims[1] = 1;
+	plist_id  = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk (plist_id, 2, cdims);
+    H5Pset_deflate (plist_id, 9); 
+	dataspace_id = H5Screate_simple(2, hdf_dims, NULL);	
+	dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_INT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    memspace_id = H5Screate_simple (2, hdf_dims, NULL);     
+    H5Dwrite(dataset_id, H5T_NATIVE_INT, memspace_id,dataspace_id, H5P_DEFAULT, data);
+
+    H5Sclose (memspace_id);
+	H5Sclose(dataspace_id);
+    H5Dclose (dataset_id);
+	H5Pclose (plist_id);
+    
+    //The same can be done using H5 High Level API, but without compression
+    //H5LTmake_dataset(h5_file_id,varname,2,hdf_dims,H5T_NATIVE_FLOAT,data);
+        H5Fclose(h5_file_id);
+return 1;
+}
+
+
+
+uint8_t h5_write_buffer_char(const char* filename, const char* varname, cl_char* data, cl_ulong size)
+{
+    hid_t    h5_file_id, dataset_id,dataspace_id,memspace_id;
+    hsize_t  hdf_dims[2];
+    hid_t    plist_id;
+    hsize_t  cdims[2]; //chunk size used for compression
+    hdf_dims[0] = size;
+    hdf_dims[1] = 1;
+    if (!FileExists(filename)){	
+        h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    
+    } else {
+        h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
+    }
+	cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+	cdims[1] = 1;
+	plist_id  = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk (plist_id, 2, cdims);
+    H5Pset_deflate (plist_id, 9); 
+	dataspace_id = H5Screate_simple(2, hdf_dims, NULL);	
+	dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_CHAR, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    memspace_id = H5Screate_simple (2, hdf_dims, NULL);     
+    H5Dwrite(dataset_id, H5T_NATIVE_CHAR, memspace_id,dataspace_id, H5P_DEFAULT, data);
+
+    H5Sclose (memspace_id);
+	H5Sclose(dataspace_id);
+    H5Dclose (dataset_id);
+	H5Pclose (plist_id);
+    
+    //The same can be done using H5 High Level API, but without compression
+    //H5LTmake_dataset(h5_file_id,varname,2,hdf_dims,H5T_NATIVE_FLOAT,data);
+        H5Fclose(h5_file_id);
+return 1;
+}
+
+
+uint8_t h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar* data, cl_ulong size)
+{
+    hid_t    h5_file_id, dataset_id,dataspace_id,memspace_id;
+    hsize_t  hdf_dims[2];
+    hid_t    plist_id;
+    hsize_t  cdims[2]; //chunk size used for compression
+    hdf_dims[0] = size;
+    hdf_dims[1] = 1;
+    if (!FileExists(filename)){	
+        h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    
+    } else {
+        h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
+    }
+	cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+	cdims[1] = 1;
+	plist_id  = H5Pcreate(H5P_DATASET_CREATE);
+	H5Pset_chunk (plist_id, 2, cdims);
+    H5Pset_deflate (plist_id, 9); 
+	dataspace_id = H5Screate_simple(2, hdf_dims, NULL);	
+	dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_UCHAR, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    memspace_id = H5Screate_simple (2, hdf_dims, NULL);     
+    H5Dwrite(dataset_id, H5T_NATIVE_UCHAR, memspace_id,dataspace_id, H5P_DEFAULT, data);
+
+    H5Sclose (memspace_id);
+	H5Sclose(dataspace_id);
+    H5Dclose (dataset_id);
+	H5Pclose (plist_id);
+    
+    //The same can be done using H5 High Level API, but without compression
+    //H5LTmake_dataset(h5_file_id,varname,2,hdf_dims,H5T_NATIVE_FLOAT,data);
+        H5Fclose(h5_file_id);
+return 1;
+}
+
+
 uint8_t h5_get_content(const char* filename,const char* hdf_dir,std::vector<std::string> &data_list,std::vector<HD5_Type> &datatype_list,std::vector<size_t> &data_size)
 {
 #define MAX_NAME 1024
@@ -457,6 +714,31 @@ if(otype==H5G_DATASET) {
     {
       datatype_list.push_back(H5_double);
     }
+     if (H5Tequal(native_type,H5T_NATIVE_CHAR)>0) 
+    {
+       datatype_list.push_back(H5_char);
+    }
+    if (H5Tequal(native_type,H5T_NATIVE_UCHAR)>0) 
+    {
+       datatype_list.push_back(H5_uchar);
+    }
+    if (H5Tequal(native_type,H5T_NATIVE_INT)>0) 
+    {
+       datatype_list.push_back(H5_int);
+    }
+    if (H5Tequal(native_type,H5T_NATIVE_UINT)>0) 
+    {
+       datatype_list.push_back(H5_uint);
+    }
+    if (H5Tequal(native_type,H5T_NATIVE_LONG)>0) 
+    {
+       datatype_list.push_back(H5_long);
+    }
+    if (H5Tequal(native_type,H5T_NATIVE_ULONG)>0) 
+    {
+       datatype_list.push_back(H5_ulong);
+    }
+    
   H5Dclose(dataset);
 		
 

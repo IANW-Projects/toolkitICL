@@ -27,5 +27,5 @@ MESSAGE("Adding defines...")
 ENDIF()
 #target_compile_definitions(test1CL PUBLIC USE_OPENGL)
 
-configure_file(test_kernel.cl ${CMAKE_BINARY_DIR}/bin/test_kernel.cl COPYONLY)
+configure_file(filter.cl ${CMAKE_BINARY_DIR}/bin/filter.cl COPYONLY)
 configure_file(../misc/make.sh ${CMAKE_BINARY_DIR}/bin/make.sh COPYONLY)

@@ -18,8 +18,6 @@ inline void compile(cl::Program& cl_prog,const char* options) {
 	default_options.setf(std::ios::fixed);
 	default_options << " -cl-fast-relaxed-math";
 	default_options << " -cl-single-precision-constant";
-	// default_options << " -DREAL4="<<STRINGIZE(CL_REAL)<<"4";           //define REAL as alias for float/double as defined in main.hpp
-	//  default_options << " -DREAL="<<STRINGIZE(CL_REAL);
 	default_options << " " << options;
 
 	try {
@@ -344,6 +342,22 @@ try{
 
   return con_list.at(context_idx).kernels.at(idx).size();
     }
+}
+
+cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx,std::string prog_name,std::vector<std::string>& found_kernels) {
+ std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
+	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+	
+	if (i != con_list.at(context_idx).prog_names.end())
+	{
+	
+    int32_t idx=distance(con_list.at(context_idx).prog_names.begin(), i);
+for (uint32_t kernel_id=0; kernel_id<con_list.at(context_idx).kernel_names.at(idx).size();kernel_id++){
+    found_kernels.push_back(con_list.at(context_idx).kernel_names.at(idx).at(kernel_id));
+}
+return con_list.at(context_idx).kernel_names.at(idx).size();
+    }
+    return 0;
 }
 
 /*

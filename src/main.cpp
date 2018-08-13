@@ -70,8 +70,9 @@ int main(int argc, char *argv[]) {
   char kernel_url[500]; 
  h5_read_string(filename, "Kernel_URL",kernel_url);
 
-  char kernels[500]; 
- h5_read_string(filename, "Kernels",kernels);
+std::vector<std::string> kernel_list;
+  
+ h5_read_strings(filename, "Kernels",kernel_list);
 
 
 dev_mgr.add_program_url(0,"ocl_Kernel",kernel_url);
@@ -88,10 +89,13 @@ uint64_t kernels_found = 0;
 		cout<<"No valid kernels found"<<endl;
 		return -1;
 	}
-    cout <<"Found Kernels: "<<kernels_found<<endl;
-std::vector<std::string> kernel_list;
-kernel_list.push_back(std::string(kernels));
+    
+	std::vector<std::string> found_kernels;
+	dev_mgr.get_kernel_names(0,"ocl_Kernel",found_kernels) ;
+cout <<"Found Kernels: "<<found_kernels.size()<<endl;
 
+
+cout <<"Number of Kernels to execute: "<<kernel_list.size()<<endl;
 cout<<"Ingesting HDF5..."<<endl;
 
     	std::vector<std::string> data_list;
@@ -111,7 +115,6 @@ rw_flags_ptr = new double[data_list.size()];
 for(cl_uint i=0;i<data_list.size();i++) {
     try {
 
-cout<<"Reserving "<<data_list.at(i).c_str()<<" : "<<data_size.at(i)<<"\n"<<endl;
 
  uint8_t *tmp_data = 0;
  //float *tmp_data = 0;
@@ -126,19 +129,16 @@ case H5_uint: var_size=data_size.at(i)*sizeof(cl_uint); tmp_data = new uint8_t[v
 case H5_int: var_size=data_size.at(i)*sizeof(cl_int); tmp_data = new uint8_t[var_size]; h5_read_buffer_int(filename, data_list.at(i).c_str(),(cl_int *)tmp_data); break;
 //case default: break;
 }
-cout<<"Pushing data to device"<<endl;
+
 				switch ((uint32_t)round(rw_flags_ptr[i])) {
 				case 0:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, var_size)); dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,(tmp_data));  break;
 				case 1:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_ONLY | CL_MEM_ALLOC_HOST_PTR, var_size));  dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.at(data_in.size() - 1), blocking, 0, var_size,(tmp_data));  break;
 				case 2:	data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, var_size)); break;
 				}
-cout<<"Setting kernel args: "<<data_in.size()<<endl;
-				for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
-					cout<<"Kernel : ";
-					cout<<kernel_list.at(kernel_idx)<<endl;
-				dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))->setArg(i, data_in.at(data_in.size() - 1));
+
+				for (uint32_t kernel_idx = 0; kernel_idx < found_kernels.size(); kernel_idx++) {
+				dev_mgr.getKernelbyName(0, "ocl_Kernel", found_kernels.at(kernel_idx))->setArg(i, data_in.at(data_in.size() - 1));
 				}
-				cout<<"Test"<<endl;
    delete[] tmp_data;                     
     tmp_data = 0;    
 			}
@@ -150,7 +150,6 @@ cout<<"Setting kernel args: "<<data_in.size()<<endl;
 
 	dev_mgr.get_queue(0, 0).finish();//Buffer Copy is asynchornous
 
-cout<<"Setting OpenCL Range"<<endl;
 
 cl::NDRange range_start;
 cl::NDRange global_range;
@@ -171,10 +170,14 @@ local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
 }
 
 	uint64_t exec_time = 0;
+	uint32_t kernels_run=0;
 	for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++){
 		exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))), dev_mgr.get_queue(0, 0), range_start,global_range, local_range);
+	 kernels_run++;	
 	}
 
+cout<<"Kernels executed: "<<kernels_run<<endl;
+cout<<"Kernel runtime: "<<exec_time/1000<<" ms"<<endl;
               char out_name[500];  
     sprintf(out_name,"out.h5");
 

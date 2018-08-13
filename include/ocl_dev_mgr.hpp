@@ -69,8 +69,9 @@ class ocl_dev_mgr {
      ocl_device_info& get_avail_dev_info(cl_uint avail_device_idx); 
      ocl_device_info& get_context_dev_info(cl_uint context_idx,cl_uint device_idx);
      cl_ulong compile_kernel(cl_uint context_idx, std::string prog_name,const char* options);
+    cl_ulong get_kernel_names(cl_uint context_idx,std::string prog_name,std::vector<std::string>& found_kernels);
 	// void compile_thread(cl::Program& cl_prog, char* options);
-	 cl_ulong finish_compile(cl::Program& cl_prog);
+	 //cl_ulong finish_compile(cl::Program& cl_prog);
      cl_ulong execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue, cl::NDRange global_range, cl::NDRange local_range, std::vector<cl::Buffer*>& dev_Buffers);
 	 cl_ulong execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& queue, cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range);
 	 cl_ulong execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue& queue, cl::NDRange global_range, cl::NDRange local_range, std::vector<cl::Buffer*>& dev_Buffers);

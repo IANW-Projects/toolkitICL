@@ -223,7 +223,7 @@ h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
  
  char * pch;
  pch = strtok (buffer,"\0");
-for (uint i=0;i<dims[0];i++) {
+for (unsigned int i=0;i<dims[0];i++) {
   //  printf ("%s\n",pch);
   kernels.push_back(pch);
     pch = strtok (buffer, "\0");

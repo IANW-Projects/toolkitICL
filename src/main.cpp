@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
   // } 
   
   char filename[500];  
-    sprintf(filename,"../../misc/data.h5"); //path to input HDF5 data file
+    sprintf(filename,"data.h5"); //path to input HDF5 data file
 
   char kernel_url[500]; 
  h5_read_string(filename, "Kernel_URL",kernel_url);
@@ -182,6 +182,7 @@ cout<<"Kernel runtime: "<<exec_time/1000<<" ms"<<endl;
     sprintf(out_name,"out.h5");
 
 h5_write_single_long(out_name,"Kernel_Time",exec_time);
+
 
 
 h5_create_dir(out_name,"/Data");

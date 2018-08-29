@@ -217,17 +217,34 @@ h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
     out_off[0]=0;
 //memspace = H5Screate_simple(1,out_size,NULL);
 //H5Sselect_hyperslab(memspace, H5S_SELECT_SET, out_off, NULL, out_size, NULL);
-   char buffer[50000]; 
+	const unsigned int max_buffer_size = 500000;
+   char buffer[max_buffer_size]; 
   
  H5LTread_dataset_string(h5_file_id,varname,buffer); 
- 
+  // H5Dread(dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+printf("%c\n\n", buffer[5]);
+
  char * pch;
- pch = strtok (buffer,"\0");
-for (unsigned int i=0;i<dims[0];i++) {
-  //  printf ("%s\n",pch);
-  kernels.push_back(pch);
-    pch = strtok (buffer, "\0");
-  }
+ char delimiter[] = "\0";
+ pch = strtok (buffer, delimiter);
+
+ unsigned int kernels_found = 0;
+
+ unsigned int str_start = 0;
+ for (unsigned int i = 0; i < max_buffer_size; i++) {
+	 if (buffer[i] == '\0') {
+		 char subbuff[100];
+		 memcpy(subbuff, &buffer[str_start], i- str_start);
+		// printf("%s\n", subbuff);  
+		 kernels.push_back(subbuff);
+		 str_start = i + 1;
+		 kernels_found++;
+	 }
+	 if (kernels_found >= dims[0]) {
+		 break;
+	 }
+ }
+
  
    // for (uint i=0;i<1000;i++) {
   //      offset[0]=i;

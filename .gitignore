@@ -36,3 +36,4 @@
 #Ignored directories
 bin/
 build/
+.vs/

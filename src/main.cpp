@@ -96,6 +96,12 @@ cout <<"Found Kernels: "<<found_kernels.size()<<endl;
 
 
 cout <<"Number of Kernels to execute: "<<kernel_list.size()<<endl;
+
+/*
+for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
+	cout <<"Found : "<< kernel_list.at(kernel_idx) << endl;
+}
+*/
 cout<<"Ingesting HDF5..."<<endl;
 
     	std::vector<std::string> data_list;
@@ -150,6 +156,7 @@ case H5_int: var_size=data_size.at(i)*sizeof(cl_int); tmp_data = new uint8_t[var
 
 	dev_mgr.get_queue(0, 0).finish();//Buffer Copy is asynchornous
 
+	cout << "Launching kernel..." << endl;
 
 cl::NDRange range_start;
 cl::NDRange global_range;

@@ -4,6 +4,7 @@
 #include <string>
 #include <iterator>
 #include <vector>
+#include <algorithm>
 
 #define CL_HPP_MINIMUM_OPENCL_VERSION 120
 #define CL_HPP_TARGET_OPENCL_VERSION 120
@@ -19,38 +20,20 @@ typedef unsigned int uint;
 #include <unistd.h>
 #endif
   
-  
-int parseUInt(const char *str, cl_uint *output)
+
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
-  char *next;
-  *output = strtoul(str, &next, 10);
-  return !strlen(next);
+	char ** itr = std::find(begin, end, option);
+	if (itr != end && ++itr != end)
+	{
+		return *itr;
+	}
+	return 0;
 }
 
-void parseArguments(int argc, char *argv[], cl_uint *deviceIndex)
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
-  for (int i = 1; i < argc; i++)
-  {
-      if (!strcmp(argv[i], "--device"))
-    {
-      if (++i >= argc || !parseUInt(argv[i], deviceIndex))
-      {
-        std::cout << "Invalid device index\n";
-        exit(1);
-      }
-    }
-    else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h"))
-    {
-      std::cout << "\n";
-      std::cout << "Usage: ./program [OPTIONS]\n\n";
-      std::cout << "Options:\n";
-      std::cout << "  -h  --help               Print the message\n";
-      std::cout << "      --list               List available devices\n";
-      std::cout << "      --device     INDEX   Select device at INDEX\n";
-      std::cout << "\n";
-      exit(0);
-    }
-  }
+	return std::find(begin, end, option) != end;
 }
 
 

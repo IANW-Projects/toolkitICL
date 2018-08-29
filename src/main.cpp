@@ -10,6 +10,8 @@
 #include <vector>
 #include <math.h>
 #include <thread>   
+#include <cstdlib>
+#include <chrono>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -43,11 +45,23 @@ int main(int argc, char *argv[]) {
     cl_uint  deviceIndex   =      0; //set default OpenCL Device
   
     ofstream logfile;
-	logfile.open("log.txt");
+	//logfile.open("log.txt");
              
     //parse command line arguments
-    parseArguments(argc, argv,&deviceIndex);
-    
+   // parseArguments(argc, argv,&deviceIndex);
+	
+	bool benchmark_mode = false;
+
+	if (cmdOptionExists(argv, argv + argc, "-b"))
+	{
+		benchmark_mode = true;
+		cout << "Benchmark mode\n";
+	}
+	char * dev_id = getCmdOption(argv, argv + argc, "-d");
+	char * filename = getCmdOption(argv, argv + argc, "-c");
+
+	deviceIndex = atoi(dev_id);
+
     
    ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
    cl_uint devices_availble=dev_mgr.get_avail_dev_num();   
@@ -64,8 +78,8 @@ int main(int argc, char *argv[]) {
        dev_mgr.init_device(i);   
   // } 
   
-  char filename[500];  
-    sprintf(filename,"data.h5"); //path to input HDF5 data file
+  //char filename[500];  
+    //sprintf(filename,"data.h5"); //path to input HDF5 data file
 
   char kernel_url[500]; 
  h5_read_string(filename, "Kernel_URL",kernel_url);
@@ -176,6 +190,14 @@ local_range=cl::NullRange;
 local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
 }
 
+
+if (benchmark_mode == true) {
+	cout << "Sleeping for 4s" << endl;
+	std::chrono::milliseconds timespan(4000); 
+
+	std::this_thread::sleep_for(timespan);
+}
+
 	uint64_t exec_time = 0;
 	uint32_t kernels_run=0;
 	for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++){
@@ -185,11 +207,22 @@ local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
 
 cout<<"Kernels executed: "<<kernels_run<<endl;
 cout<<"Kernel runtime: "<<exec_time/1000<<" ms"<<endl;
+
+if (benchmark_mode == true) {
+	cout << "Sleeping for 4s" << endl;
+	std::chrono::milliseconds timespan(4000);
+
+	std::this_thread::sleep_for(timespan);
+}
+
+
+
               char out_name[500];  
-    sprintf(out_name,"out.h5");
+			  
+    sprintf(out_name,"out_");
+	strcat(out_name, filename);
 
 h5_write_single_long(out_name,"Kernel_Time",exec_time);
-
 
 
 h5_create_dir(out_name,"/Data");

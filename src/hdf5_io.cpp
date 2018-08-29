@@ -222,11 +222,6 @@ h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
   
  H5LTread_dataset_string(h5_file_id,varname,buffer); 
   // H5Dread(dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
-printf("%c\n\n", buffer[5]);
-
- char * pch;
- char delimiter[] = "\0";
- pch = strtok (buffer, delimiter);
 
  unsigned int kernels_found = 0;
 
@@ -786,7 +781,7 @@ if(otype==H5G_DATASET) {
     H5Sget_simple_extent_dims(dataspace,dims,NULL);
     H5Sclose(dataspace);
     
-       data_size.push_back((size_t)dims[0]);
+       data_size.push_back((size_t)dims[0]* dims[1]);
 
 	   delete[] dims;
 

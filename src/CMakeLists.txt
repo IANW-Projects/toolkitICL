@@ -1,6 +1,12 @@
 
+if (MSVC)
+MESSAGE(STATUS "MSVC++ detected")
+set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+endif(MSVC)
+
 # Include header directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}	${OPENGL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLEW_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}	${OPENGL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
 
 #Header files of the project
 
@@ -18,14 +24,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #gernerate executable
 add_executable(toolkitICL ${SOURCES})
 
-
 #Link libraries
 TARGET_LINK_LIBRARIES(toolkitICL ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 
-IF(OPENGL)
-MESSAGE("Adding defines...")
-ENDIF()
-#target_compile_definitions(test1CL PUBLIC USE_OPENGL)
-
-configure_file(filter.cl ${CMAKE_BINARY_DIR}/bin/filter.cl COPYONLY)
 configure_file(../misc/make.sh ${CMAKE_BINARY_DIR}/bin/make.sh COPYONLY)

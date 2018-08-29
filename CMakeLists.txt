@@ -3,9 +3,6 @@
 cmake_minimum_required (VERSION 3.5)
 PROJECT(toolkitICL)
 
-set(COMPILER MSVC)
-
-option(OPENGL "Use OpenGL" OFF)
 
 if (COMPILER STREQUAL "GCC")
   find_program(CMAKE_C_COMPILER NAMES gcc)
@@ -17,22 +14,24 @@ elseif (COMPILER STREQUAL "CLANG")
   find_program(CMAKE_LINKER NAMES llvm-ld)
 endif ()
 
-
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-
 #Because Makefiles are shit to read
 SET(CMAKE_VERBOSE_MAKEFILE "false")
 #Includes modules to find OCL
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
-if (COMPILER STREQUAL "MSVC")
-set (CMAKE_CXX_FLAGS " -std=c++11 -O2")
+if (MSVC)
+MESSAGE(STATUS "MSVC++ detected")
+set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
 elseif (COMPILER STREQUAL "GCC")
   set (CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -fPIC -Wall -mfpmath=sse -Wcast-align -Wl,-E")
 elseif (COMPILER STREQUAL "CLANG")
   set (CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2  -mavx -mavx2 -fPIC -Wall")
 endif ()
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+
 
 find_package(HDF5 REQUIRED COMPONENTS CXX HL)
 IF(HDF5_FOUND)

@@ -13,6 +13,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#include <io.h> 
 typedef cl_ulong uint64_t;
 typedef unsigned int uint;
 #else
@@ -20,11 +21,9 @@ typedef unsigned int uint;
 #include <unistd.h>
 #endif
   
-
-bool FileExists(const char* filename) //Function to check whether a file already exists
+inline bool FileExists(const std::string &Filename)
 {
-	struct stat fileInfo;
-	return stat(filename, &fileInfo) == 0;
+	return access(Filename.c_str(), 0) == 0;
 }
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option)

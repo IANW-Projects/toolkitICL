@@ -90,7 +90,7 @@ std::vector<std::string> kernel_list;
 dev_mgr.add_program_url(0,"ocl_Kernel",kernel_url);
 
 	char settings[1024];
- h5_read_string(filename, "Settings",settings);
+ h5_read_string(filename, "Kernel_Settings",settings);
 
 
 uint64_t kernels_found = 0;
@@ -131,6 +131,9 @@ cout<<"Ingesting HDF5 config file..."<<endl;
 	  remove(out_name);
 	  cout << "Old HDF5 data file found and deleted!" << endl;
   }
+
+  h5_write_string(out_name, "Kernel_Settings", settings);
+
 
 	std::vector<cl::Buffer> data_in;
     	bool blocking = CL_TRUE;

@@ -16,8 +16,6 @@
 inline void compile(cl::Program& cl_prog,const char* options) {
 	std::stringstream default_options;
 	default_options.setf(std::ios::fixed);
-//	default_options << " -cl-fast-relaxed-math";
-//	default_options << " -cl-single-precision-constant";
 	default_options << " " << options;
 
 	try {
@@ -300,8 +298,6 @@ cl_ulong time_start, time_end;
 cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,const char* options) {
         std::stringstream default_options;
     default_options.setf(std::ios::fixed);
-   // default_options << " -cl-fast-relaxed-math";
-   // default_options << " -cl-single-precision-constant";
     default_options << " " << options;
 
     std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();

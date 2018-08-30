@@ -12,6 +12,7 @@
 #include <thread>   
 #include <cstdlib>
 #include <chrono>
+#include <ctime>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
 	if (cmdOptionExists(argv, argv + argc, "-b"))
 	{
 		benchmark_mode = true;
-		cout << "Benchmark mode\n";
+		cout << "Benchmark mode"<<endl<<endl;
 	}
 	char * dev_id = getCmdOption(argv, argv + argc, "-d");
 	char * filename = getCmdOption(argv, argv + argc, "-c");
@@ -68,15 +69,12 @@ int main(int argc, char *argv[]) {
     
     cout<<"Available devices: "<<devices_availble<<endl;
 
-   
-  // for (unsigned int i=0; i<dev_mgr.get_dev_names(dev_names);i++) {
-   uint i=deviceIndex;
-       cout<<dev_mgr.get_avail_dev_info(i).name.c_str()<<endl;
-       cout<< "OpenCL version: "<<dev_mgr.get_avail_dev_info(i).ocl_version.c_str()<<endl;
-       cout<<"Memory limit: "<<dev_mgr.get_avail_dev_info(i).max_mem<<endl;
-       cout<<"WG limit: "<<dev_mgr.get_avail_dev_info(i).wg_size<<endl<<endl;
-       dev_mgr.init_device(i);   
-  // } 
+  
+       cout<<dev_mgr.get_avail_dev_info(deviceIndex).name.c_str()<<endl;
+       cout<< "OpenCL version: "<<dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str()<<endl;
+       cout<<"Memory limit: "<<dev_mgr.get_avail_dev_info(deviceIndex).max_mem<<endl;
+       cout<<"WG limit: "<<dev_mgr.get_avail_dev_info(deviceIndex).wg_size<<endl<<endl;
+       dev_mgr.init_device(deviceIndex);
   
   //char filename[500];  
     //sprintf(filename,"data.h5"); //path to input HDF5 data file
@@ -116,13 +114,23 @@ for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
 	cout <<"Found : "<< kernel_list.at(kernel_idx) << endl;
 }
 */
-cout<<"Ingesting HDF5..."<<endl;
+cout<<"Ingesting HDF5 config file..."<<endl;
 
     	std::vector<std::string> data_list;
         std::vector<HD5_Type> datatype_list;
         std::vector<size_t> data_size;
   h5_get_content(filename,"/Data/",data_list,datatype_list,data_size);
 
+  cout << "Creating output HDF5 file..." << endl;
+  char out_name[500];
+
+  sprintf(out_name, "out_");
+  strcat(out_name, filename);
+
+  if (FileExists(out_name)) {
+	  remove(out_name);
+	  cout << "Old HDF5 data file found and deleted!" << endl;
+  }
 
 	std::vector<cl::Buffer> data_in;
     	bool blocking = CL_TRUE;
@@ -131,6 +139,8 @@ double  *rw_flags_ptr;
 rw_flags_ptr = new double[data_list.size()];
 		std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
 
+		uint64_t push_time, pull_time;
+		push_time = timer.getTimeMicroseconds();
 
 for(cl_uint i=0;i<data_list.size();i++) {
     try {
@@ -170,7 +180,9 @@ case H5_int: var_size=data_size.at(i)*sizeof(cl_int); tmp_data = new uint8_t[var
 
 	dev_mgr.get_queue(0, 0).finish();//Buffer Copy is asynchornous
 
-	cout << "Launching kernel..." << endl;
+	push_time = timer.getTimeMicroseconds() - push_time;
+
+	cout << "Setting range..." << endl;
 
 cl::NDRange range_start;
 cl::NDRange global_range;
@@ -179,11 +191,14 @@ cl::NDRange local_range;
 int tmp_range[3];
 h5_read_buffer_int(filename, "Global_Range", tmp_range);
 global_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
+h5_write_buffer_int(out_name, "Global_Range", tmp_range,3);
 
 h5_read_buffer_int(filename, "Range_Start", tmp_range);
 range_start = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
+h5_write_buffer_int(out_name, "Range_Start", tmp_range,3);
 
 h5_read_buffer_int(filename, "Local_Range", tmp_range);
+h5_write_buffer_int(out_name, "Local_Range", tmp_range, 3);
 if ((tmp_range[0]==0)&&(tmp_range[1]==0)&&(tmp_range[2]==0)){
 local_range=cl::NullRange;	
 } else{
@@ -192,11 +207,21 @@ local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
 
 
 if (benchmark_mode == true) {
-	cout << "Sleeping for 4s" << endl;
+	cout << "Sleeping for 4s" << endl<<endl;
 	std::chrono::milliseconds timespan(4000); 
 
 	std::this_thread::sleep_for(timespan);
 }
+
+cout << "Launching kernel..." << endl;
+
+time_t rawtime;
+struct tm * timeinfo;
+
+//get execution timestamp
+time(&rawtime);
+timeinfo = localtime(&rawtime);
+
 
 	uint64_t exec_time = 0;
 	uint32_t kernels_run=0;
@@ -209,23 +234,26 @@ cout<<"Kernels executed: "<<kernels_run<<endl;
 cout<<"Kernel runtime: "<<exec_time/1000<<" ms"<<endl;
 
 if (benchmark_mode == true) {
-	cout << "Sleeping for 4s" << endl;
+	cout << endl <<"Sleeping for 4s" << endl;
 	std::chrono::milliseconds timespan(4000);
 
 	std::this_thread::sleep_for(timespan);
 }
 
+cout << "Saving results... " << endl;
 
+	char time_buffer[80];
+	strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
 
-              char out_name[500];  
-			  
-    sprintf(out_name,"out_");
-	strcat(out_name, filename);
-
-h5_write_single_long(out_name,"Kernel_Time",exec_time);
-
+h5_write_string(out_name, "Kernel_ExecStart",time_buffer);
+h5_write_string(out_name, "OpenCL_Device", dev_mgr.get_avail_dev_info(deviceIndex).name.c_str());
+h5_write_string(out_name, "OpenCL_Version", dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str());
+h5_write_single_double(out_name,"Kernel_ExecTime", (double)exec_time/1000.0);
+h5_write_single_double(out_name, "Data_LoadTime", (double)push_time/1000.0);
 
 h5_create_dir(out_name,"/Data");
+
+pull_time = timer.getTimeMicroseconds();
 
 	uint32_t buffer_counter = 0;
   
@@ -273,7 +301,8 @@ case H5_int: h5_write_buffer_int(out_name,data_list.at(i).c_str(),(cl_int *)tmp_
 	
 	}
 
-
+pull_time = timer.getTimeMicroseconds() - pull_time;
+h5_write_single_double(out_name, "Data_StoreTime", (double)pull_time / 1000.0);
 
 
 

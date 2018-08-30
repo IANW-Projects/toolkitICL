@@ -21,6 +21,12 @@ typedef unsigned int uint;
 #endif
   
 
+bool FileExists(const char* filename) //Function to check whether a file already exists
+{
+	struct stat fileInfo;
+	return stat(filename, &fileInfo) == 0;
+}
+
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
 {
 	char ** itr = std::find(begin, end, option);

@@ -181,8 +181,33 @@ H5Fclose(h5_file_id);
 return 1;
 } else {
     //File not found - no idea what error code to use
-   return 0.0;
+   return 0;
 }
+}
+
+
+uint8_t h5_write_string(const char * filename, const char* varname, const char *buffer)
+{
+	hid_t h5_file_id;
+	float param_value;
+
+	if (!FileExists(filename)) {
+		h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+	}
+	else {
+
+		h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+
+	}
+
+		H5LTmake_dataset_string(h5_file_id, varname, buffer);
+		//check if varname was found - no idea what error code to use if not
+
+		H5Fclose(h5_file_id);
+
+		return 1;
+
 }
 
 uint8_t h5_read_strings(const char * filename, const char* varname, std::vector<std::string>& kernels)

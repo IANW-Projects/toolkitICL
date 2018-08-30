@@ -15,7 +15,7 @@ float h5_read_single_float(const char* filename, const char* varname);
 uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* data);
 uint8_t h5_read_buffer_uint(const char* filename, const char* varname, uint32_t* data);
 
-uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, cl_uchar* data);
+uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data);
 uint8_t h5_read_buffer_char(const char* filename, const char* varname, cl_char* data);
 
 uint8_t h5_write_single_long(const char* filename, const char* varname, long data);
@@ -27,6 +27,7 @@ uint8_t h5_write_buffer_double4(const char* filename, const char* varname, cl_do
 uint8_t h5_write_buffer_float4(const char* filename, const char* varname, cl_float4* data, cl_ulong size);
 
 uint8_t h5_read_string(const char * filename, const char* varname, char *buffer);
+uint8_t h5_write_string(const char * filename, const char* varname, const char *buffer);
 
 uint8_t h5_read_strings(const char * filename, const char* varname, std::vector<std::string>& kernels);
 // write a uint4 buffer to an HDF5 File

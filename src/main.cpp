@@ -228,10 +228,17 @@ timeinfo = localtime(&rawtime);
 
 	uint64_t exec_time = 0;
 	uint32_t kernels_run=0;
+
+	uint64_t total_exec_time = timer.getTimeMicroseconds();
+
 	for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++){
 		exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))), dev_mgr.get_queue(0, 0), range_start,global_range, local_range);
 	 kernels_run++;	
 	}
+
+	total_exec_time = timer.getTimeMicroseconds() - total_exec_time;
+	h5_write_single_double(out_name, "Total_ExecTime", (double)total_exec_time / 1000.0);
+
 
 cout<<"Kernels executed: "<<kernels_run<<endl;
 cout<<"Kernel runtime: "<<exec_time/1000<<" ms"<<endl;

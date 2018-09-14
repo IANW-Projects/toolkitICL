@@ -6,7 +6,7 @@ set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
 endif(MSVC)
 
 # Include header directories
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}	${OPENGL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${OpenCL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
 
 #Header files of the project
 

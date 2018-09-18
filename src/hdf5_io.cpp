@@ -30,6 +30,29 @@ using namespace std;
     return stat(filename, &fileInfo) == 0;
 }
 
+
+
+ bool h5_check_object(const char* filename, const char* varname)
+ {
+	 hid_t h5_file_id;
+
+	 if (FileExists(filename)) {
+		 h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+		 if (H5LTpath_valid(h5_file_id, varname, true) > 0) {
+			 H5Fclose(h5_file_id);
+			 return true;
+		 }
+		 else {
+			 H5Fclose(h5_file_id);
+			 return false;
+		 }
+	 }
+	 else {
+		 std::cout << "File not found " << std::endl;
+		 return false;
+	 }
+ }
+
 uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* data)
 {
 hid_t h5_file_id, dataset_id,dataspace_id,memspace_id;
@@ -220,6 +243,7 @@ float param_value;
     hsize_t     block[2];
     hsize_t     out_size[1];  
        hsize_t     out_off[1];  
+	   std::cout << "Test" << std::endl;
 if (FileExists(filename)){	
 
 h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);

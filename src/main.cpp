@@ -79,17 +79,40 @@ int main(int argc, char *argv[]) {
   //char filename[500];  
     //sprintf(filename,"data.h5"); //path to input HDF5 data file
 
+
   char kernel_url[500]; 
- h5_read_string(filename, "Kernel_URL",kernel_url);
+  if (h5_check_object(filename, "Kernel_URL") == true) {
+	  cout << "Reading kernel from file... " << endl;
+	  h5_read_string(filename, "Kernel_URL", kernel_url);
+  }
+  else
+  {
+  cout << "Reading kernel from HDF5 file... " << endl;
+  if (h5_check_object(filename, "Kernel_Data") == true) {
+	  char kernel_data[655350];
+	  h5_read_string(filename, "Kernel_Data", kernel_data);
+	  ofstream tmp_clfile;
+	  tmp_clfile.open("tmp_kernel.cl");	
+	  tmp_clfile << kernel_data << endl;
+	  tmp_clfile.close();
+	  sprintf(kernel_url, "tmp_kernel.cl");
+  }
+  else {
+	  cout << "No kernel found! " << endl;
+	  return 0;
+  }
+  }
 
 std::vector<std::string> kernel_list;
-  
+
  h5_read_strings(filename, "Kernels",kernel_list);
+
+
 
 
 dev_mgr.add_program_url(0,"ocl_Kernel",kernel_url);
 
-	char settings[1024];
+	char settings[2048];
  h5_read_string(filename, "Kernel_Settings",settings);
 
 

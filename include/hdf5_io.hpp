@@ -7,6 +7,8 @@
 
 enum HD5_Type { H5_float, H5_double,H5_char,H5_uchar,H5_int,H5_uint,H5_long,H5_ulong };
 
+bool h5_check_object(const char* filename, const char* varname);
+
 uint8_t h5_read_buffer_float(const char * filename, const char* varname, void* data);
 uint8_t h5_read_buffer_double(const char * filename, const char* varname, void* data);
 // read a single float from an HDF5 File

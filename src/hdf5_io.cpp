@@ -242,8 +242,8 @@ float param_value;
     hsize_t     stride[2];
     hsize_t     block[2];
     hsize_t     out_size[1];  
-       hsize_t     out_off[1];  
-	   std::cout << "Test" << std::endl;
+    hsize_t     out_off[1]; 
+
 if (FileExists(filename)){	
 
 h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);

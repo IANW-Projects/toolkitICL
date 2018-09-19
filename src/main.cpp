@@ -82,23 +82,20 @@ int main(int argc, char *argv[]) {
 
   char kernel_url[500]; 
   if (h5_check_object(filename, "Kernel_URL") == true) {
-	  cout << "Reading kernel from file... " << endl;
 	  h5_read_string(filename, "Kernel_URL", kernel_url);
-  }
-  else
-  {
-  cout << "Reading kernel from HDF5 file... " << endl;
-  if (h5_check_object(filename, "Kernel_Data") == true) {
+	  cout << "Reading kernel from file: "<< kernel_url <<"... " << endl;
+  } else  {
+  if (h5_check_object(filename, "Kernel_Source") == true) {
+	  cout << "Reading kernel from HDF5 file... " << endl;
 	  char kernel_data[655350];
-	  h5_read_string(filename, "Kernel_Data", kernel_data);
+	  h5_read_string(filename, "Kernel_Source", kernel_data);
 	  ofstream tmp_clfile;
 	  tmp_clfile.open("tmp_kernel.cl");	
 	  tmp_clfile << kernel_data << endl;
 	  tmp_clfile.close();
 	  sprintf(kernel_url, "tmp_kernel.cl");
-  }
-  else {
-	  cout << "No kernel found! " << endl;
+  }  else {
+	  cout << "No kernel information found! " << endl;
 	  return 0;
   }
   }

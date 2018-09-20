@@ -87,11 +87,14 @@ int main(int argc, char *argv[]) {
   } else  {
   if (h5_check_object(filename, "Kernel_Source") == true) {
 	  cout << "Reading kernel from HDF5 file... " << endl;
-	  char kernel_data[655350];
-	  h5_read_string(filename, "Kernel_Source", kernel_data);
+	  std::vector<std::string> kernel_source;
+	  h5_read_strings(filename, "Kernel_Source", kernel_source);
 	  ofstream tmp_clfile;
 	  tmp_clfile.open("tmp_kernel.cl");	
-	  tmp_clfile << kernel_data << endl;
+	  for (unsigned int i = 0; i < kernel_source.size(); i++) {
+	tmp_clfile << kernel_source.at(i) << endl;
+	  }
+	  
 	  tmp_clfile.close();
 	  sprintf(kernel_url, "tmp_kernel.cl");
   }  else {

@@ -233,7 +233,7 @@ uint8_t h5_write_string(const char * filename, const char* varname, const char *
 
 }
 
-uint8_t h5_read_strings(const char * filename, const char* varname, std::vector<std::string>& kernels)
+uint8_t h5_read_strings(const char * filename, const char* varname, std::vector<std::string>& lines)
 {
 hid_t h5_file_id,memspace;
 float param_value;
@@ -266,27 +266,25 @@ h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
     out_off[0]=0;
 //memspace = H5Screate_simple(1,out_size,NULL);
 //H5Sselect_hyperslab(memspace, H5S_SELECT_SET, out_off, NULL, out_size, NULL);
-	const unsigned int max_buffer_size = 500000;
+	const unsigned int max_buffer_size = 900000;
    char buffer[max_buffer_size]; 
   
  H5LTread_dataset_string(h5_file_id,varname,buffer); 
   // H5Dread(dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
 
- unsigned int kernels_found = 0;
+ unsigned int line_length = H5Tget_size(datatype);
+ unsigned int lines_found = 0;
 
  unsigned int str_start = 0;
- for (unsigned int i = 0; i < max_buffer_size; i++) {
-	 if (buffer[i] == '\0') {
-		 char subbuff[100];
-		 memcpy(subbuff, &buffer[str_start], i- str_start);
+ for (unsigned int i = 0; i < dims[0]; i++) {
+		 char subbuff[65535];
+		 memcpy(subbuff, &buffer[str_start], line_length);
 		// printf("%s\n", subbuff);  
-		 kernels.push_back(subbuff);
-		 str_start = i + 1;
-		 kernels_found++;
-	 }
-	 if (kernels_found >= dims[0]) {
-		 break;
-	 }
+		 lines.push_back(subbuff);
+		// std::cout << varname <<":"<<H5Tget_size(datatype)<<":"<<i<< "       "<<str_start <<"   "<< i - str_start << std::endl;
+		 str_start += line_length;
+		 lines_found++;
+	 
  }
 
  
@@ -313,7 +311,7 @@ H5Fclose(h5_file_id);
 return 1;
 } else {
     //File not found - no idea what error code to use
-   return 0.0;
+   return 0;
 }
 }
 float h5_read_single_float(const char * filename, const char* varname)

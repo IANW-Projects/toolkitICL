@@ -307,39 +307,39 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
 }
 
 
-float h5_read_single_float(const char * filename, const char* varname)
-{
-hid_t h5_file_id;
-float param_value;
+// float h5_read_single_float(const char * filename, const char* varname)
+// {
+// hid_t h5_file_id;
+// float param_value;
 
 
-    // for (uint i=0;i<1000;i++) {
-    //      offset[0]=i;
-    //
-    //H5Sselect_hyperslab (dataspace, H5S_SELECT_SET, offset,NULL, count, NULL);
-    //
-    //H5Dread (dataset, H5T_C_S1, H5S_ALL, dataspace, H5P_DEFAULT, buffer);
-    //std::string test = "test1234567u89";
-    //test.resize(4000);
-    //H5Dread (dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT,(void*) test.c_str());
-    //std::cout<<strlen(buffer)<<std::endl;
-    //std::cout<<(char)buffer[6];
-    //std::cout<<kernels.size()<<std::endl;
-    //   }
-    H5Sclose(dataspace);
+//     // for (uint i=0;i<1000;i++) {
+//     //      offset[0]=i;
+//     //
+//     //H5Sselect_hyperslab (dataspace, H5S_SELECT_SET, offset,NULL, count, NULL);
+//     //
+//     //H5Dread (dataset, H5T_C_S1, H5S_ALL, dataspace, H5P_DEFAULT, buffer);
+//     //std::string test = "test1234567u89";
+//     //test.resize(4000);
+//     //H5Dread (dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT,(void*) test.c_str());
+//     //std::cout<<strlen(buffer)<<std::endl;
+//     //std::cout<<(char)buffer[6];
+//     //std::cout<<kernels.size()<<std::endl;
+//     //   }
+//     H5Sclose(dataspace);
 
-    //H5LTread_dataset_string(h5_file_id,varname,buffer);
-    //check if varname was found - no idea what error code to use if not
+//     //H5LTread_dataset_string(h5_file_id,varname,buffer);
+//     //check if varname was found - no idea what error code to use if not
 
-    H5Fclose(h5_file_id);
+//     H5Fclose(h5_file_id);
 
-    return 1;
-  }
-  else {
-    //File not found - no idea what error code to use
-   return 0;
-  }
-}
+//     return 1;
+//   }
+//   else {
+//     //File not found - no idea what error code to use
+//    return 0;
+//   }
+// }
 
 
 float h5_read_single_float(const char* filename, const char* varname)

@@ -867,7 +867,7 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
 
       data_size.push_back((size_t)dims[0]* dims[1]);
 
-      delete[] dims;
+      delete[] dims; dims = nullptr;
 
       hid_t datatype = H5Dget_type(dataset);
 

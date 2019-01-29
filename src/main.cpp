@@ -225,8 +225,7 @@ int main(int argc, char *argv[]) {
       for (uint32_t kernel_idx = 0; kernel_idx < found_kernels.size(); kernel_idx++) {
         dev_mgr.getKernelbyName(0, "ocl_Kernel", found_kernels.at(kernel_idx))->setArg(i, data_in.at(data_in.size() - 1));
       }
-      delete[] tmp_data;
-      tmp_data = 0;
+      delete[] tmp_data; tmp_data = nullptr;
     }
     catch (cl::Error err) {
       cout << "error" << endl;
@@ -349,16 +348,15 @@ int main(int argc, char *argv[]) {
       dev_mgr.get_queue(0, 0).finish(); //Buffer Copy is asynchornous
 
       switch (datatype_list.at(i)){
-      case H5_float: h5_write_buffer_float(out_name,data_list.at(i).c_str(),(float *)tmp_data,data_size.at(buffer_counter)); break;
-      case H5_double: h5_write_buffer_double(out_name,data_list.at(i).c_str(),(double *)tmp_data,data_size.at(buffer_counter)); break;
-      case H5_char: h5_write_buffer_char(out_name,data_list.at(i).c_str(),(cl_char *)tmp_data,data_size.at(buffer_counter)); break;
-      case H5_uchar: h5_write_buffer_uchar(out_name,data_list.at(i).c_str(),(cl_uchar *)tmp_data,data_size.at(buffer_counter)); break;
-      case H5_uint: h5_write_buffer_uint(out_name,data_list.at(i).c_str(),(cl_uint *)tmp_data,data_size.at(buffer_counter)); break;
-      case H5_int: h5_write_buffer_int(out_name,data_list.at(i).c_str(),(cl_int *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_float: h5_write_buffer_float(out_name,data_list.at(i).c_str(),(float *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_double: h5_write_buffer_double(out_name,data_list.at(i).c_str(),(double *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_char: h5_write_buffer_char(out_name,data_list.at(i).c_str(),(cl_char *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_uchar: h5_write_buffer_uchar(out_name,data_list.at(i).c_str(),(cl_uchar *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_uint: h5_write_buffer_uint(out_name,data_list.at(i).c_str(),(cl_uint *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_int: h5_write_buffer_int(out_name,data_list.at(i).c_str(),(cl_int *)tmp_data,data_size.at(buffer_counter)); break;
       }
-      delete[] tmp_data;
-      // tmp_data = 0;
-         buffer_counter++;
+      delete[] tmp_data; tmp_data = nullptr;
+      buffer_counter++;
     }
     catch (cl::Error err) {
       cout << "error" << endl;
@@ -368,7 +366,7 @@ int main(int argc, char *argv[]) {
   pull_time = timer.getTimeMicroseconds() - pull_time;
   h5_write_single_double(out_name, "Data_StoreTime", (double)pull_time / 1000.0);
 
-  delete[] rw_flags_ptr;
+  delete[] rw_flags_ptr; rw_flags_ptr = nullptr;
 
   return 0;
 }

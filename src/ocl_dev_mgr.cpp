@@ -31,8 +31,7 @@ inline void compile(cl::Program& cl_prog, const char* options)
   }
   catch (cl::Error err)
   {
-    std::cout << "Exception:" << std::endl
-              << "ERROR: " << err.what() << std::endl;
+    std::cerr << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
   }
 }
 
@@ -45,7 +44,7 @@ inline std::string loadProgram(std::string input)
 {
   std::ifstream stream(input.c_str());
   if (!stream.is_open()) {
-    std::cout << "Cannot open file: " << input << std::endl;
+    std::cerr << "Cannot open file: " << input << std::endl;
     exit(1);
   }
 
@@ -246,7 +245,7 @@ cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue
     std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
   }
   catch (cl::Error err) {
-    std::cout << "Exception:" << std::endl<< "ERROR: "<< err.what()<< std::endl;
+    std::cerr << "Exception:" << std::endl<< "ERROR: "<< err.what() << std::endl;
   }
 
   return (time_end - time_start)/1000;
@@ -272,7 +271,7 @@ cl_ulong ocl_dev_mgr::execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& que
     std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
   }
   catch (cl::Error err) {
-    std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+    std::cerr << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
   }
 
   return (time_end - time_start) / 1000;
@@ -299,7 +298,7 @@ cl_ulong ocl_dev_mgr::execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue&
     std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
   }
   catch (cl::Error err) {
-    std::cout << "Exception:" << std::endl<< "ERROR: "<< err.what()<< std::endl;
+    std::cerr << "Exception:" << std::endl<< "ERROR: "<< err.what()<< std::endl;
   }
 
   return 0;
@@ -332,7 +331,7 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,
     std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
   }
   catch (cl::Error err) {
-    std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+    std::cerr << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
   }
 
   con_list.at(context_idx).programs.at(idx).createKernels(&(con_list.at(context_idx).kernels.at(idx)));

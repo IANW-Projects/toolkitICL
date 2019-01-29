@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
   cout << "WG limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
   dev_mgr.init_device(deviceIndex);
 
-  char kernel_url[500];
+  char kernel_url[500]; // TODO: possible buffer overflow?
   if (h5_check_object(filename, "Kernel_URL") == true) {
 	  h5_read_string(filename, "Kernel_URL", kernel_url);
 	  cout << "Reading kernel from file: " << kernel_url << "... " << endl;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
   h5_get_content(filename, "/Data/", data_list, datatype_list, data_size);
 
   cout << "Creating output HDF5 file..." << endl;
-  char out_name[500];
+  char out_name[500];  // TODO: possible buffer overflow?
 
   sprintf(out_name, "out_");
   strcat(out_name, filename);
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
       delete[] tmp_data; tmp_data = nullptr;
     }
     catch (cl::Error err) {
-      cout << "error" << endl;
+      std::cerr << "Exception:" << std::endl<< "ERROR: "<< err.what() << std::endl;
     }
   }
 
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
       buffer_counter++;
     }
     catch (cl::Error err) {
-      cout << "error" << endl;
+      std::cerr << "Exception:" << std::endl<< "ERROR: "<< err.what() << std::endl;
     }
   }
 

@@ -58,7 +58,7 @@ void compile_kernel(cl::Program& cl_prog, char* options)
     std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
   }
   catch (cl::Error err) {
-    std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+    std::cerr << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
   }
 }
 

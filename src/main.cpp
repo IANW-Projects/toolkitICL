@@ -75,9 +75,8 @@ int main(int argc, char *argv[]) {
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
   cl_uint devices_availble=dev_mgr.get_avail_dev_num();
 
-  cout << "Available devices: " << devices_availble << endl;
-
-  cout << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
+  cout << "Available devices: " << devices_availble << endl
+       << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
   cout << "OpenCL version: " << dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str() << endl;
   cout << "Memory limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).max_mem << endl;
   cout << "WG limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
@@ -368,6 +367,8 @@ int main(int argc, char *argv[]) {
 
   pull_time = timer.getTimeMicroseconds() - pull_time;
   h5_write_single_double(out_name, "Data_StoreTime", (double)pull_time / 1000.0);
+
+  delete[] rw_flags_ptr;
 
   return 0;
 }

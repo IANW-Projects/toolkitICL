@@ -189,7 +189,7 @@ uint8_t h5_read_string(const char* filename, const char* varname, char *buffer)
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     hid_t dataset= H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
-    H5LTread_dataset_string(h5_file_id,varname,buffer);
+    H5LTread_dataset_string(h5_file_id, varname, buffer);
     //check if varname was found - no idea what error code to use if not
 
     H5Fclose(h5_file_id);

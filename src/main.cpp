@@ -53,22 +53,18 @@ int main(int argc, char *argv[]) {
 
   cl_uint deviceIndex = 0; // set default OpenCL Device
 
-  ofstream logfile;
-	//logfile.open("log.txt");
-
   // parse command line arguments
-  // parseArguments(argc, argv, &deviceIndex);
-
 	bool benchmark_mode = false;
-
 	if (cmdOptionExists(argv, argv + argc, "-b"))	{
 		benchmark_mode = true;
 		cout << "Benchmark mode" << endl << endl;
 	}
+
   if (cmdOptionExists(argv, argv + argc, "-d")) {
     char* dev_id = getCmdOption(argv, argv + argc, "-d");
     deviceIndex = atoi(dev_id);
   }
+
   if (cmdOptionExists(argv, argv + argc, "-h") || !cmdOptionExists(argv, argv + argc, "-c")) {
     print_help();
     return -2;
@@ -86,9 +82,6 @@ int main(int argc, char *argv[]) {
   cout << "Memory limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).max_mem << endl;
   cout << "WG limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
   dev_mgr.init_device(deviceIndex);
-
-  //char filename[500];
-  //sprintf(filename,"data.h5"); //path to input HDF5 data file
 
   char kernel_url[500];
   if (h5_check_object(filename, "Kernel_URL") == true) {
@@ -116,25 +109,27 @@ int main(int argc, char *argv[]) {
   std::vector<std::string> kernel_list;
   h5_read_strings(filename, "Kernels", kernel_list);
 
-
   dev_mgr.add_program_url(0, "ocl_Kernel", kernel_url);
 
 	char settings[2048]; //TODO: possible buffer overflow?
   h5_read_string(filename, "Kernel_Settings", settings);
 
 
-  uint64_t kernels_found = 0;
-	kernels_found = dev_mgr.compile_kernel(0, "ocl_Kernel", settings);
 
-	if (kernels_found == 0) {
-		cout << "No valid kernels found" << endl;
+  uint64_t num_kernels_found = 0;
+	num_kernels_found = dev_mgr.compile_kernel(0, "ocl_Kernel", settings);
+	if (num_kernels_found == 0) {
+		cerr << "Error: No valid kernels found" << endl;
 		return -1;
 	}
 
 	std::vector<std::string> found_kernels;
 	dev_mgr.get_kernel_names(0, "ocl_Kernel", found_kernels);
   cout << "Found Kernels: " << found_kernels.size() << endl;
-
+  if (found_kernels.size() == 0) {
+		cerr << "Error: No valid kernels found." << endl;
+		return -1;
+	}
 
   cout << "Number of Kernels to execute: " << kernel_list.size() << endl;
 

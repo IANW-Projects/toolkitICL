@@ -306,40 +306,44 @@ cl_ulong ocl_dev_mgr::execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue&
 }
 
 
+// Compile kernels and return the number of compiled kernels.
 cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name, const char* options)
 {
   std::stringstream default_options;
   default_options.setf(std::ios::fixed);
   default_options << " " << options;
 
-  std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
+  std::vector<std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
 	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
 
-	if (i != con_list.at(context_idx).prog_names.end())
-	{
-    int32_t idx=distance(con_list.at(context_idx).prog_names.begin(), i);
-
-    try {
-        con_list.at(context_idx).programs.at(idx).build(default_options.str().c_str());
-    }
-    catch (cl::BuildError error) {
-      std::string log = error.getBuildLog()[0].second;
-      std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
-    }
-    catch (cl::Error err) {
-      std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
-    }
-
-    con_list.at(context_idx).programs.at(idx).createKernels(&(con_list.at(context_idx).kernels.at(idx)));
-
-    con_list.at(context_idx).kernel_names.at(idx).clear(); //make sure to clean kernel_names list
-
-    for (uint32_t i = 0; i < con_list.at(context_idx).kernels.at(idx).size(); i++) {
-      con_list.at(context_idx).kernel_names.at(idx).push_back(con_list.at(context_idx).kernels.at(idx).at(i).getInfo<CL_KERNEL_FUNCTION_NAME>());
-    }
-
-    return con_list.at(context_idx).kernels.at(idx).size();
+  if (i == con_list.at(context_idx).prog_names.end())	{
+    // prog_name was not found and no kernels were compiled
+    return 0;
   }
+
+
+  int32_t idx = distance(con_list.at(context_idx).prog_names.begin(), i);
+
+  try {
+    con_list.at(context_idx).programs.at(idx).build(default_options.str().c_str());
+  }
+  catch (cl::BuildError error) {
+    std::string log = error.getBuildLog()[0].second;
+    std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
+  }
+  catch (cl::Error err) {
+    std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+  }
+
+  con_list.at(context_idx).programs.at(idx).createKernels(&(con_list.at(context_idx).kernels.at(idx)));
+
+  con_list.at(context_idx).kernel_names.at(idx).clear(); //make sure to clean kernel_names list
+
+  for (uint32_t i = 0; i < con_list.at(context_idx).kernels.at(idx).size(); i++) {
+    con_list.at(context_idx).kernel_names.at(idx).push_back(con_list.at(context_idx).kernels.at(idx).at(i).getInfo<CL_KERNEL_FUNCTION_NAME>());
+  }
+
+  return con_list.at(context_idx).kernels.at(idx).size();
 }
 
 cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_name, std::vector<std::string>& found_kernels)

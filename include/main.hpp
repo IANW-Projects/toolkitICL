@@ -1,3 +1,5 @@
+/* TODO: Procide a license note */
+
 #ifndef MAIN_H
 #define MAIN_H
 
@@ -9,6 +11,7 @@
 
 //disable strange warnings for newer versions of GCC
 #pragma GCC diagnostic ignored "-Wignored-attributes"
+
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
@@ -29,8 +32,8 @@
 #define DREAL cl_float
 #define DREAL4 cl_float4
 #define CL_REAL float
-#undef USE_OPENGL 
-#endif    
+#undef USE_OPENGL
+#endif
 
 
 #endif // MAIN_H

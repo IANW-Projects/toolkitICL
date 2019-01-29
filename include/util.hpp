@@ -1,3 +1,8 @@
+/* TODO: Procide a license note */
+
+#ifndef UTIL_H
+#define UTIL_H
+
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
@@ -9,28 +14,27 @@
 #define CL_HPP_MINIMUM_OPENCL_VERSION 120
 #define CL_HPP_TARGET_OPENCL_VERSION 120
 #include <CL/cl2.hpp>
-  
+
 
 #if defined(_WIN32)
 #include <windows.h>
-#include <io.h> 
+#include <io.h>
 typedef cl_ulong uint64_t;
 typedef unsigned int uint;
 #else
 #include <stdint.h>
 #include <unistd.h>
 #endif
-  
+
 inline bool FileExists(const std::string &Filename)
 {
 	return access(Filename.c_str(), 0) == 0;
 }
 
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
+char* getCmdOption(char** begin, char** end, const std::string & option)
 {
-	char ** itr = std::find(begin, end, option);
-	if (itr != end && ++itr != end)
-	{
+	char** itr = std::find(begin, end, option);
+	if (itr != end && ++itr != end)	{
 		return *itr;
 	}
 	return 0;
@@ -69,8 +73,7 @@ private:
         LONGLONG elapsedTime = currentTime.QuadPart - startTime_.QuadPart;
 
         // Compute the number of millisecond ticks elapsed.
-        unsigned long msecTicks =
-            (unsigned long)(1000 * elapsedTime / frequency_.QuadPart);
+        unsigned long msecTicks = (unsigned long)(1000 * elapsedTime / frequency_.QuadPart);
         // Check for unexpected leaps in the Win32 performance counter.
         // (This is caused by unexpected data across the PCI to ISA
         // bridge, aka south bridge.  See Microsoft KB274323.)
@@ -78,13 +81,13 @@ private:
 
         signed long msecOff = (signed long)(msecTicks - elapsedTicks);
         if (msecOff < -100 || msecOff > 100) {
-                // Adjust the starting time forwards.
-                LONGLONG msecAdjustment =
-                    _max(msecOff *
-                        frequency_.QuadPart / 1000, elapsedTime -
-                        prevElapsedTime_);
-                startTime_.QuadPart += msecAdjustment;
-                elapsedTime -= msecAdjustment;
+            // Adjust the starting time forwards.
+            LONGLONG msecAdjustment =
+                _max(msecOff *
+                     frequency_.QuadPart / 1000, elapsedTime -
+                     prevElapsedTime_);
+            startTime_.QuadPart += msecAdjustment;
+            elapsedTime -= msecAdjustment;
         }
         // Store the current elapsed time for adjustments next time.
         prevElapsedTime_ = elapsedTime;
@@ -94,19 +97,17 @@ private:
         struct timespec tp;
         ::clock_gettime(CLOCK_MONOTONIC, &tp);
         // check for overflow
-        if ((tp.tv_nsec - startTime_.tv_nsec) < 0)
-        {
+        if ((tp.tv_nsec - startTime_.tv_nsec) < 0) {
             // Remove a second from the second field and add it to the
             // nanoseconds field to prevent overflow.
             // Then scale
             ticks = (uint64_t) (tp.tv_sec - startTime_.tv_sec - 1) * scale
-                    + (uint64_t) ((1000ULL * 1000ULL * 1000ULL) + tp.tv_nsec - startTime_.tv_nsec)
+                   + (uint64_t) ((1000ULL * 1000ULL * 1000ULL) + tp.tv_nsec - startTime_.tv_nsec)
                                   * scale / (1000ULL * 1000ULL * 1000ULL);
         }
-        else
-        {
+        else {
             ticks = (uint64_t) (tp.tv_sec - startTime_.tv_sec) * scale
-                + (uint64_t) (tp.tv_nsec - startTime_.tv_nsec) * scale / (1000ULL * 1000ULL * 1000ULL);
+                   + (uint64_t) (tp.tv_nsec - startTime_.tv_nsec) * scale / (1000ULL * 1000ULL * 1000ULL);
         }
 #endif //_WIN32
 
@@ -195,4 +196,4 @@ public:
     }
 };
 
-
+#endif // UTIL_H

@@ -323,17 +323,16 @@ int main(int argc, char *argv[]) {
 
   for(cl_uint i = 0; i < data_list.size(); i++) {
     try {
-      //   uint8_t *tmp_data = 0;
       uint8_t *tmp_data = 0;
       size_t var_size = 0;
 
       switch (datatype_list.at(i)) {
-        case H5_float:  var_size=data_size.at(i)*sizeof(cl_float);   break;
+        case H5_float:  var_size=data_size.at(i)*sizeof(cl_float);  break;
         case H5_double: var_size=data_size.at(i)*sizeof(cl_double); break;
-        case H5_char:   var_size=data_size.at(i)*sizeof(cl_char); break;
-        case H5_uchar:  var_size=data_size.at(i)*sizeof(cl_uchar); break;
-        case H5_uint:   var_size=data_size.at(i)*sizeof(cl_uint); break;
-        case H5_int:    var_size=data_size.at(i)*sizeof(cl_int); break;
+        case H5_char:   var_size=data_size.at(i)*sizeof(cl_char);   break;
+        case H5_uchar:  var_size=data_size.at(i)*sizeof(cl_uchar);  break;
+        case H5_uint:   var_size=data_size.at(i)*sizeof(cl_uint);   break;
+        case H5_int:    var_size=data_size.at(i)*sizeof(cl_int);    break;
         default:        var_size=data_size.at(buffer_counter)*sizeof(cl_double); break;
       }
 
@@ -348,12 +347,12 @@ int main(int argc, char *argv[]) {
       dev_mgr.get_queue(0, 0).finish(); //Buffer Copy is asynchornous
 
       switch (datatype_list.at(i)){
-        case H5_float: h5_write_buffer_float(out_name,data_list.at(i).c_str(),(float *)tmp_data,data_size.at(buffer_counter)); break;
-        case H5_double: h5_write_buffer_double(out_name,data_list.at(i).c_str(),(double *)tmp_data,data_size.at(buffer_counter)); break;
-        case H5_char: h5_write_buffer_char(out_name,data_list.at(i).c_str(),(cl_char *)tmp_data,data_size.at(buffer_counter)); break;
-        case H5_uchar: h5_write_buffer_uchar(out_name,data_list.at(i).c_str(),(cl_uchar *)tmp_data,data_size.at(buffer_counter)); break;
-        case H5_uint: h5_write_buffer_uint(out_name,data_list.at(i).c_str(),(cl_uint *)tmp_data,data_size.at(buffer_counter)); break;
-        case H5_int: h5_write_buffer_int(out_name,data_list.at(i).c_str(),(cl_int *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_float:  h5_write_buffer_float( out_name, data_list.at(i).c_str(), (float *)tmp_data,   data_size.at(buffer_counter)); break;
+        case H5_double: h5_write_buffer_double(out_name, data_list.at(i).c_str(), (double *)tmp_data,  data_size.at(buffer_counter)); break;
+        case H5_char:   h5_write_buffer_char(  out_name, data_list.at(i).c_str(), (cl_char *)tmp_data, data_size.at(buffer_counter)); break;
+        case H5_uchar:  h5_write_buffer_uchar( out_name, data_list.at(i).c_str(), (cl_uchar *)tmp_data,data_size.at(buffer_counter)); break;
+        case H5_uint:   h5_write_buffer_uint(  out_name, data_list.at(i).c_str(), (cl_uint *)tmp_data, data_size.at(buffer_counter)); break;
+        case H5_int:    h5_write_buffer_int(   out_name, data_list.at(i).c_str(), (cl_int *)tmp_data,  data_size.at(buffer_counter)); break;
       }
       delete[] tmp_data; tmp_data = nullptr;
       buffer_counter++;

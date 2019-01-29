@@ -54,11 +54,11 @@ int main(int argc, char *argv[]) {
   cl_uint deviceIndex = 0; // set default OpenCL Device
 
   // parse command line arguments
-	bool benchmark_mode = false;
-	if (cmdOptionExists(argv, argv + argc, "-b"))	{
-		benchmark_mode = true;
-		cout << "Benchmark mode" << endl << endl;
-	}
+  bool benchmark_mode = false;
+  if (cmdOptionExists(argv, argv + argc, "-b"))  {
+    benchmark_mode = true;
+    cout << "Benchmark mode" << endl << endl;
+  }
 
   if (cmdOptionExists(argv, argv + argc, "-d")) {
     char* dev_id = getCmdOption(argv, argv + argc, "-d");
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     print_help();
     return -2;
   }
-	char* filename = getCmdOption(argv, argv + argc, "-c");
+  char* filename = getCmdOption(argv, argv + argc, "-c");
 
 
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
@@ -117,19 +117,19 @@ int main(int argc, char *argv[]) {
 
 
   uint64_t num_kernels_found = 0;
-	num_kernels_found = dev_mgr.compile_kernel(0, "ocl_Kernel", settings);
-	if (num_kernels_found == 0) {
-		cerr << "Error: No valid kernels found" << endl;
-		return -1;
-	}
+  num_kernels_found = dev_mgr.compile_kernel(0, "ocl_Kernel", settings);
+  if (num_kernels_found == 0) {
+    cerr << "Error: No valid kernels found" << endl;
+    return -1;
+  }
 
-	std::vector<std::string> found_kernels;
-	dev_mgr.get_kernel_names(0, "ocl_Kernel", found_kernels);
+  std::vector<std::string> found_kernels;
+  dev_mgr.get_kernel_names(0, "ocl_Kernel", found_kernels);
   cout << "Found Kernels: " << found_kernels.size() << endl;
   if (found_kernels.size() == 0) {
-		cerr << "Error: No valid kernels found." << endl;
-		return -1;
-	}
+    cerr << "Error: No valid kernels found." << endl;
+    return -1;
+  }
 
   cout << "Number of Kernels to execute: " << kernel_list.size() << endl;
 
@@ -152,22 +152,22 @@ int main(int argc, char *argv[]) {
   strcat(out_name, filename);
 
   if (FileExists(out_name)) {
-	  remove(out_name);
-	  cout << "Old HDF5 data file found and deleted!" << endl;
+    remove(out_name);
+    cout << "Old HDF5 data file found and deleted!" << endl;
   }
 
   h5_write_string(out_name, "Kernel_Settings", settings);
 
 
-	std::vector<cl::Buffer> data_in;
+  std::vector<cl::Buffer> data_in;
   bool blocking = CL_TRUE;
 
   double *rw_flags_ptr;
   rw_flags_ptr = new double[data_list.size()];
-	std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
+  std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
 
-	uint64_t push_time, pull_time;
-	push_time = timer.getTimeMicroseconds();
+  uint64_t push_time, pull_time;
+  push_time = timer.getTimeMicroseconds();
 
   for(cl_uint i = 0; i < data_list.size(); i++) {
     try {
@@ -228,10 +228,10 @@ int main(int argc, char *argv[]) {
       }
       delete[] tmp_data;
       tmp_data = 0;
-		}
-		catch (cl::Error err) {
-			cout << "error" << endl;
-		}
+    }
+    catch (cl::Error err) {
+      cout << "error" << endl;
+    }
   }
 
 
@@ -280,19 +280,19 @@ int main(int argc, char *argv[]) {
   timeinfo = localtime(&rawtime);
 
 
-	uint64_t exec_time = 0;
-	uint32_t kernels_run=0;
+  uint64_t exec_time = 0;
+  uint32_t kernels_run=0;
 
-	uint64_t total_exec_time = timer.getTimeMicroseconds();
+  uint64_t total_exec_time = timer.getTimeMicroseconds();
 
-	for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
-		exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))),
+  for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
+    exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_list.at(kernel_idx))),
                                                      dev_mgr.get_queue(0, 0), range_start, global_range, local_range);
-	  kernels_run++;
-	}
+    kernels_run++;
+  }
 
-	total_exec_time = timer.getTimeMicroseconds() - total_exec_time;
-	h5_write_single_double(out_name, "Total_ExecTime", (double)total_exec_time / 1000.0);
+  total_exec_time = timer.getTimeMicroseconds() - total_exec_time;
+  h5_write_single_double(out_name, "Total_ExecTime", (double)total_exec_time / 1000.0);
 
 
   cout << "Kernels executed: " << kernels_run << endl;
@@ -307,8 +307,8 @@ int main(int argc, char *argv[]) {
 
   cout << "Saving results... " << endl;
 
-	char time_buffer[80];
-	strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
+  char time_buffer[80];
+  strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
 
   h5_write_string(out_name, "Kernel_ExecStart", time_buffer);
   h5_write_string(out_name, "OpenCL_Device", dev_mgr.get_avail_dev_info(deviceIndex).name.c_str());
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
 
   pull_time = timer.getTimeMicroseconds();
 
-	uint32_t buffer_counter = 0;
+  uint32_t buffer_counter = 0;
 
 
   for(cl_uint i = 0; i < data_list.size(); i++) {
@@ -359,12 +359,12 @@ int main(int argc, char *argv[]) {
       }
       delete[] tmp_data;
       // tmp_data = 0;
-       	buffer_counter++;
-		}
-		catch (cl::Error err) {
-			cout << "error" << endl;
-		}
-	}
+         buffer_counter++;
+    }
+    catch (cl::Error err) {
+      cout << "error" << endl;
+    }
+  }
 
   pull_time = timer.getTimeMicroseconds() - pull_time;
   h5_write_single_double(out_name, "Data_StoreTime", (double)pull_time / 1000.0);

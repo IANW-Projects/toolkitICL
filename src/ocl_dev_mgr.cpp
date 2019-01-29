@@ -17,67 +17,67 @@
 
 inline void compile(cl::Program& cl_prog, const char* options)
 {
-	std::stringstream default_options;
-	default_options.setf(std::ios::fixed);
-	default_options << " " << options;
+  std::stringstream default_options;
+  default_options.setf(std::ios::fixed);
+  default_options << " " << options;
 
-	try {
-		cl_prog.build(default_options.str().c_str());
-	}
-	catch (cl::BuildError error)
-	{
-		std::string log = error.getBuildLog()[0].second;
-		std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
-	}
-	catch (cl::Error err)
-	{
-		std::cout << "Exception:" << std::endl
+  try {
+    cl_prog.build(default_options.str().c_str());
+  }
+  catch (cl::BuildError error)
+  {
+    std::string log = error.getBuildLog()[0].second;
+    std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
+  }
+  catch (cl::Error err)
+  {
+    std::cout << "Exception:" << std::endl
               << "ERROR: " << err.what() << std::endl;
-	}
+  }
 }
 
 inline bool FileExists(const std::string &Filename)
 {
-	return access(Filename.c_str(), 0) == 0;
+  return access(Filename.c_str(), 0) == 0;
 }
 
 inline std::string loadProgram(std::string input)
 {
-	std::ifstream stream(input.c_str());
-	if (!stream.is_open()) {
-		std::cout << "Cannot open file: " << input << std::endl;
-		exit(1);
-	}
+  std::ifstream stream(input.c_str());
+  if (!stream.is_open()) {
+    std::cout << "Cannot open file: " << input << std::endl;
+    exit(1);
+  }
 
-	return std::string(
-		std::istreambuf_iterator<char>(stream),
-		(std::istreambuf_iterator<char>()));
+  return std::string(
+    std::istreambuf_iterator<char>(stream),
+    (std::istreambuf_iterator<char>()));
 }
 
 ocl_dev_mgr::ocl_dev_mgr() {
-	initialize();
+  initialize();
 }
 
 
 cl::Kernel * ocl_dev_mgr::getKernelbyName(cl_uint context_idx, std::string prog_name, std::string kernel_name)
 {
   std::vector <std::string>::iterator it_p = con_list.at(context_idx).prog_names.begin();
-	it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-	//if (i != con_list.at(context_idx).prog_names.end())
-	//{
+  it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  //if (i != con_list.at(context_idx).prog_names.end())
+  //{
   uint32_t idx = distance(con_list.at(context_idx).prog_names.begin(), it_p);
-//	std::cout << idx << std::endl;
+//  std::cout << idx << std::endl;
 
-	if (con_list.at(context_idx).kernels.at(idx).size() > 1) {
+  if (con_list.at(context_idx).kernels.at(idx).size() > 1) {
 
-		for (cl_uint i = 0; i < con_list.at(context_idx).kernels.at(idx).size(); i++) {
-			//std::cout<< kernel_name <<":" << con_list.at(context_idx).kernel_names.at(idx).at(i) << std::endl;
-			if (kernel_name.compare(con_list.at(context_idx).kernel_names.at(idx).at(i)) == 0) {
-			//	std::cout << "1" << idx << std::endl;
-			return &(con_list.at(context_idx).kernels.at(idx).at(i));
-			}
-		}
-	}
+    for (cl_uint i = 0; i < con_list.at(context_idx).kernels.at(idx).size(); i++) {
+      //std::cout<< kernel_name <<":" << con_list.at(context_idx).kernel_names.at(idx).at(i) << std::endl;
+      if (kernel_name.compare(con_list.at(context_idx).kernel_names.at(idx).at(i)) == 0) {
+      //  std::cout << "1" << idx << std::endl;
+      return &(con_list.at(context_idx).kernels.at(idx).at(i));
+      }
+    }
+  }
 
   return &(con_list.at(context_idx).kernels.at(idx).at(0));
   //}
@@ -86,11 +86,11 @@ cl::Kernel * ocl_dev_mgr::getKernelbyName(cl_uint context_idx, std::string prog_
 cl::Kernel * ocl_dev_mgr::getKernelbyID(cl_uint context_idx, std::string prog_name,cl_ulong kernel_id)
 {
   std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
-	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-	if (i != con_list.at(context_idx).prog_names.end())	{
+  i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  if (i != con_list.at(context_idx).prog_names.end())  {
     uint32_t idx=distance(con_list.at(context_idx).prog_names.begin(), i);
 
-	  return &(con_list.at(context_idx).kernels.at(idx).at(kernel_id));
+    return &(con_list.at(context_idx).kernels.at(idx).at(kernel_id));
   }
 }
 
@@ -180,9 +180,9 @@ cl_int ocl_dev_mgr::add_program_url(cl_uint context_idx, std::string prog_name, 
 {
   if (FileExists(url)) {
     con_list.at(context_idx).programs.push_back(cl::Program (con_list.at(context_idx).context, loadProgram(url)));
-	  con_list.at(context_idx).prog_names.push_back(prog_name);
+    con_list.at(context_idx).prog_names.push_back(prog_name);
     con_list.at(context_idx).kernels.resize(con_list.at(context_idx).kernels.size()+1);
-	  con_list.at(context_idx).kernel_names.resize(con_list.at(context_idx).kernel_names.size() + 1);
+    con_list.at(context_idx).kernel_names.resize(con_list.at(context_idx).kernel_names.size() + 1);
     return 1;
   }
   else {
@@ -201,14 +201,14 @@ cl_int ocl_dev_mgr::add_program_str(cl_uint context_idx, std::string prog_name, 
 
 cl::Program& ocl_dev_mgr::get_program(cl_uint context_idx, std::string prog_name)
 {
-	std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
-	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-	if (i != con_list.at(context_idx).prog_names.end())	{
-		return con_list.at(context_idx).programs.at(distance(con_list.at(context_idx).prog_names.begin(), i));
-	}
-	else {
-		return con_list.at(context_idx).programs.at(0);
-	}
+  std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
+  i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  if (i != con_list.at(context_idx).prog_names.end())  {
+    return con_list.at(context_idx).programs.at(distance(con_list.at(context_idx).prog_names.begin(), i));
+  }
+  else {
+    return con_list.at(context_idx).programs.at(0);
+  }
 }
 
 ocl_dev_mgr::ocl_device_info& ocl_dev_mgr::get_avail_dev_info(cl_uint avail_device_idx)
@@ -238,7 +238,7 @@ cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global_range, local_range, NULL, &event);
     // queue.finish();
     event.wait();
-	  event.getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
+    event.getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
     event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &time_start);
   }
   catch (cl::BuildError error) {
@@ -257,25 +257,25 @@ cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue
 cl_ulong ocl_dev_mgr::execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& queue,
                                        cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range)
 {
-	cl::Event event;
-	cl_ulong time_start, time_end;
+  cl::Event event;
+  cl_ulong time_start, time_end;
 
-	try {
-		queue.enqueueNDRangeKernel(kernel, range_start, global_range, local_range, NULL, &event);
-		// queue.finish();
-		event.wait();
-		event.getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
-		event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &time_start);
-	}
-	catch (cl::BuildError error) {
-		std::string log = error.getBuildLog()[0].second;
-		std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
-	}
-	catch (cl::Error err) {
-		std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
-	}
+  try {
+    queue.enqueueNDRangeKernel(kernel, range_start, global_range, local_range, NULL, &event);
+    // queue.finish();
+    event.wait();
+    event.getProfilingInfo(CL_PROFILING_COMMAND_END, &time_end);
+    event.getProfilingInfo(CL_PROFILING_COMMAND_SUBMIT, &time_start);
+  }
+  catch (cl::BuildError error) {
+    std::string log = error.getBuildLog()[0].second;
+    std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
+  }
+  catch (cl::Error err) {
+    std::cout << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+  }
 
-	return (time_end - time_start) / 1000;
+  return (time_end - time_start) / 1000;
 }
 
 // don't return execution time in µs
@@ -314,9 +314,9 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,
   default_options << " " << options;
 
   std::vector<std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
-	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
 
-  if (i == con_list.at(context_idx).prog_names.end())	{
+  if (i == con_list.at(context_idx).prog_names.end())  {
     // prog_name was not found and no kernels were compiled
     return 0;
   }
@@ -349,9 +349,9 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,
 cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_name, std::vector<std::string>& found_kernels)
 {
   std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
-	i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
 
-	if (i != con_list.at(context_idx).prog_names.end()) {
+  if (i != con_list.at(context_idx).prog_names.end()) {
     int32_t idx = distance(con_list.at(context_idx).prog_names.begin(), i);
     for (uint32_t kernel_id = 0; kernel_id < con_list.at(context_idx).kernel_names.at(idx).size(); kernel_id++) {
       found_kernels.push_back(con_list.at(context_idx).kernel_names.at(idx).at(kernel_id));
@@ -365,15 +365,15 @@ cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_nam
 /*
 void ocl_dev_mgr::compile_thread(cl::Program& cl_prog, char* options)
 {
-	compile_threads.push_back(std::thread(compile, std::ref(get_program(0, "ocl_Kernel")), options));
+  compile_threads.push_back(std::thread(compile, std::ref(get_program(0, "ocl_Kernel")), options));
 }
 
 cl_ulong ocl_dev_mgr::finish_compile(cl::Program& cl_prog )
 {
-	compile_threads.at(0).join();
-	cl_prog.createKernels(&kernels);
-	compile_threads.clear();
-	return kernels.size();
+  compile_threads.at(0).join();
+  cl_prog.createKernels(&kernels);
+  compile_threads.clear();
+  return kernels.size();
 }
 */
 
@@ -390,21 +390,21 @@ void ocl_dev_mgr::initialize()
     available_devices[i].device = tmp_devices[i];
 
     available_devices[i].device.getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &available_devices[i].max_mem);
-	  available_devices[i].device.getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &available_devices[i].max_mem_alloc);
-	  available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &available_devices[i].lw_dim);
-	  std::vector<size_t> tmp_size;
-	  available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &available_devices[i].wg_size);
-	  available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &tmp_size);
-	  available_devices[i].lw_size = tmp_size.at(0);
+    available_devices[i].device.getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &available_devices[i].max_mem_alloc);
+    available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &available_devices[i].lw_dim);
+    std::vector<size_t> tmp_size;
+    available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE, &available_devices[i].wg_size);
+    available_devices[i].device.getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &tmp_size);
+    available_devices[i].lw_size = tmp_size.at(0);
     available_devices[i].device.getInfo(CL_DEVICE_NAME, &available_devices[i].name);
-	  available_devices[i].device.getInfo(CL_DEVICE_VERSION, &available_devices[i].ocl_version);
+    available_devices[i].device.getInfo(CL_DEVICE_VERSION, &available_devices[i].ocl_version);
     available_devices[i].device.getInfo(CL_DEVICE_TYPE, &available_devices[i].type);
-	  available_devices[i].device.getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &available_devices[i].compute_units);
+    available_devices[i].device.getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &available_devices[i].compute_units);
   }
 }
 
 void ocl_dev_mgr::deinitalize()
 {
-	//compile_threads.clear();
-	con_list.clear();
+  //compile_threads.clear();
+  con_list.clear();
 }

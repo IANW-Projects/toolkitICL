@@ -36,6 +36,17 @@
 using namespace std;
 
 
+void print_help()
+{
+  cout << "Usage: toolkitICL [options] -c config.h5" << endl
+       << "Options:" << endl
+       << "  -d device_id: " << "Use the device specified by `device_id`." << endl
+       << "  -b          : " << "Activate the benchmark mode (additional delay before and after runs)" << endl
+       << "  -c config.h5: " << "Specify the URL `config.h5` of the HDF5 configuration file" << endl
+       << endl;
+}
+
+
 int main(int argc, char *argv[]) {
 
   Timer timer; //used to track performance
@@ -54,10 +65,15 @@ int main(int argc, char *argv[]) {
 		benchmark_mode = true;
 		cout << "Benchmark mode" << endl << endl;
 	}
-	char* dev_id = getCmdOption(argv, argv + argc, "-d");
+  if (cmdOptionExists(argv, argv + argc, "-d")) {
+    char* dev_id = getCmdOption(argv, argv + argc, "-d");
+    deviceIndex = atoi(dev_id);
+  }
+  if (cmdOptionExists(argv, argv + argc, "-h") || !cmdOptionExists(argv, argv + argc, "-c")) {
+    print_help();
+    return -2;
+  }
 	char* filename = getCmdOption(argv, argv + argc, "-c");
-
-	deviceIndex = atoi(dev_id);
 
 
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();

@@ -177,16 +177,11 @@ cl_ulong ocl_dev_mgr::get_context_num()
 
 cl_int ocl_dev_mgr::add_program_url(cl_uint context_idx, std::string prog_name, std::string url)
 {
-  if (FileExists(url)) {
-    con_list.at(context_idx).programs.push_back(cl::Program (con_list.at(context_idx).context, loadProgram(url)));
-    con_list.at(context_idx).prog_names.push_back(prog_name);
-    con_list.at(context_idx).kernels.resize(con_list.at(context_idx).kernels.size()+1);
-    con_list.at(context_idx).kernel_names.resize(con_list.at(context_idx).kernel_names.size() + 1);
-    return 1;
-  }
-  else {
+  if (!FileExists(url)) {
     return -1;
   }
+
+  return add_program_str(context_idx, prog_name, loadProgram(url));
 }
 
 cl_int ocl_dev_mgr::add_program_str(cl_uint context_idx, std::string prog_name, std::string kernel)

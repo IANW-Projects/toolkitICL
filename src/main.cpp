@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   std::vector<cl::Buffer> data_in;
   bool blocking = CL_TRUE;
 
-  double *rw_flags_ptr;
+  double *rw_flags_ptr; //TODO: Why double?
   rw_flags_ptr = new double[data_list.size()];
   std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
 
@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
   cout << "Kernel runtime: " << exec_time/1000 << " ms" << endl;
 
   if (benchmark_mode == true) {
-    cout << endl <<"Sleeping for 4s" << endl;
+    cout << endl << "Sleeping for 4s" << endl;
     std::chrono::milliseconds timespan(4000);
 
     std::this_thread::sleep_for(timespan);

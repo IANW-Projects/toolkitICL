@@ -244,7 +244,7 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
     hid_t dataspace = H5Dget_space(dataset);
     unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
     hsize_t* dims = new hsize_t[ndims];
-    H5Sget_simple_extent_dims(dataspace,dims,NULL);
+    H5Sget_simple_extent_dims(dataspace, dims, NULL);
     hid_t datatype = H5Dget_type(dataset);
     hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
     //std::cout<<"Entires:"<<dims[0]<<std::endl;
@@ -294,6 +294,7 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
     //std::cout<<(char)buffer[6];
     //std::cout<<kernels.size()<<std::endl;
     //   }
+    delete[] dims; dims = nullptr;
     H5Sclose(dataspace);
 
     //H5LTread_dataset_string(h5_file_id,varname,buffer);

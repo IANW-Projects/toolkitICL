@@ -33,7 +33,8 @@ uint8_t h5_write_buffer_float4(const char* filename, const char* varname, cl_flo
 uint8_t h5_read_string(const char * filename, const char* varname, char *buffer);
 uint8_t h5_write_string(const char * filename, const char* varname, const char *buffer);
 
-uint8_t h5_read_strings(const char * filename, const char* varname, std::vector<std::string>& kernels);
+uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines);
+uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines);
 // write a uint4 buffer to an HDF5 File
 uint8_t h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4* data, cl_ulong size);
 

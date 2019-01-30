@@ -133,11 +133,10 @@ int main(int argc, char *argv[]) {
   cout << "Number of Kernels to execute: " << kernel_list.size() << endl;
 
   //TODO: Clean up; debug mode?
-  /*
-  for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
-    cout <<"Found : "<< kernel_list.at(kernel_idx) << endl;
-  }
-  */
+  // for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
+  //   cout <<"Found : "<< kernel_list.at(kernel_idx) << endl;
+  // }
+
   cout << "Ingesting HDF5 config file..." << endl;
 
   std::vector<std::string> data_list;

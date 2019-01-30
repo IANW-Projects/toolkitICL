@@ -49,3 +49,7 @@ ELSE(OpenCL_FOUND)
 ENDIF(OpenCL_FOUND)
 
 ADD_SUBDIRECTORY(src)
+
+# tests
+enable_testing()
+ADD_SUBDIRECTORY(test)

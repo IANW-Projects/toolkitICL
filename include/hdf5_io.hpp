@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 #ifndef HDF5_IO_H
 #define HDF5_IO_H
@@ -6,6 +6,7 @@
 #include "hdf5.h"
 #include "hdf5_hl.h"
 #include "../include/main.hpp"
+//TODO: remove dependency on main.hpp since no OpenCL parts are really needed?
 
 enum HD5_Type { H5_float, H5_double, H5_char, H5_uchar, H5_int, H5_uint, H5_long, H5_ulong };
 

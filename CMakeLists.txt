@@ -14,9 +14,9 @@ elseif (COMPILER STREQUAL "CLANG")
   find_program(CMAKE_LINKER NAMES llvm-ld)
 endif ()
 
-#Because Makefiles are shit to read
+# Because Makefiles are shit to read
 SET(CMAKE_VERBOSE_MAKEFILE "false")
-#Includes modules to find OCL
+# Includes modules to find OCL
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
 if (MSVC)
@@ -32,7 +32,7 @@ endif ()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
-
+# Check for HDF5
 find_package(HDF5 REQUIRED COMPONENTS CXX HL)
 IF(HDF5_FOUND)
     MESSAGE(STATUS ${HDF5_INCLUDE_DIRS})
@@ -40,7 +40,7 @@ ELSE(HDF5_FOUND)
     MESSAGE(STATUS "HDF5 not found!")
 ENDIF(HDF5_FOUND)
 
-# Check for OpenCL 
+# Check for OpenCL
 find_package(OpenCL REQUIRED)
 IF(OpenCL_FOUND)
   MESSAGE(STATUS "Looking for OpenCL - found at ${OpenCL_INCLUDE_DIRS} and ${OpenCL_LIBRARY}")
@@ -49,4 +49,3 @@ ELSE(OpenCL_FOUND)
 ENDIF(OpenCL_FOUND)
 
 ADD_SUBDIRECTORY(src)
-

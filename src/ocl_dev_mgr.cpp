@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 #include "ocl_dev_mgr.hpp"
 #include <iostream>

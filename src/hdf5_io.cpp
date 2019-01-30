@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 //#include "../include/util.hpp"
 #include "../include/hdf5_io.hpp"
@@ -49,7 +49,7 @@ bool h5_check_object(const char* filename, const char* varname)
     }
   }
 
-  std::cerr << "File not found " << std::endl;
+  std::cerr << "File '" << filename << "' not found." << std::endl;
   return false;
 }
 
@@ -69,7 +69,7 @@ uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* da
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     // File not found - no idea what error code to use
     return 0;
   }
@@ -90,7 +90,7 @@ uint8_t h5_read_buffer_double(const char* filename, const char* varname, void* d
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
@@ -111,7 +111,7 @@ uint8_t h5_read_buffer_uint(const char* filename, const char* varname, uint32_t*
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
@@ -132,7 +132,7 @@ uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* d
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
@@ -154,7 +154,7 @@ uint8_t h5_read_buffer_char(const char* filename, const char* varname, cl_char* 
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
@@ -175,7 +175,7 @@ uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, unsigned
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
@@ -199,7 +199,7 @@ uint8_t h5_read_string(const char* filename, const char* varname, char* buffer)
     return 1;
   }
   else {
-    std::cerr << "File not found " << std::endl;
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }

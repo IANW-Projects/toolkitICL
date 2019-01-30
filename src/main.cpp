@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 #include <stdio.h>
 #include <fstream>
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
   if (cmdOptionExists(argv, argv + argc, "-h") || !cmdOptionExists(argv, argv + argc, "-c")) {
     print_help();
-    return -2;
+    return -1;
   }
   char* filename = getCmdOption(argv, argv + argc, "-c");
 
@@ -101,8 +101,8 @@ int main(int argc, char *argv[]) {
     sprintf(kernel_url, "tmp_kernel.cl");
   }
   else {
-    cout << "No kernel information found! " << endl;
-    return 0;
+    cerr << "No kernel information found! " << endl;
+    return -1;
   }
 
   std::vector<std::string> kernel_list;
@@ -171,9 +171,8 @@ int main(int argc, char *argv[]) {
 
   for(cl_uint i = 0; i < data_list.size(); i++) {
     try {
-      uint8_t *tmp_data = 0;
-      //float *tmp_data = 0;//TODO: Clean up
-      size_t var_size=0;
+      uint8_t *tmp_data = nullptr;
+      size_t var_size = 0;
 
       switch (datatype_list.at(i)) {
         case H5_float:
@@ -206,7 +205,8 @@ int main(int argc, char *argv[]) {
           tmp_data = new uint8_t[var_size];
           h5_read_buffer_int(filename, data_list.at(i).c_str(), (cl_int*)tmp_data);
           break;
-        //case default: break;
+        // default:
+        //   break;
       }
 
       switch ((uint32_t)round(rw_flags_ptr[i])) {
@@ -226,13 +226,14 @@ int main(int argc, char *argv[]) {
       for (uint32_t kernel_idx = 0; kernel_idx < found_kernels.size(); kernel_idx++) {
         dev_mgr.getKernelbyName(0, "ocl_Kernel", found_kernels.at(kernel_idx))->setArg(i, data_in.at(data_in.size() - 1));
       }
-      delete[] tmp_data; tmp_data = nullptr;
+      if (tmp_data != nullptr) {
+        delete[] tmp_data; tmp_data = nullptr;
+      }
     }
     catch (cl::Error err) {
       std::cerr << "Exception:" << std::endl<< "ERROR: "<< err.what() << std::endl;
     }
   }
-
 
   dev_mgr.get_queue(0, 0).finish(); // Buffer Copy is asynchornous
 
@@ -315,7 +316,7 @@ int main(int argc, char *argv[]) {
   h5_write_single_double(out_name,"Kernel_ExecTime", (double)exec_time/1000.0);
   h5_write_single_double(out_name, "Data_LoadTime", (double)push_time/1000.0);
 
-  h5_create_dir(out_name,"/Data");
+  h5_create_dir(out_name, "/Data");
 
   pull_time = timer.getTimeMicroseconds();
 

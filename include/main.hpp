@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 #ifndef MAIN_H
 #define MAIN_H

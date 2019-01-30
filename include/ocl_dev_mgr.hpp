@@ -1,4 +1,4 @@
-/* TODO: Procide a license note */
+/* TODO: Provide a license note */
 
 #ifndef DEV_MGR_H
 #define DEV_MGR_H

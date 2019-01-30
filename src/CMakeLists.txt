@@ -16,7 +16,7 @@ set(SOURCES main.cpp hdf5_io.cpp ocl_dev_mgr.cpp ${HEADER})
 
 
 # Specifiy library paths for linker
-link_directories (${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES}) 
+link_directories (${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 
 #set output directory for executable
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

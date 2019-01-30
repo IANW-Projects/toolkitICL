@@ -62,6 +62,7 @@ cl::Kernel * ocl_dev_mgr::getKernelbyName(cl_uint context_idx, std::string prog_
 {
   std::vector <std::string>::iterator it_p = con_list.at(context_idx).prog_names.begin();
   it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
+  //TODO: Clean up
   //if (i != con_list.at(context_idx).prog_names.end())
   //{
   uint32_t idx = distance(con_list.at(context_idx).prog_names.begin(), it_p);
@@ -147,6 +148,7 @@ cl_ulong ocl_dev_mgr::init_device(cl_uint avail_device_idx)
 
   return con_list.size();
 
+  //TODO: Clean up
   /*
   for (unsigned int i=0; i<device_idx.size();i++) {
     tmp_devices.push_back(devices[device_idx.at(i)].device);
@@ -356,6 +358,7 @@ cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_nam
   return 0;
 }
 
+//TODO: Clean up?
 /*
 void ocl_dev_mgr::compile_thread(cl::Program& cl_prog, char* options)
 {
@@ -399,6 +402,7 @@ void ocl_dev_mgr::initialize()
 
 void ocl_dev_mgr::deinitalize()
 {
+  //TODO: Clean up
   //compile_threads.clear();
   con_list.clear();
 }

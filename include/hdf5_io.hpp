@@ -46,6 +46,7 @@ uint8_t h5_write_buffer_char(const char* filename, const char* varname, cl_char*
 
 uint8_t h5_get_content(const char* filename, const char* hdf_dir,
                        std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size);
+//TODO: Clean up
 /*
 // write a double4 buffer to an HDF5 File
 uint8_t h5_write_buffer_double4(char* filename, char* varname, cl_double4* data, cl_ulong size);

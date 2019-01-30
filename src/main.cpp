@@ -132,6 +132,7 @@ int main(int argc, char *argv[]) {
 
   cout << "Number of Kernels to execute: " << kernel_list.size() << endl;
 
+  //TODO: Clean up; debug mode?
   /*
   for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
     cout <<"Found : "<< kernel_list.at(kernel_idx) << endl;
@@ -171,7 +172,7 @@ int main(int argc, char *argv[]) {
   for(cl_uint i = 0; i < data_list.size(); i++) {
     try {
       uint8_t *tmp_data = 0;
-      //float *tmp_data = 0;
+      //float *tmp_data = 0;//TODO: Clean up
       size_t var_size=0;
 
       switch (datatype_list.at(i)) {

@@ -68,6 +68,7 @@ public:
   ocl_device_info& get_context_dev_info(cl_uint context_idx, cl_uint device_idx);
   cl_ulong compile_kernel(cl_uint context_idx, std::string prog_name, const char* options);
   cl_ulong get_kernel_names(cl_uint context_idx, std::string prog_name, std::vector<std::string>& found_kernels);
+  //TODO: Clean up
   //void compile_thread(cl::Program& cl_prog, char* options);
   //cl_ulong finish_compile(cl::Program& cl_prog);
   cl_ulong execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue,
@@ -109,6 +110,7 @@ private:
   cl_ulong num_available_devices;
   std::vector<ocl_context> con_list;
 
+  //TODO: Clean up
   //std::vector<std::thread> compile_threads;
 };
 

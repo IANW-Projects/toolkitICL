@@ -53,6 +53,7 @@ bool h5_check_object(const char* filename, const char* varname)
   return false;
 }
 
+//TODO: reduce code duplication; templates?
 uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* data)
 {
   hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
@@ -62,7 +63,7 @@ uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* da
 
   if (FileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_FLOAT,data);
+    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_FLOAT, data);
     //TODO: check if varname was found - no idea what error code to use if not
     H5Fclose(h5_file_id);
     return 1;
@@ -180,7 +181,8 @@ uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, unsigned
   }
 }
 
-uint8_t h5_read_string(const char* filename, const char* varname, char *buffer)
+
+uint8_t h5_read_string(const char* filename, const char* varname, char* buffer)
 {
   hid_t h5_file_id;
   float param_value;
@@ -204,7 +206,7 @@ uint8_t h5_read_string(const char* filename, const char* varname, char *buffer)
 }
 
 
-uint8_t h5_write_string(const char * filename, const char* varname, const char *buffer)
+uint8_t h5_write_string(const char* filename, const char* varname, const char* buffer)
 {
   hid_t h5_file_id;
   float param_value;
@@ -255,9 +257,10 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
     block[1]=1;
     out_size[0]=4;
     out_off[0]=0;
+    // TODO: Clean up
     //memspace = H5Screate_simple(1,out_size,NULL);
     //H5Sselect_hyperslab(memspace, H5S_SELECT_SET, out_off, NULL, out_size, NULL);
-	  const unsigned int max_buffer_size = 900000;
+    const unsigned int max_buffer_size = 900000;
     char buffer[max_buffer_size]; //TODO: possible buffer overflow?
 
     H5LTread_dataset_string(h5_file_id,varname,buffer);
@@ -307,6 +310,7 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
 }
 
 
+// TODO: Clean up
 // float h5_read_single_float(const char * filename, const char* varname)
 // {
 // hid_t h5_file_id;
@@ -342,6 +346,7 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
 // }
 
 
+//TODO: reduce code duplication; templates?
 float h5_read_single_float(const char* filename, const char* varname)
 {
   hid_t h5_file_id;
@@ -360,6 +365,8 @@ float h5_read_single_float(const char* filename, const char* varname)
   }
 }
 
+
+//TODO: reduce code duplication; templates??
 uint8_t h5_write_single_double(const char* filename, const char* varname, double data)
 {
   hid_t h5_file_id;
@@ -427,6 +434,7 @@ uint8_t h5_write_single_float(const char* filename, const char* varname, float d
 }
 
 
+//TODO: reduce code duplication; templates?
 uint8_t h5_write_buffer_float4(const char* filename, const char* varname, cl_float4* data, cl_ulong size)
 {
   hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
@@ -833,7 +841,7 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
   herr_t err;
   int otype;
 
-  char group_name[MAX_NAME];
+  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
   char memb_name[MAX_NAME];
 
   if (FileExists(filename)) {

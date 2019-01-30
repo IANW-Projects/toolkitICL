@@ -70,7 +70,7 @@ uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* da
   }
   else {
     std::cerr << "File '" << filename << "' not found." << std::endl;
-    // File not found - no idea what error code to use
+    //TODO: File not found - no idea what error code to use
     return 0;
   }
 }
@@ -228,8 +228,7 @@ uint8_t h5_write_string(const char* filename, const char* varname, const char* b
 
 uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
 {
-  hid_t h5_file_id, memspace;
-  float param_value;
+  hid_t h5_file_id;
   hsize_t count[2];       /* size of subset in the file */
   hsize_t offset[2];      /* subset offset in the file */
   hsize_t stride[2];
@@ -237,77 +236,78 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
   hsize_t out_size[1];
   hsize_t out_off[1];
 
-  if (FileExists(filename)) {
-
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    hid_t dataset = H5Dopen(h5_file_id,varname, H5P_DEFAULT);
-    hid_t dataspace = H5Dget_space(dataset);
-    unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
-    hsize_t* dims = new hsize_t[ndims];
-    H5Sget_simple_extent_dims(dataspace, dims, NULL);
-    hid_t datatype = H5Dget_type(dataset);
-    hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
-    //std::cout<<"Entires:"<<dims[0]<<std::endl;
-    count[0]=1;
-    count[1]=4;
-    offset[1]=0;
-    stride[0]=1;
-    stride[1]=1;
-    block[0]=1;
-    block[1]=1;
-    out_size[0]=4;
-    out_off[0]=0;
-    // TODO: Clean up
-    //memspace = H5Screate_simple(1,out_size,NULL);
-    //H5Sselect_hyperslab(memspace, H5S_SELECT_SET, out_off, NULL, out_size, NULL);
-    const unsigned int max_buffer_size = 900000;
-    char buffer[max_buffer_size]; //TODO: possible buffer overflow?
-
-    H5LTread_dataset_string(h5_file_id,varname,buffer);
-    // H5Dread(dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
-
-    unsigned int line_length = H5Tget_size(datatype);
-    unsigned int lines_found = 0;
-
-    unsigned int str_start = 0;
-    for (unsigned int i = 0; i < dims[0]; i++) {
-      char subbuff[65535]; //TODO: possible buffer overflow?
-      memcpy(subbuff, &buffer[str_start], line_length);
-      // printf("%s\n", subbuff);
-      lines.push_back(subbuff);
-      // std::cout << varname <<":"<<H5Tget_size(datatype)<<":"<<i<< "       "<<str_start <<"   "<< i - str_start << std::endl;
-      str_start += line_length;
-      lines_found++;
-    }
-
-
-    // for (uint i=0;i<1000;i++) {
-    //      offset[0]=i;
-
-    //H5Sselect_hyperslab (dataspace, H5S_SELECT_SET, offset,NULL, count, NULL);
-
-    //H5Dread (dataset, H5T_C_S1, H5S_ALL, dataspace, H5P_DEFAULT, buffer);
-    //std::string test = "test1234567u89";
-    //test.resize(4000);
-    //H5Dread (dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT,(void*) test.c_str());
-    //std::cout<<strlen(buffer)<<std::endl;
-    //std::cout<<(char)buffer[6];
-    //std::cout<<kernels.size()<<std::endl;
-    //   }
-    delete[] dims; dims = nullptr;
-    H5Sclose(dataspace);
-
-    //H5LTread_dataset_string(h5_file_id,varname,buffer);
-    //check if varname was found - no idea what error code to use if not
-
-    H5Fclose(h5_file_id);
-
-    return 1;
-  }
-  else {
+  if (!FileExists(filename)) {
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
   }
+
+
+  h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
+  hid_t dataspace = H5Dget_space(dataset);
+  unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
+  // if (ndims == 0) {
+  //   std::cerr << "Error: Dataset '" << varname << "' in '" << filename << "' has a wrong format." << std::endl;
+  //   //TODO: We should do something...
+  // }
+  hsize_t* dims = new hsize_t[ndims];
+  H5Sget_simple_extent_dims(dataspace, dims, NULL);
+  hid_t datatype = H5Dget_type(dataset);
+  hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
+  // std::cout<<"Entires:"<<dims[0]<<std::endl;
+  count[0]=1;
+  count[1]=4;
+  offset[1]=0;
+  stride[0]=1;
+  stride[1]=1;
+  block[0]=1;
+  block[1]=1;
+  out_size[0]=4;
+  out_off[0]=0;
+  const unsigned int max_buffer_size = 900000;
+  char buffer[max_buffer_size]; //TODO: possible buffer overflow?
+
+  H5LTread_dataset_string(h5_file_id, varname, buffer);
+  // H5Dread(dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+
+  unsigned int line_length = H5Tget_size(datatype);
+  unsigned int lines_found = 0;
+
+  unsigned int str_start = 0;
+  for (unsigned int i = 0; i < dims[0]; i++) {
+    char subbuff[65535]; //TODO: possible buffer overflow?
+    memcpy(subbuff, &buffer[str_start], line_length);
+    // printf("%s\n", subbuff);
+    lines.push_back(subbuff);
+    // std::cout << varname <<":"<<H5Tget_size(datatype)<<":"<<i<< "       "<<str_start <<"   "<< i - str_start << std::endl;
+    str_start += line_length;
+    lines_found++;
+  }
+
+
+  // for (uint i=0;i<1000;i++) {
+  //      offset[0]=i;
+
+  //H5Sselect_hyperslab (dataspace, H5S_SELECT_SET, offset,NULL, count, NULL);
+
+  //H5Dread (dataset, H5T_C_S1, H5S_ALL, dataspace, H5P_DEFAULT, buffer);
+  //std::string test = "test1234567u89";
+  //test.resize(4000);
+  //H5Dread (dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT,(void*) test.c_str());
+  //std::cout<<strlen(buffer)<<std::endl;
+  //std::cout<<(char)buffer[6];
+  //std::cout<<kernels.size()<<std::endl;
+  //   }
+  delete[] dims; dims = nullptr;
+  H5Sclose(dataspace);
+
+  //H5LTread_dataset_string(h5_file_id,varname,buffer);
+  //check if varname was found - no idea what error code to use if not
+
+  H5Fclose(h5_file_id);
+
+  return 1;
 }
 
 
@@ -341,7 +341,8 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
 //     return 1;
 //   }
 //   else {
-//     //File not found - no idea what error code to use
+//     std::cerr << "File '" << filename << "' not found." << std::endl;
+//     //TODO: File not found - no idea what error code to use
 //    return 0;
 //   }
 // }
@@ -361,7 +362,8 @@ float h5_read_single_float(const char* filename, const char* varname)
     return param_value;
   }
   else {
-    //File not found - no idea what error code to use
+    std::cerr << "File '" << filename << "' not found." << std::endl;
+    //TODO: File not found - no idea what error code to use
     return -0.0;
   }
 }

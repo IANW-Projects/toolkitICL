@@ -8,11 +8,6 @@ endif(MSVC)
 # include header directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${HDF5_INCLUDE_DIRS} ../include)
 
-set(HEADER ../include/hdf5_io.hpp)
-
-set(SOURCES copy_float.cpp ../src/hdf5_io.cpp ${HEADER})
-
-
 # specifiy library paths for linker
 link_directories (${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 
@@ -20,9 +15,18 @@ link_directories (${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 
+# copy tests
+set(COPY_TESTS copy_float copy_double copy_char copy_uchar copy_int copy_uint)
+
+foreach(TEST ${COPY_TESTS})
+  add_executable(${TEST} ${TEST}.cpp copy_test.h ../include/hdf5_io.hpp ../src/hdf5_io.cpp)
+endforeach()
 
 
-add_executable(copy_float ${SOURCES})
-# TODO: ${OpenCL_LIBRARIES} are only needed since they are included via main.hpp in hdf5_io.hpp
-TARGET_LINK_LIBRARIES(copy_float ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
-add_test(copy_float copy_float)
+# all tests
+set(TESTS ${COPY_TESTS})
+
+foreach(TEST ${TESTS})
+  target_link_libraries(${TEST} ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
+  add_test(${TEST} ${TEST})
+endforeach()

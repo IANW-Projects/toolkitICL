@@ -1,7 +1,7 @@
 /* TODO: Provide a license note */
 
-#define COPYTYPE float
-#define COPYTYPE_HOST float
+#define COPYTYPE uint
+#define COPYTYPE_HOST cl_uint
 #include "copy_test.h"
 
 int main(void)

@@ -25,14 +25,16 @@
 
 using namespace std;
 
-inline bool FileExists(const char* filename) //Function to check whether a file already exists
+
+//Function to check whether a file already exists
+inline bool FileExists(const char* filename)
 {
   struct stat fileInfo;
   return stat(filename, &fileInfo) == 0;
 }
 
 
-
+// utility functions for hdf5 dfiles
 bool h5_check_object(const char* filename, const char* varname)
 {
 	hid_t h5_file_id;
@@ -54,133 +56,215 @@ bool h5_check_object(const char* filename, const char* varname)
   return false;
 }
 
-//TODO: reduce code duplication; templates?
-uint8_t h5_read_buffer_float(const char* filename, const char* varname, void* data)
+
+uint8_t h5_get_content(const char* filename, const char* hdf_dir,
+                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size)
 {
-  hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
-  hsize_t hdf_dims[4], count[4], offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
+  #define MAX_NAME 1024
+  hid_t   h5_file_id, grp;
+  ssize_t len;
+
+  herr_t err;
+  int otype;
+
+  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
+  char memb_name[MAX_NAME];
 
   if (FileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_FLOAT, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
   }
   else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
     return 0;
   }
+
+  grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
+
+  hsize_t nobj;
+  hid_t dsid;
+  err = H5Gget_num_objs(grp, &nobj);
+
+  for (int i = 0; i < nobj; i++) {
+
+    len = H5Gget_objname_by_idx(grp, (hsize_t)i, memb_name, (size_t)MAX_NAME );
+    otype = H5Gget_objtype_by_idx(grp, (size_t)i );
+
+    if (otype == H5G_DATASET) {
+      sprintf(group_name, "%s%s", hdf_dir, memb_name);
+      data_list.push_back(group_name);
+
+      hid_t dataset = H5Dopen(grp, memb_name, H5P_DEFAULT);
+      hid_t dataspace = H5Dget_space(dataset);
+      unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
+      hsize_t* dims = new hsize_t[ndims];
+      H5Sget_simple_extent_dims(dataspace, dims, NULL);
+      H5Sclose(dataspace);
+
+      data_size.push_back((size_t)dims[0]* dims[1]);
+
+      delete[] dims; dims = nullptr;
+
+      hid_t datatype = H5Dget_type(dataset);
+
+      hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
+
+      if (H5Tequal(native_type,H5T_NATIVE_FLOAT)>0)
+      {
+        datatype_list.push_back(H5_float);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_DOUBLE)>0)
+      {
+        datatype_list.push_back(H5_double);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_CHAR)>0)
+      {
+        datatype_list.push_back(H5_char);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_UCHAR)>0)
+      {
+        datatype_list.push_back(H5_uchar);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_INT)>0)
+      {
+        datatype_list.push_back(H5_int);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_UINT)>0)
+      {
+        datatype_list.push_back(H5_uint);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_LONG)>0)
+      {
+        datatype_list.push_back(H5_long);
+      }
+      if (H5Tequal(native_type,H5T_NATIVE_ULONG)>0)
+      {
+        datatype_list.push_back(H5_ulong);
+      }
+
+      H5Dclose(dataset);
+    }
+  }
+
+  H5Fclose(h5_file_id);
+
+  return 1;
 }
 
-uint8_t h5_read_buffer_double(const char* filename, const char* varname, void* data)
+
+uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
 {
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[4], count[4], offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
+  hid_t h5_file_id, grp;
 
   if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_DOUBLE, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
   else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
     return 0;
   }
+
+  grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
+  H5Gclose(grp);
+  H5Fclose(h5_file_id);
+
+  return 1;
 }
 
-uint8_t h5_read_buffer_uint(const char* filename, const char* varname, uint32_t* data)
+
+// convert a C type TYPE to the HDF5 identifier of that type
+template<>
+auto type_to_h5_type<float>() { return H5T_NATIVE_FLOAT; }
+
+template<>
+auto type_to_h5_type<double>() { return H5T_NATIVE_DOUBLE; }
+
+template<>
+auto type_to_h5_type<cl_char>() { return H5T_NATIVE_CHAR; } //TODO: char or cl_char?
+
+template<>
+auto type_to_h5_type<unsigned char>() { return H5T_NATIVE_UCHAR; }
+
+template<>
+auto type_to_h5_type<short>() { return H5T_NATIVE_SHORT; }
+
+template<>
+auto type_to_h5_type<ushort>() { return H5T_NATIVE_USHORT; }
+
+template<>
+auto type_to_h5_type<int>() { return H5T_NATIVE_INT; } //TODO: int or int32_t?
+
+template<>
+auto type_to_h5_type<uint>() { return H5T_NATIVE_UINT; } //TODO: uint or uint32_t?
+
+template<>
+auto type_to_h5_type<long>() { return H5T_NATIVE_LONG; }
+
+template<>
+auto type_to_h5_type<ulong>() { return H5T_NATIVE_ULONG; }
+
+
+// read a buffer from an HDF5 File
+template<typename TYPE>
+bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
 {
-  hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
-  hsize_t hdf_dims[4], count[4], offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_UINT, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
-  }
-  else {
+  if (!FileExists(filename)) {
     std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return 0;
+    //TODO: Exception? Only error code?
+    return false;
   }
+
+  hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (H5LTpath_valid(h5_file_id, varname, true) <= 0) {
+    std::cerr << "Variable '" << varname << "' not found in file '" << filename << "'." << std::endl;
+    //TODO: Exception? Only error code?
+    H5Fclose(h5_file_id);
+    return false;
+  }
+
+  int err = H5LTread_dataset(h5_file_id, varname, type_to_h5_type<TYPE>(), data);
+  if (err < 0) {
+    std::cerr << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+    //TODO: Exception? Only error code?
+    H5Fclose(h5_file_id);
+    return false;
+  }
+
+  H5Fclose(h5_file_id);
+  return true;
 }
 
-uint8_t h5_read_buffer_int(const char* filename, const char* varname, int32_t* data)
+// other forms
+bool h5_read_buffer_float(const char* filename, const char* varname, float* data)
 {
-  hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
-  hsize_t hdf_dims[4], count[4], offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_INT, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
-  }
-  else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return 0;
-  }
+  return h5_read_buffer<float>(filename, varname, data);
 }
 
-uint8_t h5_read_buffer_char(const char* filename, const char* varname, cl_char* data)
+bool h5_read_buffer_double(const char* filename, const char* varname, double* data)
 {
-  hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
-  hsize_t hdf_dims[4], count[4], offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_CHAR, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
-  }
-  else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return 0;
-  }
+  return h5_read_buffer<double>(filename, varname, data);
 }
 
-uint8_t h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data)
+bool h5_read_buffer_int(const char* filename, const char* varname, int* data)
 {
-  hid_t   h5_file_id, dataset_id,dataspace_id,memspace_id;
-  hsize_t hdf_dims[4],count[4],offset[4];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  if (FileExists(filename)){
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset(h5_file_id, varname, H5T_NATIVE_UCHAR, data);
-    //TODO: check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return 1;
-  }
-  else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return 0;
-  }
+  return h5_read_buffer<int>(filename, varname, data);
 }
+
+bool h5_read_buffer_uint(const char* filename, const char* varname, uint* data)
+{
+  return h5_read_buffer<uint>(filename, varname, data);
+}
+
+bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data)
+{
+  return h5_read_buffer<cl_char>(filename, varname, data);
+}
+
+bool h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data)
+{
+  return h5_read_buffer<unsigned char>(filename, varname, data);
+}
+
+
+
+
 
 
 uint8_t h5_read_string(const char* filename, const char* varname, char* buffer)
@@ -836,118 +920,6 @@ uint8_t h5_write_buffer_uchar(const char* filename, const char* varname, cl_ucha
   //The same can be done using H5 High Level API, but without compression
   //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
 
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_get_content(const char* filename, const char* hdf_dir,
-                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size)
-{
-  #define MAX_NAME 1024
-  hid_t   h5_file_id, grp;
-  ssize_t len;
-
-  herr_t err;
-  int otype;
-
-  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
-  char memb_name[MAX_NAME];
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-  }
-  else {
-    return 0;
-  }
-
-  grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
-
-  hsize_t nobj;
-  hid_t dsid;
-  err = H5Gget_num_objs(grp, &nobj);
-
-  for (int i = 0; i < nobj; i++) {
-
-    len = H5Gget_objname_by_idx(grp, (hsize_t)i, memb_name, (size_t)MAX_NAME );
-    otype = H5Gget_objtype_by_idx(grp, (size_t)i );
-
-    if (otype == H5G_DATASET) {
-      sprintf(group_name, "%s%s", hdf_dir, memb_name);
-      data_list.push_back(group_name);
-
-      hid_t dataset = H5Dopen(grp, memb_name, H5P_DEFAULT);
-      hid_t dataspace = H5Dget_space(dataset);
-      unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
-      hsize_t* dims = new hsize_t[ndims];
-      H5Sget_simple_extent_dims(dataspace, dims, NULL);
-      H5Sclose(dataspace);
-
-      data_size.push_back((size_t)dims[0]* dims[1]);
-
-      delete[] dims; dims = nullptr;
-
-      hid_t datatype = H5Dget_type(dataset);
-
-      hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
-
-      if (H5Tequal(native_type,H5T_NATIVE_FLOAT)>0)
-      {
-        datatype_list.push_back(H5_float);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_DOUBLE)>0)
-      {
-        datatype_list.push_back(H5_double);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_CHAR)>0)
-      {
-        datatype_list.push_back(H5_char);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_UCHAR)>0)
-      {
-        datatype_list.push_back(H5_uchar);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_INT)>0)
-      {
-        datatype_list.push_back(H5_int);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_UINT)>0)
-      {
-        datatype_list.push_back(H5_uint);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_LONG)>0)
-      {
-        datatype_list.push_back(H5_long);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_ULONG)>0)
-      {
-        datatype_list.push_back(H5_ulong);
-      }
-
-      H5Dclose(dataset);
-    }
-  }
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
-{
-  hid_t h5_file_id, grp;
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-  else {
-    return 0;
-  }
-
-  grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
-  H5Gclose(grp);
   H5Fclose(h5_file_id);
 
   return 1;

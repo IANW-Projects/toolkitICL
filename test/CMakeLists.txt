@@ -16,6 +16,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 
 # copy tests
+# TODO: short, long
 set(COPY_TESTS copy_float copy_double copy_char copy_uchar copy_int copy_uint)
 
 foreach(TEST ${COPY_TESTS})

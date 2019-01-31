@@ -180,7 +180,7 @@ template<>
 auto type_to_h5_type<cl_char>() { return H5T_NATIVE_CHAR; } //TODO: char or cl_char?
 
 template<>
-auto type_to_h5_type<unsigned char>() { return H5T_NATIVE_UCHAR; }
+auto type_to_h5_type<unsigned char>() { return H5T_NATIVE_UCHAR; } //TODO: unsigned char or cl_uchar?
 
 template<>
 auto type_to_h5_type<short>() { return H5T_NATIVE_SHORT; }
@@ -199,6 +199,26 @@ auto type_to_h5_type<long>() { return H5T_NATIVE_LONG; }
 
 template<>
 auto type_to_h5_type<ulong>() { return H5T_NATIVE_ULONG; }
+
+// OpenCL vector types
+template<>
+auto type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
+template<>
+size_t get_vector_size<cl_float4>() { return 4; };
+
+template<>
+auto type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
+template<>
+size_t get_vector_size<cl_double4>() { return 4; };
+
+template<>
+auto type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT; }
+template<>
+size_t get_vector_size<cl_uint4>() { return 4; };
+
+// fallback;
+template<typename TYPE>
+size_t get_vector_size() { return 1; };
 
 
 // read a buffer from an HDF5 File
@@ -260,6 +280,99 @@ bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* dat
 bool h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data)
 {
   return h5_read_buffer<unsigned char>(filename, varname, data);
+}
+
+
+// write a buffer to an HDF5 file using compression
+template<typename TYPE>
+bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data, size_t size)
+{
+  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
+  hsize_t hdf_dims[2];
+  hid_t   plist_id;
+  hsize_t cdims[2]; //chunk size used for compression
+
+  if (!FileExists(filename)) {
+    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  }
+  else {
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+  }
+
+  hdf_dims[0] = size;
+  hdf_dims[1] = get_vector_size<TYPE>();
+
+  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+  cdims[1] = hdf_dims[1];
+
+  plist_id = H5Pcreate(H5P_DATASET_CREATE);
+  H5Pset_chunk(plist_id, 2, cdims);
+  H5Pset_deflate(plist_id, 9);
+
+  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
+  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
+  dataset_id = H5Dcreate2(h5_file_id, varname , type_to_h5_type<TYPE>(), dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+
+  H5Dwrite(dataset_id, type_to_h5_type<TYPE>(), memspace_id, dataspace_id, H5P_DEFAULT, data);
+  // The same can be done using H5 High Level API, but without compression
+  // H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, type_to_h5_type<TYPE>(), data);
+
+  // TODO: Check error codes?
+
+  H5Pclose(plist_id);
+  H5Sclose(dataspace_id);
+  H5Sclose(memspace_id);
+  H5Dclose(dataset_id);
+
+  H5Fclose(h5_file_id);
+
+  return 1;
+}
+
+// other forms
+bool h5_write_buffer_float(const char* filename, const char* varname, float const* data, cl_ulong size)
+{
+  return h5_write_buffer<float>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_double(const char* filename, const char* varname, double const* data, cl_ulong size)
+{
+  return h5_write_buffer<double>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_int(const char* filename, const char* varname, cl_int const* data, cl_ulong size)
+{
+  return h5_write_buffer<int>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_uint(const char* filename, const char* varname, cl_uint const* data, cl_ulong size)
+{
+  return h5_write_buffer<uint>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_char(const char* filename, const char* varname, cl_char const* data, cl_ulong size)
+{
+  return h5_write_buffer<cl_char>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar const* data, cl_ulong size)
+{
+  return h5_write_buffer<cl_uchar>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_float4(const char* filename, const char* varname, cl_float4 const* data, cl_ulong size)
+{
+  return h5_write_buffer<cl_float4>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_double4(const char* filename, const char* varname, cl_double4 const* data, cl_ulong size)
+{
+  return h5_write_buffer<cl_double4>(filename, varname, data, size);
+}
+
+bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, cl_ulong size)
+{
+  return h5_write_buffer<cl_uint4>(filename, varname, data, size);
 }
 
 
@@ -403,43 +516,6 @@ uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<
 }
 
 
-// TODO: Clean up
-// float h5_read_single_float(const char * filename, const char* varname)
-// {
-// hid_t h5_file_id;
-// float param_value;
-
-
-//     // for (uint i=0;i<1000;i++) {
-//     //      offset[0]=i;
-//     //
-//     //H5Sselect_hyperslab (dataspace, H5S_SELECT_SET, offset,NULL, count, NULL);
-//     //
-//     //H5Dread (dataset, H5T_C_S1, H5S_ALL, dataspace, H5P_DEFAULT, buffer);
-//     //std::string test = "test1234567u89";
-//     //test.resize(4000);
-//     //H5Dread (dataset, H5T_C_S1, H5S_ALL, H5S_ALL, H5P_DEFAULT,(void*) test.c_str());
-//     //std::cout<<strlen(buffer)<<std::endl;
-//     //std::cout<<(char)buffer[6];
-//     //std::cout<<kernels.size()<<std::endl;
-//     //   }
-//     H5Sclose(dataspace);
-
-//     //H5LTread_dataset_string(h5_file_id,varname,buffer);
-//     //check if varname was found - no idea what error code to use if not
-
-//     H5Fclose(h5_file_id);
-
-//     return 1;
-//   }
-//   else {
-//     std::cerr << "File '" << filename << "' not found." << std::endl;
-//     //TODO: File not found - no idea what error code to use
-//    return 0;
-//   }
-// }
-
-
 //TODO: reduce code duplication; templates?
 float h5_read_single_float(const char* filename, const char* varname)
 {
@@ -459,7 +535,6 @@ float h5_read_single_float(const char* filename, const char* varname)
     return -0.0;
   }
 }
-
 
 //TODO: reduce code duplication; templates??
 uint8_t h5_write_single_double(const char* filename, const char* varname, double data)
@@ -522,403 +597,6 @@ uint8_t h5_write_single_float(const char* filename, const char* varname, float d
   }
 
   H5LTmake_dataset_float(h5_file_id,varname,1,hdf_dims,&data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-//TODO: reduce code duplication; templates?
-uint8_t h5_write_buffer_float4(const char* filename, const char* varname, cl_float4* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 4;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 4;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
-  H5Pset_deflate(plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id, varname , H5T_NATIVE_FLOAT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, memspace_id, dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_write_buffer_double4(const char* filename, const char* varname, cl_double4* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 4;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 4;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
-  H5Pset_deflate(plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-
-  H5Sclose(dataspace_id);
-  H5Dclose (dataset_id);
-  H5Pclose (plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 4;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 4;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id, varname, H5T_NATIVE_UINT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_UINT, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_write_buffer_float(const char* filename, const char* varname, float* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id, varname , H5T_NATIVE_FLOAT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_buffer_double(const char* filename, const char* varname, double* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id  = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk (plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id, varname , H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, memspace_id, dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_buffer_uint(const char* filename, const char* varname, cl_uint* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk (plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_UINT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_UINT, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_buffer_int(const char* filename, const char* varname, cl_int* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-
-  if (!FileExists(filename)) {
-      h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id  = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_INT, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_INT, memspace_id, dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose (memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose (dataset_id);
-  H5Pclose (plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_buffer_char(const char* filename, const char* varname, cl_char* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk (plist_id, 2, cdims);
-  H5Pset_deflate(plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_CHAR, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_CHAR, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose (memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose (dataset_id);
-  H5Pclose (plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar* data, cl_ulong size)
-{
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[2];
-  hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
-
-  hdf_dims[0] = size;
-  hdf_dims[1] = 1;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
-  cdims[1] = 1;
-
-  plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk (plist_id, 2, cdims);
-  H5Pset_deflate (plist_id, 9);
-
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  dataset_id = H5Dcreate2(h5_file_id,varname , H5T_NATIVE_UCHAR, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
-
-  H5Dwrite(dataset_id, H5T_NATIVE_UCHAR, memspace_id,dataspace_id, H5P_DEFAULT, data);
-
-  H5Sclose(memspace_id);
-  H5Sclose(dataspace_id);
-  H5Dclose(dataset_id);
-  H5Pclose(plist_id);
-
-  //The same can be done using H5 High Level API, but without compression
-  //H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, H5T_NATIVE_FLOAT, data);
 
   H5Fclose(h5_file_id);
 

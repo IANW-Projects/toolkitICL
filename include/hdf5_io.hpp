@@ -24,6 +24,10 @@ uint8_t h5_create_dir(const char* filename, const char* hdf_dir);
 template<typename TYPE>
 auto type_to_h5_type(void);
 
+// get the size of an OpenCL vector type
+template<typename TYPE>
+size_t get_vector_size();
+
 
 // read a buffer from an HDF5 File
 template<typename TYPE>
@@ -31,22 +35,25 @@ bool h5_read_buffer(const char* filename, const char* varname, TYPE* data);
 
 bool h5_read_buffer_float(const char* filename, const char* varname, float* data);
 bool h5_read_buffer_double(const char* filename, const char* varname, double* data);
-bool h5_read_buffer_int(const char* filename, const char* varname, int32_t* data);
-bool h5_read_buffer_uint(const char* filename, const char* varname, uint32_t* data);
+bool h5_read_buffer_int(const char* filename, const char* varname, int* data); //TODO: int or int32_t?
+bool h5_read_buffer_uint(const char* filename, const char* varname, uint* data); //TODO: uint or uint32_t?
+bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data); //TODO: char or cl_char?
 bool h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data);
-bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data);
 
 // write a buffer to an HDF5 File
-uint8_t h5_write_buffer_float(const char* filename, const char* varname, float* data, cl_ulong size);
-uint8_t h5_write_buffer_double(const char* filename, const char* varname, double* data, cl_ulong size);
-uint8_t h5_write_buffer_uint(const char* filename, const char* varname, cl_uint* data, cl_ulong size);
-uint8_t h5_write_buffer_int(const char* filename, const char* varname, cl_int* data, cl_ulong size);
-uint8_t h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar* data, cl_ulong size);
-uint8_t h5_write_buffer_char(const char* filename, const char* varname, cl_char* data, cl_ulong size);
+template<typename TYPE>
+bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data, size_t size);
 
-uint8_t h5_write_buffer_float4(const char* filename, const char* varname, cl_float4* data, cl_ulong size);
-uint8_t h5_write_buffer_double4(const char* filename, const char* varname, cl_double4* data, cl_ulong size);
-uint8_t h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4* data, cl_ulong size);
+bool h5_write_buffer_float(const char* filename, const char* varname, float const* data, cl_ulong size);
+bool h5_write_buffer_double(const char* filename, const char* varname, double const* data, cl_ulong size);
+bool h5_write_buffer_uint(const char* filename, const char* varname, cl_uint const* data, cl_ulong size);
+bool h5_write_buffer_int(const char* filename, const char* varname, cl_int const* data, cl_ulong size);
+bool h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar const* data, cl_ulong size);
+bool h5_write_buffer_char(const char* filename, const char* varname, cl_char const* data, cl_ulong size);
+
+bool h5_write_buffer_float4(const char* filename, const char* varname, cl_float4 const* data, cl_ulong size);
+bool h5_write_buffer_double4(const char* filename, const char* varname, cl_double4 const* data, cl_ulong size);
+bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, cl_ulong size);
 
 
 // read a single item from an HDF5 File

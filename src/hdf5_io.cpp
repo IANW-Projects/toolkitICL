@@ -457,41 +457,50 @@ bool h5_write_string(const char* filename, const char* varname, const char* buff
 
 // reading and writing arrays of strings using the format of the (deprecated)
 // matlab function hdfwrite for cell arrays of strings (aka char arrays)
-uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
+bool h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
 {
   if (!fileExists(filename)) {
     std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return 0;
+    //TODO: File not found - Exception? Error code?
+    return false;
   }
 
+  constexpr size_t buffer_size(900000);
+  constexpr size_t subbuffer_size(65535);
+
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  // get information about the data
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
   hid_t dataspace = H5Dget_space(dataset);
   unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
   if (ndims != 1) {
     std::cerr << "Error: Dataset '" << varname << "' in '" << filename << "' has a wrong format." << std::endl;
     H5Sclose(dataspace);
+    H5Dclose(dataset);
     H5Fclose(h5_file_id);
-    //TODO: Error code?
-    return 0;
+    //TODO: Exception?
+    return false;
   }
   hsize_t* dims = new hsize_t[ndims];
   H5Sget_simple_extent_dims(dataspace, dims, NULL);
   hid_t datatype = H5Dget_type(dataset);
-  // std::cout<<"Entires:"<<dims[0]<<std::endl;
-  const unsigned int max_buffer_size = 900000;
-  char buffer[max_buffer_size]; //TODO: possible buffer overflow?
+  unsigned int line_length = H5Tget_size(datatype);
+
+  H5Tclose(datatype);
+  H5Sclose(dataspace);
+  H5Dclose(dataset);
+
+  // load the data
+  char buffer[buffer_size]; //TODO: possible buffer overflow?
 
   H5LTread_dataset_string(h5_file_id, varname, buffer);
   //TODO: check if varname was found - no idea what error code to use if not
 
-  unsigned int line_length = H5Tget_size(datatype);
   unsigned int lines_found = 0;
-
   unsigned int str_start = 0;
   for (unsigned int i = 0; i < dims[0]; i++) {
-    char subbuff[65535]; //TODO: possible buffer overflow?
+    char subbuff[subbuffer_size];
     memcpy(subbuff, &buffer[str_start], line_length);
     lines.push_back(subbuff);
     str_start += line_length;
@@ -499,18 +508,34 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
   }
 
   delete[] dims; dims = nullptr;
-  H5Sclose(dataspace);
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }
 
-uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines)
+bool h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines)
 {
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
-  hsize_t hdf_dims[1];
-  hid_t   plist_id;
+  constexpr size_t buffer_size(900000);
 
+  // create single C string using the format of the (deprecated) matlab function
+  // `hdf5write` for cell arrays of char arrays (aka strings)
+  size_t line_length = std::max_element(
+    lines.cbegin(), lines.cend(), [] (std::string s1, std::string s2) { return s1.size() < s2.size(); } )->size() + 1;
+
+  char buffer[buffer_size] = {'\0'};
+  if (line_length >= buffer_size) {
+    std::cerr << "Error: The strings are too long (length = " << line_length << ", buffer size = " << buffer_size << "." << std::endl;
+    return false;
+  }
+
+  size_t str_start = 0;
+  for (const string& line : lines) {
+    strcpy(&buffer[str_start], line.c_str());
+    str_start += line_length;
+  }
+
+  // save buffer and additional information
+  hid_t h5_file_id;
   if (!fileExists(filename)) {
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
@@ -518,20 +543,7 @@ uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<
     h5_file_id = H5Fopen(filename, H5F_ACC_RDWR , H5P_DEFAULT);
   }
 
-  // create single C string using the format of the (deprecated) matlab function
-  // `hdf5write` for cell arrays of char arrays (aka strings)
-  unsigned int line_length = std::max_element(
-    lines.cbegin(), lines.cend(), [] (std::string s1, std::string s2) { return s1.size() < s2.size(); } )->size() + 1;
-
-  char buffer[900000] = {'\0'}; //TODO: possible buffer overflow?
-  unsigned int str_start = 0;
-  for (const string& line : lines) {
-    strcpy(&buffer[str_start], line.c_str());
-    str_start += line_length;
-  }
-
-  // save buffer and additional information
-  hdf_dims[0] = lines.size();
+  hsize_t hdf_dims[1] = {lines.size()};
   hid_t dataspace = H5Screate_simple(1, hdf_dims, NULL);
   hid_t datatype = H5Tcreate(H5T_STRING, line_length);
   hid_t dataset = H5Dcreate2(h5_file_id, varname, datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);

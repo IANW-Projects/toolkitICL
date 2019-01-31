@@ -88,8 +88,8 @@ bool h5_write_string(const char* filename, const char* varname, const char* buff
 
 // reading and writing arrays of strings using the format of the (deprecated)
 // matlab function hdfwrite for cell arrays of strings (aka char arrays)
-uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines);
-uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines);
+bool h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines);
+bool h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines);
 
 
 #endif // HDF5_IO_H

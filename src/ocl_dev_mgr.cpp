@@ -62,36 +62,35 @@ cl::Kernel * ocl_dev_mgr::getKernelbyName(cl_uint context_idx, std::string prog_
 {
   std::vector <std::string>::iterator it_p = con_list.at(context_idx).prog_names.begin();
   it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-  //TODO: Clean up
-  //if (i != con_list.at(context_idx).prog_names.end())
-  //{
+  if (it_p == con_list.at(context_idx).prog_names.end()) {
+    return nullptr;
+  }
   uint32_t idx = distance(con_list.at(context_idx).prog_names.begin(), it_p);
-//  std::cout << idx << std::endl;
 
   if (con_list.at(context_idx).kernels.at(idx).size() > 1) {
-
     for (cl_uint i = 0; i < con_list.at(context_idx).kernels.at(idx).size(); i++) {
       //std::cout<< kernel_name <<":" << con_list.at(context_idx).kernel_names.at(idx).at(i) << std::endl;
       if (kernel_name.compare(con_list.at(context_idx).kernel_names.at(idx).at(i)) == 0) {
-      //  std::cout << "1" << idx << std::endl;
-      return &(con_list.at(context_idx).kernels.at(idx).at(i));
+        //  std::cout << "1" << idx << std::endl;
+        return &(con_list.at(context_idx).kernels.at(idx).at(i));
       }
     }
   }
 
   return &(con_list.at(context_idx).kernels.at(idx).at(0));
-  //}
 }
 
-cl::Kernel * ocl_dev_mgr::getKernelbyID(cl_uint context_idx, std::string prog_name,cl_ulong kernel_id)
+cl::Kernel * ocl_dev_mgr::getKernelbyID(cl_uint context_idx, std::string prog_name, cl_ulong kernel_id)
 {
-  std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
-  i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-  if (i != con_list.at(context_idx).prog_names.end())  {
-    uint32_t idx=distance(con_list.at(context_idx).prog_names.begin(), i);
+  std::vector <std::string>::iterator it_p = con_list.at(context_idx).prog_names.begin();
+  it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
 
-    return &(con_list.at(context_idx).kernels.at(idx).at(kernel_id));
+  if (it_p == con_list.at(context_idx).prog_names.end()) {
+    return nullptr;
   }
+
+  uint32_t idx = distance(con_list.at(context_idx).prog_names.begin(), it_p);
+  return &(con_list.at(context_idx).kernels.at(idx).at(kernel_id));
 }
 
 
@@ -140,20 +139,13 @@ cl_ulong ocl_dev_mgr::init_device(cl_uint avail_device_idx)
   cl::Context context(tmp_devices, NULL);
   tmp_context.context=context;
 
-  tmp_context.queues.push_back(cl::CommandQueue (tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
+  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
   //push second queue for async copy
-  tmp_context.queues.push_back(cl::CommandQueue (tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
+  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
 
   con_list.push_back(tmp_context);
 
   return con_list.size();
-
-  //TODO: Clean up
-  /*
-  for (unsigned int i=0; i<device_idx.size();i++) {
-    tmp_devices.push_back(devices[device_idx.at(i)].device);
-  }
-  */
 }
 
 cl::CommandQueue& ocl_dev_mgr::get_queue(cl_uint context_idx, cl_uint queue_idx)
@@ -227,7 +219,7 @@ cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue
   cl_ulong time_start, time_end;
 
   try {
-    for (cl_uint i=0;i<dev_Buffers.size();i++) {
+    for (cl_uint i = 0; i < dev_Buffers.size(); i++) {
       kernel.setArg(i, *dev_Buffers[i]);
     }
 
@@ -404,5 +396,9 @@ void ocl_dev_mgr::deinitalize()
 {
   //TODO: Clean up
   //compile_threads.clear();
+  if (available_devices != nullptr) {
+    delete[] available_devices;
+    available_devices = nullptr;
+  }
   con_list.clear();
 }

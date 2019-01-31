@@ -106,7 +106,7 @@ private:
   ocl_dev_mgr();
   cl_ulong getDeviceList(std::vector<cl::Device>& devices);
 
-  ocl_device_info *available_devices;
+  ocl_device_info *available_devices; //TODO: Why not std::vector<ocl_device_info>?
   cl_ulong num_available_devices;
   std::vector<ocl_context> con_list;
 

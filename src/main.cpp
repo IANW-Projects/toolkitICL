@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  dev_mgr.get_queue(0, 0).finish(); // Buffer Copy is asynchornous
+  dev_mgr.get_queue(0, 0).finish(); // Buffer Copy is asynchronous
 
   push_time = timer.getTimeMicroseconds() - push_time;
 
@@ -321,7 +321,6 @@ int main(int argc, char *argv[]) {
 
   uint32_t buffer_counter = 0;
 
-
   for(cl_uint i = 0; i < data_list.size(); i++) {
     try {
       uint8_t *tmp_data = 0;
@@ -345,7 +344,7 @@ int main(int argc, char *argv[]) {
         case 2: dev_mgr.get_queue(0, 0).enqueueReadBuffer(data_in.at(buffer_counter), blocking, 0, var_size, (float*)tmp_data); break;
       }
 
-      dev_mgr.get_queue(0, 0).finish(); //Buffer Copy is asynchornous
+      dev_mgr.get_queue(0, 0).finish(); //Buffer Copy is asynchronous
 
       switch (datatype_list.at(i)){
         case H5_float:  h5_write_buffer_float( out_name, data_list.at(i).c_str(), (float *)tmp_data,   data_size.at(buffer_counter)); break;

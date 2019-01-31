@@ -1,10 +1,4 @@
 
-if (MSVC)
-MESSAGE(STATUS "MSVC++ detected")
-set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
-set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
-endif(MSVC)
-
 # include header directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${HDF5_INCLUDE_DIRS} ../include)
 

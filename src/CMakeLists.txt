@@ -1,8 +1,9 @@
 
+#TODO: Do we need this here? It is already in the main CMakeLists.txt file.
 if (MSVC)
-MESSAGE(STATUS "MSVC++ detected")
-set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
-set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+  MESSAGE(STATUS "MSVC++ detected")
+  set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+  set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
 endif(MSVC)
 
 # Include header directories

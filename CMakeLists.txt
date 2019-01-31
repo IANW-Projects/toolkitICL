@@ -20,9 +20,9 @@ SET(CMAKE_VERBOSE_MAKEFILE "false")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
 if (MSVC)
-MESSAGE(STATUS "MSVC++ detected")
-set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
-set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+  MESSAGE(STATUS "MSVC++ detected")
+  set (CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
+  set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
 elseif (COMPILER STREQUAL "GCC")
   set (CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -fPIC -Wall -mfpmath=sse -Wcast-align -Wl,-E")
 elseif (COMPILER STREQUAL "CLANG")
@@ -35,9 +35,9 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CM
 # Check for HDF5
 find_package(HDF5 REQUIRED COMPONENTS CXX HL)
 IF(HDF5_FOUND)
-    MESSAGE(STATUS ${HDF5_INCLUDE_DIRS})
+  MESSAGE(STATUS ${HDF5_INCLUDE_DIRS})
 ELSE(HDF5_FOUND)
-    MESSAGE(STATUS "HDF5 not found!")
+  MESSAGE(STATUS "HDF5 not found!")
 ENDIF(HDF5_FOUND)
 
 # Check for OpenCL

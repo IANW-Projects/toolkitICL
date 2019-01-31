@@ -89,6 +89,15 @@ kernel void copy(global COPYTYPE const* in, global COPYTYPE* out)\n\
   H5_WRITE_BUFFER(COPYTYPE)(filename.c_str(), "Data/in", &in[0], LENGTH);
   H5_WRITE_BUFFER(COPYTYPE)(filename.c_str(), "Data/out", &out[0], LENGTH);
 
+  // single values
+  COPYTYPE_HOST single_value(21);
+  h5_write_single<COPYTYPE_HOST>(filename.c_str(), "Single_Value", single_value);
+
+  if (single_value != h5_read_single<COPYTYPE_HOST>(filename.c_str(), "Single_Value")) {
+    cerr << "Error: Result 'Single_Value' is not as expected." << endl;
+    return 1;
+  }
+
 
   // call toolkitICL
   string command("toolkitICL -c ");

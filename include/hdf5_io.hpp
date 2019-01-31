@@ -12,6 +12,8 @@ enum HD5_Type { H5_float, H5_double, H5_char, H5_uchar, H5_int, H5_uint, H5_long
 
 
 // utility functions for hdf5 dfiles
+inline bool fileExists(const char* filename);
+
 bool h5_check_object(const char* filename, const char* varname);
 
 uint8_t h5_get_content(const char* filename, const char* hdf_dir,
@@ -29,7 +31,7 @@ template<typename TYPE>
 size_t get_vector_size();
 
 
-// read a buffer from an HDF5 File
+// read a buffer from an HDF5 file
 template<typename TYPE>
 bool h5_read_buffer(const char* filename, const char* varname, TYPE* data);
 
@@ -40,7 +42,7 @@ bool h5_read_buffer_uint(const char* filename, const char* varname, uint* data);
 bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data); //TODO: char or cl_char?
 bool h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data);
 
-// write a buffer to an HDF5 File
+// write a buffer to an HDF5 file using compression
 template<typename TYPE>
 bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data, size_t size);
 
@@ -56,13 +58,27 @@ bool h5_write_buffer_double4(const char* filename, const char* varname, cl_doubl
 bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, cl_ulong size);
 
 
-// read a single item from an HDF5 File
+// read a single item from an HDF5 file
+template<typename TYPE>
+TYPE h5_read_single(const char* filename, const char* varname)
+{
+  TYPE data;
+  h5_read_buffer<TYPE>(filename, varname, &data);
+  return data;
+}
+
 float h5_read_single_float(const char* filename, const char* varname);
 
-// write a single item to an HDF5 File
-uint8_t h5_write_single_float(const char* filename, const char* varname, float data);
-uint8_t h5_write_single_double(const char* filename, const char* varname, double data);
-uint8_t h5_write_single_long(const char* filename, const char* varname, long data);
+// write a single item to an HDF5 file
+template<typename TYPE>
+bool h5_write_single(const char* filename, const char* varname, TYPE data)
+{
+  return h5_write_buffer<TYPE>(filename, varname, &data, 1);
+}
+
+bool h5_write_single_float(const char* filename, const char* varname, float data);
+bool h5_write_single_double(const char* filename, const char* varname, double data);
+bool h5_write_single_long(const char* filename, const char* varname, long data);
 
 
 // reading and writing single strings

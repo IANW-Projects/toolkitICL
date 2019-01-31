@@ -26,20 +26,20 @@
 using namespace std;
 
 
-//Function to check whether a file already exists
-inline bool FileExists(const char* filename)
+
+// utility functions for hdf5 dfiles
+inline bool fileExists(const char* filename)
 {
   struct stat fileInfo;
   return stat(filename, &fileInfo) == 0;
 }
 
 
-// utility functions for hdf5 dfiles
 bool h5_check_object(const char* filename, const char* varname)
 {
 	hid_t h5_file_id;
 
-  if (FileExists(filename)) {
+  if (fileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
 
     if (H5LTpath_valid(h5_file_id, varname, true) > 0) {
@@ -70,7 +70,7 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
   char group_name[MAX_NAME]; //TODO: possible buffer overflow?
   char memb_name[MAX_NAME];
 
-  if (FileExists(filename)) {
+  if (fileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   }
   else {
@@ -154,7 +154,7 @@ uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
 {
   hid_t h5_file_id, grp;
 
-  if (FileExists(filename)) {
+  if (fileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
   else {
@@ -167,6 +167,7 @@ uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
 
   return 1;
 }
+
 
 
 // convert a C type TYPE to the HDF5 identifier of that type
@@ -221,11 +222,11 @@ template<typename TYPE>
 size_t get_vector_size() { return 1; };
 
 
-// read a buffer from an HDF5 File
+// read a buffer from an HDF5 file
 template<typename TYPE>
 bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
 {
-  if (!FileExists(filename)) {
+  if (!fileExists(filename)) {
     std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: Exception? Only error code?
     return false;
@@ -292,7 +293,7 @@ bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data
   hid_t   plist_id;
   hsize_t cdims[2]; //chunk size used for compression
 
-  if (!FileExists(filename)) {
+  if (!fileExists(filename)) {
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
   else {
@@ -376,16 +377,52 @@ bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 c
 }
 
 
+// read a single item from an HDF5 file
+// template<typename TYPE>
+// TYPE h5_read_single(const char* filename, const char* varname);
+// is defined in header
+
+// other forms
+float h5_read_single_float(const char* filename, const char* varname)
+{
+  return h5_read_single<float>(filename, varname);
+}
+
+float h5_read_single_double(const char* filename, const char* varname)
+{
+  return h5_read_single<double>(filename, varname);
+}
 
 
+// write a single item to an HDF5 file
+// template<typename TYPE>
+// bool h5_write_single(const char* filename, const char* varname, TYPE data);
+// is defined in header
+
+// other forms
+bool h5_write_single_float(const char* filename, const char* varname, float data)
+{
+  return h5_write_single<float>(filename, varname, data);
+}
+
+bool h5_write_single_double(const char* filename, const char* varname, double data)
+{
+  return h5_write_single<double>(filename, varname, data);
+}
+
+bool h5_write_single_long(const char* filename, const char* varname, long data)
+{
+  return h5_write_single<long>(filename, varname, data);
+}
 
 
+// reading and writing single strings
 uint8_t h5_read_string(const char* filename, const char* varname, char* buffer)
 {
   hid_t h5_file_id;
   float param_value;
 
-  if (FileExists(filename)) {
+  if (fileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     hid_t dataset= H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
@@ -407,7 +444,7 @@ uint8_t h5_write_string(const char* filename, const char* varname, const char* b
 {
   hid_t h5_file_id;
 
-  if (!FileExists(filename)) {
+  if (!fileExists(filename)) {
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
   else {
@@ -423,9 +460,11 @@ uint8_t h5_write_string(const char* filename, const char* varname, const char* b
 }
 
 
+// reading and writing arrays of strings using the format of the (deprecated)
+// matlab function hdfwrite for cell arrays of strings (aka char arrays)
 uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
 {
-  if (!FileExists(filename)) {
+  if (!fileExists(filename)) {
     std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return 0;
@@ -471,15 +510,13 @@ uint8_t h5_read_strings(const char* filename, const char* varname, std::vector<s
   return 1;
 }
 
-
-
 uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines)
 {
   hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
   hsize_t hdf_dims[1];
   hid_t   plist_id;
 
-  if (!FileExists(filename)) {
+  if (!fileExists(filename)) {
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
   else {
@@ -509,94 +546,6 @@ uint8_t h5_write_strings(const char* filename, const char* varname, std::vector<
   H5Dclose(dataset);
   H5Tclose(datatype);
   H5Sclose(dataspace);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-//TODO: reduce code duplication; templates?
-float h5_read_single_float(const char* filename, const char* varname)
-{
-  hid_t h5_file_id;
-  float param_value;
-
-  if (FileExists(filename)) {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDONLY, H5P_DEFAULT);
-    H5LTread_dataset_float(h5_file_id, varname, &param_value);
-    //check if varname was found - no idea what error code to use if not
-    H5Fclose(h5_file_id);
-    return param_value;
-  }
-  else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
-    return -0.0;
-  }
-}
-
-//TODO: reduce code duplication; templates??
-uint8_t h5_write_single_double(const char* filename, const char* varname, double data)
-{
-  hid_t h5_file_id;
-  hsize_t hdf_dims[2];
-
-  hdf_dims[0] = 1;
-  hdf_dims[1] = 0;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  H5LTmake_dataset_double(h5_file_id,varname,1,hdf_dims,&data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_single_long(const char* filename, const char* varname, long data)
-{
-  hid_t h5_file_id;
-  hsize_t  hdf_dims[2];
-
-  hdf_dims[0] = 1;
-  hdf_dims[1] = 0;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  H5LTmake_dataset_long(h5_file_id,varname,1,hdf_dims,&data);
-
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-uint8_t h5_write_single_float(const char* filename, const char* varname, float data)
-{
-  hid_t h5_file_id;
-  hsize_t  hdf_dims[2];
-
-  hdf_dims[0] = 1;
-  hdf_dims[1] = 0;
-
-  if (!FileExists(filename)) {
-    h5_file_id = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  }
-  else {
-    h5_file_id = H5Fopen(filename,H5F_ACC_RDWR , H5P_DEFAULT);
-  }
-
-  H5LTmake_dataset_float(h5_file_id,varname,1,hdf_dims,&data);
 
   H5Fclose(h5_file_id);
 

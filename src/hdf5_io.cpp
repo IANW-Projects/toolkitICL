@@ -417,30 +417,25 @@ bool h5_write_single_long(const char* filename, const char* varname, long data)
 
 
 // reading and writing single strings
-uint8_t h5_read_string(const char* filename, const char* varname, char* buffer)
+bool h5_read_string(const char* filename, const char* varname, char* buffer)
 {
-  hid_t h5_file_id;
-  float param_value;
-
-  if (fileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-    hid_t dataset= H5Dopen(h5_file_id, varname, H5P_DEFAULT);
-
-    H5LTread_dataset_string(h5_file_id, varname, buffer);
-    //check if varname was found - no idea what error code to use if not
-
-    H5Fclose(h5_file_id);
-
-    return 1;
-  }
-  else {
+  if (!fileExists(filename)) {
     std::cerr << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
-    return 0;
+    return false;
   }
+
+  hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  H5LTread_dataset_string(h5_file_id, varname, buffer);
+  //TODO: check if varname was found - no idea what error code to use if not
+
+  H5Fclose(h5_file_id);
+
+  return true;
 }
 
-uint8_t h5_write_string(const char* filename, const char* varname, const char* buffer)
+bool h5_write_string(const char* filename, const char* varname, const char* buffer)
 {
   hid_t h5_file_id;
 
@@ -452,11 +447,11 @@ uint8_t h5_write_string(const char* filename, const char* varname, const char* b
   }
 
   H5LTmake_dataset_string(h5_file_id, varname, buffer);
-  //check if varname was found - no idea what error code to use if not
+  //TODO: check if successful
 
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }
 
 

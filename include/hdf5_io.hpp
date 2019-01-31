@@ -82,8 +82,8 @@ bool h5_write_single_long(const char* filename, const char* varname, long data);
 
 
 // reading and writing single strings
-uint8_t h5_read_string(const char* filename, const char* varname, char* buffer);
-uint8_t h5_write_string(const char* filename, const char* varname, const char* buffer);
+bool h5_read_string(const char* filename, const char* varname, char* buffer);
+bool h5_write_string(const char* filename, const char* varname, const char* buffer);
 
 
 // reading and writing arrays of strings using the format of the (deprecated)

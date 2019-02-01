@@ -169,51 +169,50 @@ uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
 }
 
 
-
 // convert a C type TYPE to the HDF5 identifier of that type
 template<>
-auto type_to_h5_type<float>() { return H5T_NATIVE_FLOAT; }
+hid_t type_to_h5_type<float>() { return H5T_NATIVE_FLOAT; }
 
 template<>
-auto type_to_h5_type<double>() { return H5T_NATIVE_DOUBLE; }
+hid_t type_to_h5_type<double>() { return H5T_NATIVE_DOUBLE; }
 
 template<>
-auto type_to_h5_type<cl_char>() { return H5T_NATIVE_CHAR; } //TODO: char or cl_char?
+hid_t type_to_h5_type<cl_char>() { return H5T_NATIVE_INT8; }
 
 template<>
-auto type_to_h5_type<unsigned char>() { return H5T_NATIVE_UCHAR; } //TODO: unsigned char or cl_uchar?
+hid_t type_to_h5_type<cl_uchar>() { return H5T_NATIVE_UINT8; }
 
 template<>
-auto type_to_h5_type<short>() { return H5T_NATIVE_SHORT; }
+hid_t type_to_h5_type<cl_short>() { return H5T_NATIVE_INT16; }
 
 template<>
-auto type_to_h5_type<ushort>() { return H5T_NATIVE_USHORT; }
+hid_t type_to_h5_type<cl_ushort>() { return H5T_NATIVE_UINT16; }
 
 template<>
-auto type_to_h5_type<int>() { return H5T_NATIVE_INT; } //TODO: int or int32_t?
+hid_t type_to_h5_type<cl_int>() { return H5T_NATIVE_INT32; }
 
 template<>
-auto type_to_h5_type<uint>() { return H5T_NATIVE_UINT; } //TODO: uint or uint32_t?
+hid_t type_to_h5_type<cl_uint>() { return H5T_NATIVE_UINT32; }
 
 template<>
-auto type_to_h5_type<long>() { return H5T_NATIVE_LONG; }
+hid_t type_to_h5_type<cl_long>() { return H5T_NATIVE_INT64; }
 
 template<>
-auto type_to_h5_type<ulong>() { return H5T_NATIVE_ULONG; }
+hid_t type_to_h5_type<cl_ulong>() { return H5T_NATIVE_UINT64; }
 
 // OpenCL vector types
 template<>
-auto type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
+hid_t type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
 template<>
 size_t get_vector_size<cl_float4>() { return 4; };
 
 template<>
-auto type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
+hid_t type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
 template<>
 size_t get_vector_size<cl_double4>() { return 4; };
 
 template<>
-auto type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT; }
+hid_t type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT; }
 template<>
 size_t get_vector_size<cl_uint4>() { return 4; };
 
@@ -252,6 +251,18 @@ bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
   return true;
 }
 
+// template instantiations
+template bool h5_read_buffer(const char* filename, const char* varname, float* data);
+template bool h5_read_buffer(const char* filename, const char* varname, double* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_char* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_uchar* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_short* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_ushort* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_int* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_uint* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_long* data);
+template bool h5_read_buffer(const char* filename, const char* varname, cl_ulong* data);
+
 // other forms
 bool h5_read_buffer_float(const char* filename, const char* varname, float* data)
 {
@@ -263,14 +274,14 @@ bool h5_read_buffer_double(const char* filename, const char* varname, double* da
   return h5_read_buffer<double>(filename, varname, data);
 }
 
-bool h5_read_buffer_int(const char* filename, const char* varname, int* data)
+bool h5_read_buffer_int(const char* filename, const char* varname, cl_int* data)
 {
-  return h5_read_buffer<int>(filename, varname, data);
+  return h5_read_buffer<cl_int>(filename, varname, data);
 }
 
-bool h5_read_buffer_uint(const char* filename, const char* varname, uint* data)
+bool h5_read_buffer_uint(const char* filename, const char* varname, cl_uint* data)
 {
-  return h5_read_buffer<uint>(filename, varname, data);
+  return h5_read_buffer<cl_uint>(filename, varname, data);
 }
 
 bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data)
@@ -278,9 +289,9 @@ bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* dat
   return h5_read_buffer<cl_char>(filename, varname, data);
 }
 
-bool h5_read_buffer_uchar(const char* filename, const char* varname, unsigned char* data)
+bool h5_read_buffer_uchar(const char* filename, const char* varname, cl_uchar* data)
 {
-  return h5_read_buffer<unsigned char>(filename, varname, data);
+  return h5_read_buffer<cl_uchar>(filename, varname, data);
 }
 
 
@@ -330,48 +341,60 @@ bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data
   return 1;
 }
 
+// template instantiations
+template bool h5_write_buffer(const char* filename, const char* varname, float const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, double const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_char const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_uchar const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_short const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_ushort const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_int const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_uint const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_long const* data, size_t size);
+template bool h5_write_buffer(const char* filename, const char* varname, cl_ulong const* data, size_t size);
+
 // other forms
-bool h5_write_buffer_float(const char* filename, const char* varname, float const* data, cl_ulong size)
+bool h5_write_buffer_float(const char* filename, const char* varname, float const* data, size_t size)
 {
   return h5_write_buffer<float>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_double(const char* filename, const char* varname, double const* data, cl_ulong size)
+bool h5_write_buffer_double(const char* filename, const char* varname, double const* data, size_t size)
 {
   return h5_write_buffer<double>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_int(const char* filename, const char* varname, cl_int const* data, cl_ulong size)
+bool h5_write_buffer_int(const char* filename, const char* varname, cl_int const* data, size_t size)
 {
-  return h5_write_buffer<int>(filename, varname, data, size);
+  return h5_write_buffer<cl_int>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uint(const char* filename, const char* varname, cl_uint const* data, cl_ulong size)
+bool h5_write_buffer_uint(const char* filename, const char* varname, cl_uint const* data, size_t size)
 {
-  return h5_write_buffer<uint>(filename, varname, data, size);
+  return h5_write_buffer<cl_uint>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_char(const char* filename, const char* varname, cl_char const* data, cl_ulong size)
+bool h5_write_buffer_char(const char* filename, const char* varname, cl_char const* data, size_t size)
 {
   return h5_write_buffer<cl_char>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar const* data, cl_ulong size)
+bool h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar const* data, size_t size)
 {
   return h5_write_buffer<cl_uchar>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_float4(const char* filename, const char* varname, cl_float4 const* data, cl_ulong size)
+bool h5_write_buffer_float4(const char* filename, const char* varname, cl_float4 const* data, size_t size)
 {
   return h5_write_buffer<cl_float4>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_double4(const char* filename, const char* varname, cl_double4 const* data, cl_ulong size)
+bool h5_write_buffer_double4(const char* filename, const char* varname, cl_double4 const* data, size_t size)
 {
   return h5_write_buffer<cl_double4>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, cl_ulong size)
+bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, size_t size)
 {
   return h5_write_buffer<cl_uint4>(filename, varname, data, size);
 }
@@ -410,9 +433,9 @@ bool h5_write_single_double(const char* filename, const char* varname, double da
   return h5_write_single<double>(filename, varname, data);
 }
 
-bool h5_write_single_long(const char* filename, const char* varname, long data)
+bool h5_write_single_long(const char* filename, const char* varname, cl_long data)
 {
-  return h5_write_single<long>(filename, varname, data);
+  return h5_write_single<cl_long>(filename, varname, data);
 }
 
 

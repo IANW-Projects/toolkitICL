@@ -140,8 +140,8 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
         datatype_list.push_back(H5_ulong);
       }
 
-      H5Dclose(native_type);
-      H5Dclose(datatype);
+      H5Tclose(native_type);
+      H5Tclose(datatype);
       H5Dclose(dataset);
     }
   }

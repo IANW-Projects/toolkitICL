@@ -1,7 +1,7 @@
 /* TODO: Provide a license note */
 
-#define COPYTYPE uchar
-#define COPYTYPE_HOST cl_uchar
+#define COPYTYPE cl_uchar
+#define COPYTYPE_CL uchar
 #include "copy_test.h"
 
 int main(void)

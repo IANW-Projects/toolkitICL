@@ -74,6 +74,7 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   }
   else {
+    std::cerr << "File '" << filename << "' not found." << std::endl;
     return 0;
   }
 
@@ -104,7 +105,6 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
       delete[] dims; dims = nullptr;
 
       hid_t datatype = H5Dget_type(dataset);
-
       hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
 
       if (H5Tequal(native_type,H5T_NATIVE_FLOAT)>0)
@@ -140,10 +140,13 @@ uint8_t h5_get_content(const char* filename, const char* hdf_dir,
         datatype_list.push_back(H5_ulong);
       }
 
+      H5Dclose(native_type);
+      H5Dclose(datatype);
       H5Dclose(dataset);
     }
   }
 
+  H5Gclose(grp);
   H5Fclose(h5_file_id);
 
   return 1;

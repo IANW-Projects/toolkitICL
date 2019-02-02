@@ -6,12 +6,11 @@ if (MSVC)
   set (CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB" )
 endif(MSVC)
 
-# Include header directories
+# include header directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${OpenCL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
 
-#Header files of the project
-
-set(HEADER ../include/main.hpp ../include/util.hpp ../include/ocl_dev_mgr.hpp)
+# header files of the project
+set(HEADER ../include/main.hpp ../include/hdf5_io.hpp ../include/ocl_dev_mgr.hpp ../include/timer.hpp ../include/util.hpp)
 
 set(SOURCES main.cpp hdf5_io.cpp ocl_dev_mgr.cpp ${HEADER})
 

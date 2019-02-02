@@ -16,21 +16,18 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
-
-#include "../include/main.hpp"
-#include "../include/util.hpp"
-#include "../include/hdf5_io.hpp"
-
-#include "hdf5.h"
-#include "hdf5_hl.h"
-
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_MINIMUM_OPENCL_VERSION 120
 #define CL_HPP_TARGET_OPENCL_VERSION 120
-
 #include <CL/cl2.hpp>
-#include "../include/ocl_dev_mgr.hpp"
 
+
+#include "main.hpp"
+#include "util.hpp"
+#include "hdf5_io.hpp"
+
+#include "ocl_dev_mgr.hpp"
+#include "timer.hpp"
 
 using namespace std;
 
@@ -156,7 +153,7 @@ int main(int argc, char *argv[]) {
   std::vector<cl::Buffer> data_in;
   bool blocking = CL_TRUE;
 
-  double *rw_flags_ptr; //TODO: Why double? This isn't really used, is it?
+  double *rw_flags_ptr; //TODO: Why double? Implement functionality!
   rw_flags_ptr = new double[data_list.size()];
   std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
 

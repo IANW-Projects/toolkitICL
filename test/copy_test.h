@@ -5,27 +5,14 @@
 
 #include <fstream>
 #include <iostream>
-#include <stdlib.h>
 #include <string>
 
-#if defined(_WIN32)
-#include <windows.h>
-#include <io.h>
-#else
-#include <stdint.h>
-#include <unistd.h>
-#endif
-
+#include "opencl_include.hpp"
+#include "util.hpp"
 #include "hdf5_io.hpp"
 
 
 using namespace std;
-
-
-inline bool FileExists(const std::string &filename)
-{
-  return access(filename.c_str(), 0) == 0;
-}
 
 
 int runtest(void)
@@ -34,7 +21,7 @@ int runtest(void)
 
   string filename{"copy_" STRINGIZE(COPYTYPE_CL) "_test.h5"};
 
-  if (FileExists(filename)) {
+  if (fileExists(filename)) {
     remove(filename.c_str());
   }
 
@@ -108,7 +95,7 @@ kernel void copy(global COPYTYPE const* in, global COPYTYPE* out)\n\
   vector<COPYTYPE> in_test(LENGTH);
   vector<COPYTYPE> out_test(LENGTH);
 
-  if (!FileExists(out_filename)) {
+  if (!fileExists(out_filename)) {
     cerr << "Error: File " << out_filename << " not found." << endl;
     return 1;
   }
@@ -132,13 +119,13 @@ kernel void copy(global COPYTYPE const* in, global COPYTYPE* out)\n\
   }
 
   //TODO: possible cleanup?
-  // if (FileExists(kernel_url)) {
+  // if (fileExists(kernel_url)) {
   //   remove(kernel_url.c_str());
   // }
-  // if (FileExists(filename)) {
+  // if (fileExists(filename)) {
   //   remove(filename.c_str());
   // }
-  // if (FileExists(out_filename)) {
+  // if (fileExists(out_filename)) {
   //   remove(out_filename.c_str());
   // }
 

@@ -4,33 +4,9 @@
 #define DEV_MGR_H
 
 #include <vector>
-#include <iostream>
-#include <iterator>
-#include <sstream>
 
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 120
+#include "opencl_include.hpp"
 
-
-//some headers seem to def strict ansi, which breaks the OpenCL typedefs
-#if defined( __STRICT_ANSI__ )
-#undef  __STRICT_ANSI__
-#endif
-
-//disable strange warnings for newer versions of GCC
-#pragma GCC diagnostic ignored "-Wignored-attributes"
-
-
-#include <CL/cl2.hpp>
-
-#define DREAL cl_float
-#define DREAL4 cl_float4
-#define CL_REAL float
-
-
-#define STRINGIZE_(x) #x
-#define STRINGIZE(x) STRINGIZE_(x)
 
 class ocl_dev_mgr {
 public:
@@ -68,9 +44,6 @@ public:
   ocl_device_info& get_context_dev_info(cl_uint context_idx, cl_uint device_idx);
   cl_ulong compile_kernel(cl_uint context_idx, std::string prog_name, const char* options);
   cl_ulong get_kernel_names(cl_uint context_idx, std::string prog_name, std::vector<std::string>& found_kernels);
-  //TODO: Clean up
-  //void compile_thread(cl::Program& cl_prog, char* options);
-  //cl_ulong finish_compile(cl::Program& cl_prog);
   cl_ulong execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue,
                           cl::NDRange global_range, cl::NDRange local_range,
                           std::vector<cl::Buffer*>& dev_Buffers);
@@ -109,9 +82,6 @@ private:
   ocl_device_info *available_devices; //TODO: Why not std::vector<ocl_device_info>?
   cl_ulong num_available_devices;
   std::vector<ocl_context> con_list;
-
-  //TODO: Clean up
-  //std::vector<std::thread> compile_threads;
 };
 
 #endif // DEV_MGR_H

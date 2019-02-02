@@ -5,14 +5,12 @@
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
-#include "../include/main.hpp"
-//TODO: remove dependency on main.hpp since no OpenCL parts are really needed?
+
+#include "opencl_include.hpp"
+
 
 enum HD5_Type { H5_float, H5_double, H5_char, H5_uchar, H5_short, H5_ushort, H5_int, H5_uint, H5_long, H5_ulong };
 
-
-// utility functions for hdf5 dfiles
-inline bool fileExists(char const* filename);
 
 bool h5_check_object(char const* filename, char const* varname);
 

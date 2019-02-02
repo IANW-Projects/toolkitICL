@@ -1,36 +1,37 @@
 /* TODO: Provide a license note */
 
-#include <stdio.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <iterator>
-#include <sstream>
-#include <vector>
 #include <math.h>
+#include <string>
 #include <thread>
-#include <cstdlib>
-#include <chrono>
-#include <ctime>
+#include <vector>
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-#include <CL/cl2.hpp>
-
-
-#include "main.hpp"
+#include "opencl_include.hpp"
 #include "util.hpp"
 #include "hdf5_io.hpp"
-
 #include "ocl_dev_mgr.hpp"
 #include "timer.hpp"
 
+
 using namespace std;
 
+
+// command line arguments
+char const* getCmdOption(char** begin, char** end, std::string const& option)
+{
+  char** itr = find(begin, end, option);
+  if (itr != end && ++itr != end)  {
+    return *itr;
+  }
+  return 0;
+}
+
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+  return find(begin, end, option) != end;
+}
 
 void print_help()
 {
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (cmdOptionExists(argv, argv + argc, "-d")) {
-    char* dev_id = getCmdOption(argv, argv + argc, "-d");
+    char const* dev_id = getCmdOption(argv, argv + argc, "-d");
     deviceIndex = atoi(dev_id);
   }
 
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
     print_help();
     return -1;
   }
-  char* filename = getCmdOption(argv, argv + argc, "-c");
+  char const* filename = getCmdOption(argv, argv + argc, "-c");
 
 
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
@@ -143,7 +144,7 @@ int main(int argc, char *argv[]) {
   cout << "Creating output HDF5 file..." << endl;
   string out_name = "out_" + string(filename);
 
-  if (FileExists(out_name)) {
+  if (fileExists(out_name)) {
     remove(out_name.c_str());
     cout << "Old HDF5 data file found and deleted!" << endl;
   }

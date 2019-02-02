@@ -1,25 +1,17 @@
 /* TODO: Provide a license note */
 
 #include <algorithm>
-#include <fstream>
 #include <iostream>
-#include <iterator>
-#include <math.h>
-#include <stdio.h>
 #include <string>
-#include <sstream>
-#include <sys/stat.h>
 #include <vector>
-
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
-#include "../include/main.hpp"
-#include "../include/hdf5_io.hpp"
+#include "opencl_include.hpp"
+
+#include "util.hpp"
+#include "hdf5_io.hpp"
 
 #define chunk_factor 64
 
@@ -76,15 +68,6 @@ constexpr size_t get_vector_size<cl_uint4>() { return 4; };
 // fallback;
 template<typename TYPE>
 constexpr size_t get_vector_size() { return 1; };
-
-
-
-// utility functions for hdf5 dfiles
-inline bool fileExists(const char* filename)
-{
-  struct stat fileInfo;
-  return stat(filename, &fileInfo) == 0;
-}
 
 
 bool h5_check_object(const char* filename, const char* varname)

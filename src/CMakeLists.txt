@@ -10,7 +10,7 @@ endif(MSVC)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${OpenCL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ../include)
 
 # header files of the project
-set(HEADER ../include/main.hpp ../include/hdf5_io.hpp ../include/ocl_dev_mgr.hpp ../include/timer.hpp ../include/util.hpp)
+set(HEADER ../include/opencl_include.hpp ../include/hdf5_io.hpp ../include/ocl_dev_mgr.hpp ../include/timer.hpp ../include/util.hpp)
 
 set(SOURCES main.cpp hdf5_io.cpp ocl_dev_mgr.cpp ${HEADER})
 

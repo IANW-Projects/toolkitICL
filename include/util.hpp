@@ -3,48 +3,30 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <stdio.h>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <iterator>
-#include <vector>
-#include <algorithm>
-
-#define CL_HPP_MINIMUM_OPENCL_VERSION 120
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-#include <CL/cl2.hpp>
-
-
 #if defined(_WIN32)
-#include <windows.h>
 #include <io.h>
-typedef cl_ulong uint64_t;
-typedef unsigned int uint;
+#define access _access_s
 #else
-#include <stdint.h>
 #include <unistd.h>
 #endif
 
 
-//TODO: unify all FileExists methods and provide them in one place instead of 3...
-inline bool FileExists(const std::string &Filename)
+// macros
+#define STRINGIZE_(x) #x
+#define STRINGIZE(x) STRINGIZE_(x)
+
+#define ERROR_INFO "Error in line " STRINGIZE(__LINE__) " of " __FILE__ ":\n "
+
+
+// file system functions
+inline bool fileExists(char const* filename)
 {
-  return access(Filename.c_str(), 0) == 0;
+  return access(filename, 0) == 0;
 }
 
-char* getCmdOption(char** begin, char** end, const std::string & option)
+inline bool fileExists(std::string const& filename)
 {
-  char** itr = std::find(begin, end, option);
-  if (itr != end && ++itr != end)  {
-    return *itr;
-  }
-  return 0;
-}
-
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
-{
-  return std::find(begin, end, option) != end;
+  return fileExists(filename.c_str());
 }
 
 

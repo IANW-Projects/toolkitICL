@@ -1,44 +1,29 @@
 /* TODO: Provide a license note */
 
-#include "ocl_dev_mgr.hpp"
-#include <iostream>
-#include <fstream>
 #include <algorithm>
-#include <thread>
+#include <fstream>
+#include <iostream>
 
-#ifdef _WIN32
-#include <io.h>
-#define access    _access_s
-#else
-#include <unistd.h>
-#endif
+#include "util.hpp"
+#include "ocl_dev_mgr.hpp"
 
 
-
-inline void compile(cl::Program& cl_prog, const char* options)
+inline void compile(cl::Program& cl_prog, char const* options)
 {
-  std::stringstream default_options;
-  default_options.setf(std::ios::fixed);
-  default_options << " " << options;
+  std::string compile_options = std::string(" ") + std::string(options);
 
   try {
-    cl_prog.build(default_options.str().c_str());
+    cl_prog.build(compile_options.c_str());
   }
-  catch (cl::BuildError error)
-  {
+  catch (cl::BuildError error) {
     std::string log = error.getBuildLog()[0].second;
-    std::cerr << std::endl << "Build error:" << std::endl << log << std::endl;
+    std::cerr << ERROR_INFO << "Build error:\n" << log << std::endl;
   }
-  catch (cl::Error err)
-  {
-    std::cerr << "Exception:" << std::endl << "ERROR: " << err.what() << std::endl;
+  catch (cl::Error err) {
+    std::cerr << ERROR_INFO << "Exception:" << err.what() << std::endl;
   }
 }
 
-inline bool FileExists(const std::string &Filename)
-{
-  return access(Filename.c_str(), 0) == 0;
-}
 
 inline std::string loadProgram(std::string input)
 {
@@ -171,7 +156,7 @@ cl_ulong ocl_dev_mgr::get_context_num()
 
 cl_int ocl_dev_mgr::add_program_url(cl_uint context_idx, std::string prog_name, std::string url)
 {
-  if (!FileExists(url)) {
+  if (!fileExists(url)) {
     return -1;
   }
 
@@ -295,11 +280,9 @@ cl_ulong ocl_dev_mgr::execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue&
 
 
 // Compile kernels and return the number of compiled kernels.
-cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name, const char* options)
+cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name, char const* options)
 {
-  std::stringstream default_options;
-  default_options.setf(std::ios::fixed);
-  default_options << " " << options;
+  std::string compile_options = std::string(" ") + std::string(options);
 
   std::vector<std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
   i = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
@@ -313,7 +296,7 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,
   int32_t idx = distance(con_list.at(context_idx).prog_names.begin(), i);
 
   try {
-    con_list.at(context_idx).programs.at(idx).build(default_options.str().c_str());
+    con_list.at(context_idx).programs.at(idx).build(compile_options.c_str());
   }
   catch (cl::BuildError error) {
     std::string log = error.getBuildLog()[0].second;
@@ -334,6 +317,7 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string prog_name,
   return con_list.at(context_idx).kernels.at(idx).size();
 }
 
+
 cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_name, std::vector<std::string>& found_kernels)
 {
   std::vector <std::string>::iterator i = con_list.at(context_idx).prog_names.begin();
@@ -350,21 +334,6 @@ cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string prog_nam
   return 0;
 }
 
-//TODO: Clean up?
-/*
-void ocl_dev_mgr::compile_thread(cl::Program& cl_prog, char* options)
-{
-  compile_threads.push_back(std::thread(compile, std::ref(get_program(0, "ocl_Kernel")), options));
-}
-
-cl_ulong ocl_dev_mgr::finish_compile(cl::Program& cl_prog )
-{
-  compile_threads.at(0).join();
-  cl_prog.createKernels(&kernels);
-  compile_threads.clear();
-  return kernels.size();
-}
-*/
 
 void ocl_dev_mgr::initialize()
 {
@@ -392,10 +361,9 @@ void ocl_dev_mgr::initialize()
   }
 }
 
+
 void ocl_dev_mgr::deinitalize()
 {
-  //TODO: Clean up
-  //compile_threads.clear();
   if (available_devices != nullptr) {
     delete[] available_devices;
     available_devices = nullptr;

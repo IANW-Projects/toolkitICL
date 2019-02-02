@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -50,27 +51,42 @@ template<>
 hid_t type_to_h5_type<cl_ulong>() { return H5T_NATIVE_UINT64; }
 
 // OpenCL vector types
-template<>
-hid_t type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
-template<>
-constexpr size_t get_vector_size<cl_float4>() { return 4; };
+template<> hid_t type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
+template<> constexpr size_t get_vector_size<cl_float4>() { return 4; };
 
-template<>
-hid_t type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
-template<>
-constexpr size_t get_vector_size<cl_double4>() { return 4; };
+template<> hid_t type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
+template<> constexpr size_t get_vector_size<cl_double4>() { return 4; };
 
-template<>
-hid_t type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT; }
-template<>
-constexpr size_t get_vector_size<cl_uint4>() { return 4; };
+template<> hid_t type_to_h5_type<cl_char4>() { return H5T_NATIVE_INT8; }
+template<> constexpr size_t get_vector_size<cl_char4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_uchar4>() { return H5T_NATIVE_UINT8; }
+template<> constexpr size_t get_vector_size<cl_uchar4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_short4>() { return H5T_NATIVE_INT16; }
+template<> constexpr size_t get_vector_size<cl_short4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_ushort4>() { return H5T_NATIVE_UINT16; }
+template<> constexpr size_t get_vector_size<cl_ushort4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_int4>() { return H5T_NATIVE_INT32; }
+template<> constexpr size_t get_vector_size<cl_int4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT32; }
+template<> constexpr size_t get_vector_size<cl_uint4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_long4>() { return H5T_NATIVE_INT64; }
+template<> constexpr size_t get_vector_size<cl_long4>() { return 4; };
+
+template<> hid_t type_to_h5_type<cl_ulong4>() { return H5T_NATIVE_UINT64; }
+template<> constexpr size_t get_vector_size<cl_ulong4>() { return 4; };
 
 // fallback;
 template<typename TYPE>
 constexpr size_t get_vector_size() { return 1; };
 
 
-bool h5_check_object(const char* filename, const char* varname)
+bool h5_check_object(char const* filename, char const* varname)
 {
 	hid_t h5_file_id;
 
@@ -92,102 +108,90 @@ bool h5_check_object(const char* filename, const char* varname)
 }
 
 
-uint8_t h5_get_content(const char* filename, const char* hdf_dir,
-                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size)
+bool h5_get_content(char const* filename, char const* hdf_dir,
+                    std::vector<std::string>& data_names, std::vector<HD5_Type>& data_types, std::vector<size_t>& data_sizes)
 {
-  #define MAX_NAME 1024
-  hid_t   h5_file_id, grp;
-  ssize_t len;
-
-  herr_t err;
-  int otype;
-
-  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
-  char memb_name[MAX_NAME];
-
-  if (fileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-  }
-  else {
+  if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
-    return 0;
+    return false;
   }
 
-  grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
+  hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
 
   hsize_t nobj;
-  hid_t dsid;
-  err = H5Gget_num_objs(grp, &nobj);
+  herr_t err = H5Gget_num_objs(grp, &nobj);
 
-  for (int i = 0; i < nobj; i++) {
+  for (hsize_t obj_idx = 0; obj_idx < nobj; obj_idx++) {
 
-    len = H5Gget_objname_by_idx(grp, (hsize_t)i, memb_name, (size_t)MAX_NAME );
-    otype = H5Gget_objtype_by_idx(grp, (size_t)i );
-
-    if (otype == H5G_DATASET) {
-      sprintf(group_name, "%s%s", hdf_dir, memb_name);
-      data_list.push_back(group_name);
-
-      hid_t dataset = H5Dopen(grp, memb_name, H5P_DEFAULT);
-      hid_t dataspace = H5Dget_space(dataset);
-      unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
-      hsize_t* dims = new hsize_t[ndims];
-      H5Sget_simple_extent_dims(dataspace, dims, NULL);
-      H5Sclose(dataspace);
-
-      data_size.push_back((size_t)dims[0]* dims[1]);
-
-      delete[] dims; dims = nullptr;
-
-      hid_t datatype = H5Dget_type(dataset);
-
-      if (H5Tequal(datatype, type_to_h5_type<float>()) > 0) {
-        datatype_list.push_back(H5_float);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<double>()) > 0) {
-        datatype_list.push_back(H5_double);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_char>()) > 0) {
-        datatype_list.push_back(H5_char);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_uchar>()) > 0) {
-        datatype_list.push_back(H5_uchar);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_short>()) > 0) {
-        datatype_list.push_back(H5_short);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_ushort>()) > 0) {
-        datatype_list.push_back(H5_ushort);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_int>()) > 0) {
-        datatype_list.push_back(H5_int);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_uint>()) > 0) {
-        datatype_list.push_back(H5_uint);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_long>()) > 0) {
-        datatype_list.push_back(H5_long);
-      }
-      else if (H5Tequal(datatype, type_to_h5_type<cl_ulong>()) > 0) {
-        datatype_list.push_back(H5_ulong);
-      }
-      else {
-        std::cerr << ERROR_INFO << "Data type '" << datatype << "' unknown." << std::endl;
-      }
-
-      H5Tclose(datatype);
-      H5Dclose(dataset);
+    int object_type = H5Gget_objtype_by_idx(grp, obj_idx);
+    if (object_type != H5G_DATASET) {
+      continue;
     }
+
+    ssize_t len = H5Gget_objname_by_idx(grp, obj_idx, NULL, 0);
+    vector<char> object_name(len+1, '\0');
+    H5Gget_objname_by_idx(grp, obj_idx, &(object_name[0]), len+1);
+
+    data_names.push_back(string(hdf_dir) + string(object_name.begin(), object_name.end()));
+
+    hid_t dataset = H5Dopen(grp, &(object_name[0]), H5P_DEFAULT);
+    hid_t dataspace = H5Dget_space(dataset);
+    int ndims = H5Sget_simple_extent_ndims(dataspace);
+    vector<hsize_t> dims(ndims);
+    H5Sget_simple_extent_dims(dataspace, &(dims[0]), NULL);
+    H5Sclose(dataspace);
+
+    data_sizes.push_back(accumulate(begin(dims), end(dims), 1, std::multiplies<hsize_t>()));
+
+    hid_t datatype = H5Dget_type(dataset);
+    if (H5Tequal(datatype, type_to_h5_type<float>()) > 0) {
+      data_types.push_back(H5_float);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<double>()) > 0) {
+      data_types.push_back(H5_double);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_char>()) > 0) {
+      data_types.push_back(H5_char);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_uchar>()) > 0) {
+      data_types.push_back(H5_uchar);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_short>()) > 0) {
+      data_types.push_back(H5_short);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_ushort>()) > 0) {
+      data_types.push_back(H5_ushort);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_int>()) > 0) {
+      data_types.push_back(H5_int);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_uint>()) > 0) {
+      data_types.push_back(H5_uint);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_long>()) > 0) {
+      data_types.push_back(H5_long);
+    }
+    else if (H5Tequal(datatype, type_to_h5_type<cl_ulong>()) > 0) {
+      data_types.push_back(H5_ulong);
+    }
+    else {
+      std::cerr << ERROR_INFO << "Data type '" << datatype << "' unknown." << std::endl;
+      //TODO: Exception?
+    }
+
+    H5Tclose(datatype);
+    H5Dclose(dataset);
   }
 
   H5Gclose(grp);
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }
 
 
-uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
+uint8_t h5_create_dir(char const* filename, char const* hdf_dir)
 {
   hid_t h5_file_id, grp;
 
@@ -208,7 +212,7 @@ uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
 
 // read a buffer from an HDF5 file
 template<typename TYPE>
-bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
+bool h5_read_buffer(char const* filename, char const* varname, TYPE* data)
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
@@ -237,44 +241,44 @@ bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
 }
 
 // template instantiations
-template bool h5_read_buffer(const char* filename, const char* varname, float* data);
-template bool h5_read_buffer(const char* filename, const char* varname, double* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_char* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_uchar* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_short* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_ushort* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_int* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_uint* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_long* data);
-template bool h5_read_buffer(const char* filename, const char* varname, cl_ulong* data);
+template bool h5_read_buffer(char const* filename, char const* varname, float* data);
+template bool h5_read_buffer(char const* filename, char const* varname, double* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_char* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_uchar* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_short* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_ushort* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_int* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_uint* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_long* data);
+template bool h5_read_buffer(char const* filename, char const* varname, cl_ulong* data);
 
 // other forms
-bool h5_read_buffer_float(const char* filename, const char* varname, float* data)
+bool h5_read_buffer_float(char const* filename, char const* varname, float* data)
 {
   return h5_read_buffer<float>(filename, varname, data);
 }
 
-bool h5_read_buffer_double(const char* filename, const char* varname, double* data)
+bool h5_read_buffer_double(char const* filename, char const* varname, double* data)
 {
   return h5_read_buffer<double>(filename, varname, data);
 }
 
-bool h5_read_buffer_int(const char* filename, const char* varname, cl_int* data)
+bool h5_read_buffer_int(char const* filename, char const* varname, cl_int* data)
 {
   return h5_read_buffer<cl_int>(filename, varname, data);
 }
 
-bool h5_read_buffer_uint(const char* filename, const char* varname, cl_uint* data)
+bool h5_read_buffer_uint(char const* filename, char const* varname, cl_uint* data)
 {
   return h5_read_buffer<cl_uint>(filename, varname, data);
 }
 
-bool h5_read_buffer_char(const char* filename, const char* varname, cl_char* data)
+bool h5_read_buffer_char(char const* filename, char const* varname, cl_char* data)
 {
   return h5_read_buffer<cl_char>(filename, varname, data);
 }
 
-bool h5_read_buffer_uchar(const char* filename, const char* varname, cl_uchar* data)
+bool h5_read_buffer_uchar(char const* filename, char const* varname, cl_uchar* data)
 {
   return h5_read_buffer<cl_uchar>(filename, varname, data);
 }
@@ -282,7 +286,7 @@ bool h5_read_buffer_uchar(const char* filename, const char* varname, cl_uchar* d
 
 // write a buffer to an HDF5 file using compression
 template<typename TYPE>
-bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data, size_t size)
+bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size)
 {
   hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
   hsize_t hdf_dims[2];
@@ -327,59 +331,59 @@ bool h5_write_buffer(const char* filename, const char* varname, TYPE const* data
 }
 
 // template instantiations
-template bool h5_write_buffer(const char* filename, const char* varname, float const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, double const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_char const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_uchar const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_short const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_ushort const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_int const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_uint const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_long const* data, size_t size);
-template bool h5_write_buffer(const char* filename, const char* varname, cl_ulong const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, float const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, double const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_char const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_uchar const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_short const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_ushort const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_int const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_uint const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_long const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_ulong const* data, size_t size);
 
 // other forms
-bool h5_write_buffer_float(const char* filename, const char* varname, float const* data, size_t size)
+bool h5_write_buffer_float(char const* filename, char const* varname, float const* data, size_t size)
 {
   return h5_write_buffer<float>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_double(const char* filename, const char* varname, double const* data, size_t size)
+bool h5_write_buffer_double(char const* filename, char const* varname, double const* data, size_t size)
 {
   return h5_write_buffer<double>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_int(const char* filename, const char* varname, cl_int const* data, size_t size)
+bool h5_write_buffer_int(char const* filename, char const* varname, cl_int const* data, size_t size)
 {
   return h5_write_buffer<cl_int>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uint(const char* filename, const char* varname, cl_uint const* data, size_t size)
+bool h5_write_buffer_uint(char const* filename, char const* varname, cl_uint const* data, size_t size)
 {
   return h5_write_buffer<cl_uint>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_char(const char* filename, const char* varname, cl_char const* data, size_t size)
+bool h5_write_buffer_char(char const* filename, char const* varname, cl_char const* data, size_t size)
 {
   return h5_write_buffer<cl_char>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uchar(const char* filename, const char* varname, cl_uchar const* data, size_t size)
+bool h5_write_buffer_uchar(char const* filename, char const* varname, cl_uchar const* data, size_t size)
 {
   return h5_write_buffer<cl_uchar>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_float4(const char* filename, const char* varname, cl_float4 const* data, size_t size)
+bool h5_write_buffer_float4(char const* filename, char const* varname, cl_float4 const* data, size_t size)
 {
   return h5_write_buffer<cl_float4>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_double4(const char* filename, const char* varname, cl_double4 const* data, size_t size)
+bool h5_write_buffer_double4(char const* filename, char const* varname, cl_double4 const* data, size_t size)
 {
   return h5_write_buffer<cl_double4>(filename, varname, data, size);
 }
 
-bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 const* data, size_t size)
+bool h5_write_buffer_uint4(char const* filename, char const* varname, cl_uint4 const* data, size_t size)
 {
   return h5_write_buffer<cl_uint4>(filename, varname, data, size);
 }
@@ -387,16 +391,16 @@ bool h5_write_buffer_uint4(const char* filename, const char* varname, cl_uint4 c
 
 // read a single item from an HDF5 file
 // template<typename TYPE>
-// TYPE h5_read_single(const char* filename, const char* varname);
+// TYPE h5_read_single(char const* filename, char const* varname);
 // is defined in header
 
 // other forms
-float h5_read_single_float(const char* filename, const char* varname)
+float h5_read_single_float(char const* filename, char const* varname)
 {
   return h5_read_single<float>(filename, varname);
 }
 
-float h5_read_single_double(const char* filename, const char* varname)
+float h5_read_single_double(char const* filename, char const* varname)
 {
   return h5_read_single<double>(filename, varname);
 }
@@ -404,28 +408,28 @@ float h5_read_single_double(const char* filename, const char* varname)
 
 // write a single item to an HDF5 file
 // template<typename TYPE>
-// bool h5_write_single(const char* filename, const char* varname, TYPE data);
+// bool h5_write_single(char const* filename, char const* varname, TYPE data);
 // is defined in header
 
 // other forms
-bool h5_write_single_float(const char* filename, const char* varname, float data)
+bool h5_write_single_float(char const* filename, char const* varname, float data)
 {
   return h5_write_single<float>(filename, varname, data);
 }
 
-bool h5_write_single_double(const char* filename, const char* varname, double data)
+bool h5_write_single_double(char const* filename, char const* varname, double data)
 {
   return h5_write_single<double>(filename, varname, data);
 }
 
-bool h5_write_single_long(const char* filename, const char* varname, cl_long data)
+bool h5_write_single_long(char const* filename, char const* varname, cl_long data)
 {
   return h5_write_single<cl_long>(filename, varname, data);
 }
 
 
 // reading and writing single strings
-bool h5_read_string(const char* filename, const char* varname, char* buffer)
+bool h5_read_string(char const* filename, char const* varname, char* buffer)
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
@@ -443,7 +447,7 @@ bool h5_read_string(const char* filename, const char* varname, char* buffer)
   return true;
 }
 
-bool h5_write_string(const char* filename, const char* varname, const char* buffer)
+bool h5_write_string(char const* filename, char const* varname, char const* buffer)
 {
   hid_t h5_file_id;
 
@@ -465,7 +469,7 @@ bool h5_write_string(const char* filename, const char* varname, const char* buff
 
 // reading and writing arrays of strings using the format of the (deprecated)
 // matlab function hdfwrite for cell arrays of strings (aka char arrays)
-bool h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
+bool h5_read_strings(char const* filename, char const* varname, std::vector<std::string>& lines)
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
@@ -522,7 +526,7 @@ bool h5_read_strings(const char* filename, const char* varname, std::vector<std:
   return true;
 }
 
-bool h5_write_strings(const char* filename, const char* varname, std::vector<std::string> const& lines)
+bool h5_write_strings(char const* filename, char const* varname, std::vector<std::string> const& lines)
 {
   constexpr size_t buffer_size(900000);
 

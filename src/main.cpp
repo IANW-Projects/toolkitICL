@@ -136,10 +136,10 @@ int main(int argc, char *argv[]) {
 
   cout << "Ingesting HDF5 config file..." << endl;
 
-  std::vector<std::string> data_list;
-  std::vector<HD5_Type> datatype_list;
-  std::vector<size_t> data_size;
-  h5_get_content(filename, "/Data/", data_list, datatype_list, data_size);
+  std::vector<std::string> data_names;
+  std::vector<HD5_Type> data_types;
+  std::vector<size_t> data_sizes;
+  h5_get_content(filename, "/Data/", data_names, data_types, data_sizes);
 
   cout << "Creating output HDF5 file..." << endl;
   string out_name = "out_" + string(filename);
@@ -155,70 +155,70 @@ int main(int argc, char *argv[]) {
   bool blocking = CL_TRUE;
 
   double *rw_flags_ptr; //TODO: Why double? Implement functionality!
-  rw_flags_ptr = new double[data_list.size()];
-  std::fill(rw_flags_ptr, rw_flags_ptr + data_list.size(), 0);
+  rw_flags_ptr = new double[data_names.size()];
+  std::fill(rw_flags_ptr, rw_flags_ptr + data_names.size(), 0);
 
   uint64_t push_time, pull_time;
   push_time = timer.getTimeMicroseconds();
 
-  for(cl_uint i = 0; i < data_list.size(); i++) {
+  for(cl_uint i = 0; i < data_names.size(); i++) {
     try {
       uint8_t *tmp_data = nullptr;
       size_t var_size = 0;
 
-      switch (datatype_list.at(i)) {
+      switch (data_types.at(i)) {
         case H5_float:
-          var_size = data_size.at(i)*sizeof(float);
+          var_size = data_sizes.at(i)*sizeof(float);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<float>(filename, data_list.at(i).c_str(), (float*)tmp_data);
+          h5_read_buffer<float>(filename, data_names.at(i).c_str(), (float*)tmp_data);
           break;
         case H5_double:
-          var_size = data_size.at(i)*sizeof(double);
+          var_size = data_sizes.at(i)*sizeof(double);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<double>(filename, data_list.at(i).c_str(), (double*)tmp_data);
+          h5_read_buffer<double>(filename, data_names.at(i).c_str(), (double*)tmp_data);
           break;
         case H5_char:
-          var_size=data_size.at(i)*sizeof(cl_char);
+          var_size=data_sizes.at(i)*sizeof(cl_char);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_char>(filename, data_list.at(i).c_str(), (cl_char*)tmp_data);
+          h5_read_buffer<cl_char>(filename, data_names.at(i).c_str(), (cl_char*)tmp_data);
           break;
         case H5_uchar:
-          var_size = data_size.at(i)*sizeof(cl_uchar);
+          var_size = data_sizes.at(i)*sizeof(cl_uchar);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_uchar>(filename, data_list.at(i).c_str(), (cl_uchar*)tmp_data);
+          h5_read_buffer<cl_uchar>(filename, data_names.at(i).c_str(), (cl_uchar*)tmp_data);
           break;
         case H5_short:
-          var_size=data_size.at(i)*sizeof(cl_short);
+          var_size=data_sizes.at(i)*sizeof(cl_short);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_short>(filename, data_list.at(i).c_str(), (cl_short*)tmp_data);
+          h5_read_buffer<cl_short>(filename, data_names.at(i).c_str(), (cl_short*)tmp_data);
           break;
         case H5_ushort:
-          var_size=data_size.at(i)*sizeof(cl_ushort);
+          var_size=data_sizes.at(i)*sizeof(cl_ushort);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_ushort>(filename, data_list.at(i).c_str(), (cl_ushort*)tmp_data);
+          h5_read_buffer<cl_ushort>(filename, data_names.at(i).c_str(), (cl_ushort*)tmp_data);
           break;
         case H5_int:
-          var_size=data_size.at(i)*sizeof(cl_int);
+          var_size=data_sizes.at(i)*sizeof(cl_int);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_int>(filename, data_list.at(i).c_str(), (cl_int*)tmp_data);
+          h5_read_buffer<cl_int>(filename, data_names.at(i).c_str(), (cl_int*)tmp_data);
           break;
         case H5_uint:
-          var_size=data_size.at(i)*sizeof(cl_uint);
+          var_size=data_sizes.at(i)*sizeof(cl_uint);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_uint>(filename, data_list.at(i).c_str(), (cl_uint*)tmp_data);
+          h5_read_buffer<cl_uint>(filename, data_names.at(i).c_str(), (cl_uint*)tmp_data);
           break;
         case H5_long:
-          var_size=data_size.at(i)*sizeof(cl_long);
+          var_size=data_sizes.at(i)*sizeof(cl_long);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_long>(filename, data_list.at(i).c_str(), (cl_long*)tmp_data);
+          h5_read_buffer<cl_long>(filename, data_names.at(i).c_str(), (cl_long*)tmp_data);
           break;
         case H5_ulong:
-          var_size=data_size.at(i)*sizeof(cl_ulong);
+          var_size=data_sizes.at(i)*sizeof(cl_ulong);
           tmp_data = new uint8_t[var_size];
-          h5_read_buffer<cl_ulong>(filename, data_list.at(i).c_str(), (cl_ulong*)tmp_data);
+          h5_read_buffer<cl_ulong>(filename, data_names.at(i).c_str(), (cl_ulong*)tmp_data);
           break;
         default:
-          cerr << ERROR_INFO << "Data type '" << datatype_list.at(i) << "' unknown." << endl;
+          cerr << ERROR_INFO << "Data type '" << data_types.at(i) << "' unknown." << endl;
           break;
       }
 
@@ -337,24 +337,23 @@ int main(int argc, char *argv[]) {
 
   uint32_t buffer_counter = 0;
 
-  for(cl_uint i = 0; i < data_list.size(); i++) {
+  for(cl_uint i = 0; i < data_names.size(); i++) {
     try {
       uint8_t *tmp_data = nullptr;
       size_t var_size = 0;
 
-      switch (datatype_list.at(i)) {
-        case H5_float:  var_size=data_size.at(i)*sizeof(cl_float);  break;
-        case H5_double: var_size=data_size.at(i)*sizeof(cl_double); break;
-        case H5_char:   var_size=data_size.at(i)*sizeof(cl_char);   break;
-        case H5_uchar:  var_size=data_size.at(i)*sizeof(cl_uchar);  break;
-        case H5_short:  var_size=data_size.at(i)*sizeof(cl_short);  break;
-        case H5_ushort: var_size=data_size.at(i)*sizeof(cl_ushort); break;
-        case H5_int:    var_size=data_size.at(i)*sizeof(cl_int);    break;
-        case H5_uint:   var_size=data_size.at(i)*sizeof(cl_uint);   break;
-        case H5_long:   var_size=data_size.at(i)*sizeof(cl_long);   break;
-        case H5_ulong:  var_size=data_size.at(i)*sizeof(cl_ulong);  break;
-        // default:        var_size=data_size.at(buffer_counter)*sizeof(cl_double); break; //TODO: exception?
-        default: cerr << ERROR_INFO << "Data type '" << datatype_list.at(i) << "' unknown." << endl;
+      switch (data_types.at(i)) {
+        case H5_float:  var_size=data_sizes.at(i)*sizeof(cl_float);  break;
+        case H5_double: var_size=data_sizes.at(i)*sizeof(cl_double); break;
+        case H5_char:   var_size=data_sizes.at(i)*sizeof(cl_char);   break;
+        case H5_uchar:  var_size=data_sizes.at(i)*sizeof(cl_uchar);  break;
+        case H5_short:  var_size=data_sizes.at(i)*sizeof(cl_short);  break;
+        case H5_ushort: var_size=data_sizes.at(i)*sizeof(cl_ushort); break;
+        case H5_int:    var_size=data_sizes.at(i)*sizeof(cl_int);    break;
+        case H5_uint:   var_size=data_sizes.at(i)*sizeof(cl_uint);   break;
+        case H5_long:   var_size=data_sizes.at(i)*sizeof(cl_long);   break;
+        case H5_ulong:  var_size=data_sizes.at(i)*sizeof(cl_ulong);  break;
+        default: cerr << ERROR_INFO << "Data type '" << data_types.at(i) << "' unknown." << endl;
       }
 
       tmp_data = new uint8_t[var_size];
@@ -367,18 +366,18 @@ int main(int argc, char *argv[]) {
 
       dev_mgr.get_queue(0, 0).finish(); //Buffer Copy is asynchronous
 
-      switch (datatype_list.at(i)){
-        case H5_float:  h5_write_buffer<float>(    out_name, data_list.at(i).c_str(), (float*)tmp_data,     data_size.at(buffer_counter)); break;
-        case H5_double: h5_write_buffer<double>(   out_name, data_list.at(i).c_str(), (double*)tmp_data,    data_size.at(buffer_counter)); break;
-        case H5_char:   h5_write_buffer<cl_char>(  out_name, data_list.at(i).c_str(), (cl_char*)tmp_data,   data_size.at(buffer_counter)); break;
-        case H5_uchar:  h5_write_buffer<cl_uchar>( out_name, data_list.at(i).c_str(), (cl_uchar*)tmp_data,  data_size.at(buffer_counter)); break;
-        case H5_short:  h5_write_buffer<cl_short>( out_name, data_list.at(i).c_str(), (cl_short*)tmp_data,  data_size.at(buffer_counter)); break;
-        case H5_ushort: h5_write_buffer<cl_ushort>(out_name, data_list.at(i).c_str(), (cl_ushort*)tmp_data, data_size.at(buffer_counter)); break;
-        case H5_int:    h5_write_buffer<cl_int>(   out_name, data_list.at(i).c_str(), (cl_int*)tmp_data,    data_size.at(buffer_counter)); break;
-        case H5_uint:   h5_write_buffer<cl_uint>(  out_name, data_list.at(i).c_str(), (cl_uint*)tmp_data,   data_size.at(buffer_counter)); break;
-        case H5_long:   h5_write_buffer<cl_long>(  out_name, data_list.at(i).c_str(), (cl_long*)tmp_data,   data_size.at(buffer_counter)); break;
-        case H5_ulong:  h5_write_buffer<cl_ulong>( out_name, data_list.at(i).c_str(), (cl_ulong*)tmp_data,  data_size.at(buffer_counter)); break;
-        default: cerr << ERROR_INFO << "Data type '" << datatype_list.at(i) << "' unknown." << endl;
+      switch (data_types.at(i)){
+        case H5_float:  h5_write_buffer<float>(    out_name, data_names.at(i).c_str(), (float*)tmp_data,     data_sizes.at(buffer_counter)); break;
+        case H5_double: h5_write_buffer<double>(   out_name, data_names.at(i).c_str(), (double*)tmp_data,    data_sizes.at(buffer_counter)); break;
+        case H5_char:   h5_write_buffer<cl_char>(  out_name, data_names.at(i).c_str(), (cl_char*)tmp_data,   data_sizes.at(buffer_counter)); break;
+        case H5_uchar:  h5_write_buffer<cl_uchar>( out_name, data_names.at(i).c_str(), (cl_uchar*)tmp_data,  data_sizes.at(buffer_counter)); break;
+        case H5_short:  h5_write_buffer<cl_short>( out_name, data_names.at(i).c_str(), (cl_short*)tmp_data,  data_sizes.at(buffer_counter)); break;
+        case H5_ushort: h5_write_buffer<cl_ushort>(out_name, data_names.at(i).c_str(), (cl_ushort*)tmp_data, data_sizes.at(buffer_counter)); break;
+        case H5_int:    h5_write_buffer<cl_int>(   out_name, data_names.at(i).c_str(), (cl_int*)tmp_data,    data_sizes.at(buffer_counter)); break;
+        case H5_uint:   h5_write_buffer<cl_uint>(  out_name, data_names.at(i).c_str(), (cl_uint*)tmp_data,   data_sizes.at(buffer_counter)); break;
+        case H5_long:   h5_write_buffer<cl_long>(  out_name, data_names.at(i).c_str(), (cl_long*)tmp_data,   data_sizes.at(buffer_counter)); break;
+        case H5_ulong:  h5_write_buffer<cl_ulong>( out_name, data_names.at(i).c_str(), (cl_ulong*)tmp_data,  data_sizes.at(buffer_counter)); break;
+        default: cerr << ERROR_INFO << "Data type '" << data_types.at(i) << "' unknown." << endl;
       }
       if (tmp_data != nullptr) {
         delete[] tmp_data; tmp_data = nullptr;

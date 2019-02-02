@@ -14,8 +14,8 @@ enum HD5_Type { H5_float, H5_double, H5_char, H5_uchar, H5_short, H5_ushort, H5_
 
 bool h5_check_object(char const* filename, char const* varname);
 
-uint8_t h5_get_content(char const* filename, char const* hdf_dir,
-                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size);
+bool h5_get_content(char const* filename, char const* hdf_dir,
+                    std::vector<std::string>& data_names, std::vector<HD5_Type>& data_types, std::vector<size_t>& data_sizes);
 
 uint8_t h5_create_dir(char const* filename, char const* hdf_dir);
 inline uint8_t h5_create_dir(std::string const& filename, char const* hdf_dir)

@@ -26,6 +26,7 @@ typedef unsigned int uint;
 #include <unistd.h>
 #endif
 
+
 //TODO: unify all FileExists methods and provide them in one place instead of 3...
 inline bool FileExists(const std::string &Filename)
 {

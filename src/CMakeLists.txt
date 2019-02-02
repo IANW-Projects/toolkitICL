@@ -11,7 +11,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${OpenCL_INCLUDE_DIRS} ${HDF5_IN
 
 #Header files of the project
 
-set(HEADER ../include/ocl_util.hpp ../include/util.hpp ../include/ocl_dev_mgr.hpp)
+set(HEADER ../include/main.hpp ../include/util.hpp ../include/ocl_dev_mgr.hpp)
 
 set(SOURCES main.cpp hdf5_io.cpp ocl_dev_mgr.cpp ${HEADER})
 

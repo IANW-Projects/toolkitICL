@@ -1,18 +1,15 @@
 /* TODO: Provide a license note */
 
-//#include "../include/util.hpp"
-#include "../include/hdf5_io.hpp"
-#include "../include/main.hpp"
 #include <algorithm>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <iterator>
-#include <sstream>
-#include <vector>
 #include <math.h>
+#include <stdio.h>
+#include <string>
+#include <sstream>
+#include <sys/stat.h>
+#include <vector>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -21,155 +18,12 @@
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
+#include "../include/main.hpp"
+#include "../include/hdf5_io.hpp"
+
 #define chunk_factor 64
 
 using namespace std;
-
-
-
-// utility functions for hdf5 dfiles
-inline bool fileExists(const char* filename)
-{
-  struct stat fileInfo;
-  return stat(filename, &fileInfo) == 0;
-}
-
-
-bool h5_check_object(const char* filename, const char* varname)
-{
-	hid_t h5_file_id;
-
-  if (fileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-
-    if (H5LTpath_valid(h5_file_id, varname, true) > 0) {
-      H5Fclose(h5_file_id);
-      return true;
-    }
-    else {
-      H5Fclose(h5_file_id);
-      return false;
-    }
-  }
-
-  std::cerr << "File '" << filename << "' not found." << std::endl;
-  return false;
-}
-
-
-uint8_t h5_get_content(const char* filename, const char* hdf_dir,
-                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size)
-{
-  #define MAX_NAME 1024
-  hid_t   h5_file_id, grp;
-  ssize_t len;
-
-  herr_t err;
-  int otype;
-
-  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
-  char memb_name[MAX_NAME];
-
-  if (fileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-  }
-  else {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
-    return 0;
-  }
-
-  grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
-
-  hsize_t nobj;
-  hid_t dsid;
-  err = H5Gget_num_objs(grp, &nobj);
-
-  for (int i = 0; i < nobj; i++) {
-
-    len = H5Gget_objname_by_idx(grp, (hsize_t)i, memb_name, (size_t)MAX_NAME );
-    otype = H5Gget_objtype_by_idx(grp, (size_t)i );
-
-    if (otype == H5G_DATASET) {
-      sprintf(group_name, "%s%s", hdf_dir, memb_name);
-      data_list.push_back(group_name);
-
-      hid_t dataset = H5Dopen(grp, memb_name, H5P_DEFAULT);
-      hid_t dataspace = H5Dget_space(dataset);
-      unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
-      hsize_t* dims = new hsize_t[ndims];
-      H5Sget_simple_extent_dims(dataspace, dims, NULL);
-      H5Sclose(dataspace);
-
-      data_size.push_back((size_t)dims[0]* dims[1]);
-
-      delete[] dims; dims = nullptr;
-
-      hid_t datatype = H5Dget_type(dataset);
-      hid_t native_type = H5Tget_native_type(datatype, H5T_DIR_ASCEND);
-
-      if (H5Tequal(native_type,H5T_NATIVE_FLOAT)>0)
-      {
-        datatype_list.push_back(H5_float);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_DOUBLE)>0)
-      {
-        datatype_list.push_back(H5_double);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_CHAR)>0)
-      {
-        datatype_list.push_back(H5_char);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_UCHAR)>0)
-      {
-        datatype_list.push_back(H5_uchar);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_INT)>0)
-      {
-        datatype_list.push_back(H5_int);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_UINT)>0)
-      {
-        datatype_list.push_back(H5_uint);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_LONG)>0)
-      {
-        datatype_list.push_back(H5_long);
-      }
-      if (H5Tequal(native_type,H5T_NATIVE_ULONG)>0)
-      {
-        datatype_list.push_back(H5_ulong);
-      }
-
-      H5Tclose(native_type);
-      H5Tclose(datatype);
-      H5Dclose(dataset);
-    }
-  }
-
-  H5Gclose(grp);
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
-
-
-uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
-{
-  hid_t h5_file_id, grp;
-
-  if (fileExists(filename)) {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
-  }
-  else {
-    return 0;
-  }
-
-  grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
-  H5Gclose(grp);
-  H5Fclose(h5_file_id);
-
-  return 1;
-}
 
 
 // convert a C type TYPE to the HDF5 identifier of that type
@@ -207,21 +61,166 @@ hid_t type_to_h5_type<cl_ulong>() { return H5T_NATIVE_UINT64; }
 template<>
 hid_t type_to_h5_type<cl_float4>() { return H5T_NATIVE_FLOAT; }
 template<>
-size_t get_vector_size<cl_float4>() { return 4; };
+constexpr size_t get_vector_size<cl_float4>() { return 4; };
 
 template<>
 hid_t type_to_h5_type<cl_double4>() { return H5T_NATIVE_DOUBLE; }
 template<>
-size_t get_vector_size<cl_double4>() { return 4; };
+constexpr size_t get_vector_size<cl_double4>() { return 4; };
 
 template<>
 hid_t type_to_h5_type<cl_uint4>() { return H5T_NATIVE_UINT; }
 template<>
-size_t get_vector_size<cl_uint4>() { return 4; };
+constexpr size_t get_vector_size<cl_uint4>() { return 4; };
 
 // fallback;
 template<typename TYPE>
-size_t get_vector_size() { return 1; };
+constexpr size_t get_vector_size() { return 1; };
+
+
+
+// utility functions for hdf5 dfiles
+inline bool fileExists(const char* filename)
+{
+  struct stat fileInfo;
+  return stat(filename, &fileInfo) == 0;
+}
+
+
+bool h5_check_object(const char* filename, const char* varname)
+{
+	hid_t h5_file_id;
+
+  if (fileExists(filename)) {
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+    if (H5LTpath_valid(h5_file_id, varname, true) > 0) {
+      H5Fclose(h5_file_id);
+      return true;
+    }
+    else {
+      H5Fclose(h5_file_id);
+      return false;
+    }
+  }
+
+  std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
+  return false;
+}
+
+
+uint8_t h5_get_content(const char* filename, const char* hdf_dir,
+                       std::vector<std::string> &data_list, std::vector<HD5_Type> &datatype_list, std::vector<size_t> &data_size)
+{
+  #define MAX_NAME 1024
+  hid_t   h5_file_id, grp;
+  ssize_t len;
+
+  herr_t err;
+  int otype;
+
+  char group_name[MAX_NAME]; //TODO: possible buffer overflow?
+  char memb_name[MAX_NAME];
+
+  if (fileExists(filename)) {
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  }
+  else {
+    std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
+    return 0;
+  }
+
+  grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
+
+  hsize_t nobj;
+  hid_t dsid;
+  err = H5Gget_num_objs(grp, &nobj);
+
+  for (int i = 0; i < nobj; i++) {
+
+    len = H5Gget_objname_by_idx(grp, (hsize_t)i, memb_name, (size_t)MAX_NAME );
+    otype = H5Gget_objtype_by_idx(grp, (size_t)i );
+
+    if (otype == H5G_DATASET) {
+      sprintf(group_name, "%s%s", hdf_dir, memb_name);
+      data_list.push_back(group_name);
+
+      hid_t dataset = H5Dopen(grp, memb_name, H5P_DEFAULT);
+      hid_t dataspace = H5Dget_space(dataset);
+      unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
+      hsize_t* dims = new hsize_t[ndims];
+      H5Sget_simple_extent_dims(dataspace, dims, NULL);
+      H5Sclose(dataspace);
+
+      data_size.push_back((size_t)dims[0]* dims[1]);
+
+      delete[] dims; dims = nullptr;
+
+      hid_t datatype = H5Dget_type(dataset);
+
+      if (H5Tequal(datatype, type_to_h5_type<float>()) > 0) {
+        datatype_list.push_back(H5_float);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<double>()) > 0) {
+        datatype_list.push_back(H5_double);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_char>()) > 0) {
+        datatype_list.push_back(H5_char);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_uchar>()) > 0) {
+        datatype_list.push_back(H5_uchar);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_short>()) > 0) {
+        datatype_list.push_back(H5_short);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_ushort>()) > 0) {
+        datatype_list.push_back(H5_ushort);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_int>()) > 0) {
+        datatype_list.push_back(H5_int);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_uint>()) > 0) {
+        datatype_list.push_back(H5_uint);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_long>()) > 0) {
+        datatype_list.push_back(H5_long);
+      }
+      else if (H5Tequal(datatype, type_to_h5_type<cl_ulong>()) > 0) {
+        datatype_list.push_back(H5_ulong);
+      }
+      else {
+        std::cerr << ERROR_INFO << "Data type '" << datatype << "' unknown." << std::endl;
+      }
+
+      H5Tclose(datatype);
+      H5Dclose(dataset);
+    }
+  }
+
+  H5Gclose(grp);
+  H5Fclose(h5_file_id);
+
+  return 1;
+}
+
+
+uint8_t h5_create_dir(const char* filename, const char* hdf_dir)
+{
+  hid_t h5_file_id, grp;
+
+  if (fileExists(filename)) {
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+  }
+  else {
+    return 0;
+  }
+
+  grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
+  H5Gclose(grp);
+  H5Fclose(h5_file_id);
+
+  return 1;
+}
 
 
 // read a buffer from an HDF5 file
@@ -229,14 +228,14 @@ template<typename TYPE>
 bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
 {
   if (!fileExists(filename)) {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
+    std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
     //TODO: Exception? Only error code?
     return false;
   }
 
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (H5LTpath_valid(h5_file_id, varname, true) <= 0) {
-    std::cerr << "Variable '" << varname << "' not found in file '" << filename << "'." << std::endl;
+    std::cerr << ERROR_INFO << "Variable '" << varname << "' not found in file '" << filename << "'." << std::endl;
     //TODO: Exception? Only error code?
     H5Fclose(h5_file_id);
     return false;
@@ -244,7 +243,7 @@ bool h5_read_buffer(const char* filename, const char* varname, TYPE* data)
 
   int err = H5LTread_dataset(h5_file_id, varname, type_to_h5_type<TYPE>(), data);
   if (err < 0) {
-    std::cerr << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+    std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
     //TODO: Exception? Only error code?
     H5Fclose(h5_file_id);
     return false;
@@ -446,7 +445,7 @@ bool h5_write_single_long(const char* filename, const char* varname, cl_long dat
 bool h5_read_string(const char* filename, const char* varname, char* buffer)
 {
   if (!fileExists(filename)) {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
+    std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return false;
   }
@@ -486,11 +485,12 @@ bool h5_write_string(const char* filename, const char* varname, const char* buff
 bool h5_read_strings(const char* filename, const char* varname, std::vector<std::string>& lines)
 {
   if (!fileExists(filename)) {
-    std::cerr << "File '" << filename << "' not found." << std::endl;
+    std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - Exception? Error code?
     return false;
   }
 
+  //TODO: increase; heap!
   constexpr size_t buffer_size(900000);
   constexpr size_t subbuffer_size(65535);
 
@@ -501,7 +501,7 @@ bool h5_read_strings(const char* filename, const char* varname, std::vector<std:
   hid_t dataspace = H5Dget_space(dataset);
   unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
   if (ndims != 1) {
-    std::cerr << "Error: Dataset '" << varname << "' in '" << filename << "' has a wrong format." << std::endl;
+    std::cerr << ERROR_INFO << "Error: Dataset '" << varname << "' in '" << filename << "' has a wrong format." << std::endl;
     H5Sclose(dataspace);
     H5Dclose(dataset);
     H5Fclose(h5_file_id);
@@ -550,7 +550,7 @@ bool h5_write_strings(const char* filename, const char* varname, std::vector<std
 
   char buffer[buffer_size] = {'\0'};
   if (line_length >= buffer_size) {
-    std::cerr << "Error: The strings are too long (length = " << line_length << ", buffer size = " << buffer_size << "." << std::endl;
+    std::cerr << ERROR_INFO << "Error: The strings are too long (length = " << line_length << ", buffer size = " << buffer_size << "." << std::endl;
     return false;
   }
 

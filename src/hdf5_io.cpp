@@ -320,9 +320,36 @@ template bool h5_write_buffer(char const* filename, char const* varname, cl_ulon
 
 
 // write a single item to an HDF5 file
-// template<typename TYPE>
-// bool h5_write_single(char const* filename, char const* varname, TYPE data);
-// is defined in header
+template<typename TYPE>
+bool h5_write_single(char const* filename, char const* varname, TYPE data)
+{
+  hid_t h5_file_id;
+
+  if (!fileExists(filename)) {
+    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  }
+  else {
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
+  }
+
+  H5LTmake_dataset(h5_file_id, varname, 0, NULL, type_to_h5_type<TYPE>(), &data);
+
+  H5Fclose(h5_file_id);
+
+  return true;
+}
+
+// template instantiations
+template bool h5_write_single(char const* filename, char const* varname, float data);
+template bool h5_write_single(char const* filename, char const* varname, double data);
+template bool h5_write_single(char const* filename, char const* varname, cl_char data);
+template bool h5_write_single(char const* filename, char const* varname, cl_uchar data);
+template bool h5_write_single(char const* filename, char const* varname, cl_short data);
+template bool h5_write_single(char const* filename, char const* varname, cl_ushort data);
+template bool h5_write_single(char const* filename, char const* varname, cl_int data);
+template bool h5_write_single(char const* filename, char const* varname, cl_uint data);
+template bool h5_write_single(char const* filename, char const* varname, cl_long data);
+template bool h5_write_single(char const* filename, char const* varname, cl_ulong data);
 
 
 // reading and writing single strings
@@ -390,8 +417,7 @@ bool h5_write_string(char const* filename, char const* varname, std::string cons
 }
 
 
-// reading and writing arrays of strings using the format of the (deprecated)
-// matlab function hdfwrite for cell arrays of strings (aka char arrays)
+// reading and writing arrays of strings
 bool h5_read_strings(char const* filename, char const* varname, std::vector<std::string>& lines)
 {
   if (!fileExists(filename)) {

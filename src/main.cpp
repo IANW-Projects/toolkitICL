@@ -38,8 +38,8 @@ void print_help()
   cout << "Usage: toolkitICL [options] -c config.h5" << endl
        << "Options:" << endl
        << "  -d device_id: " << "Use the device specified by `device_id`." << endl
-       << "  -b          : " << "Activate the benchmark mode (additional delay before and after runs)" << endl
-       << "  -c config.h5: " << "Specify the URL `config.h5` of the HDF5 configuration file" << endl
+       << "  -b          : " << "Activate the benchmark mode (additional delay before & after runs)." << endl
+       << "  -c config.h5: " << "Specify the URL `config.h5` of the HDF5 configuration file." << endl
        << endl;
 }
 

@@ -31,3 +31,8 @@ foreach(TEST ${TESTS})
   target_link_libraries(${TEST} ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
   add_test(${TEST} ${TEST})
 endforeach()
+
+
+# julia tests
+configure_file(copy_test.jl copy_test.jl COPYONLY)
+add_test(julia julia copy_test.jl)

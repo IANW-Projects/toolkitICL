@@ -1,0 +1,63 @@
+image:
+  - Visual Studio 2015
+  - Visual Studio 2017
+  - Ubuntu1804
+
+platform:
+  - x64
+
+# If the build fails on older versions for some reason:
+# matrix:
+#   allow_failures:
+#     - image: Visual Studio 2015
+
+notifications:
+  - provider: Email
+    on_build_success: false
+    on_build_failure: false
+    on_build_status_changed: false
+
+# build version format
+version: '{build}'
+
+install:
+  # Windows only
+  - cmd: set VCPKG_DEFAULT_TRIPLET=x64-windows
+  - cmd: vcpkg integrate install
+  - cmd: vcpkg install hdf5[cpp]
+  # - cmd: dir C:\Tools\vcpkg\installed
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows\bin
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows\include
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows\lib
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows\share
+  # - cmd: dir C:\Tools\vcpkg\installed\x64-windows\share\hdf5
+  - cmd: vcpkg install opencl
+  - cmd: appveyor DownloadFile "http://registrationcenter-download.intel.com/akdlm/irc_nas/12512/opencl_runtime_16.1.2_x64_setup.msi"
+  - cmd: start /wait msiexec /i opencl_runtime_16.1.2_x64_setup.msi /qn  /l*v opencl_runtime.log
+  - cmd: appveyor DownloadFile "https://boinc.berkeley.edu/dl/clinfo.zip"
+  - cmd: 7z e clinfo.zip
+  # Linux only
+  - sh: sudo apt-get update
+  - sh: sudo apt-get -y install libhdf5-dev opencl-clhpp-headers opencl-c-headers opencl-dev pocl-opencl-icd clinfo
+  # Windows and Linux
+  - clinfo
+
+cache: C:\Tools\vcpkg\installed\
+
+build_script:
+  - mkdir build
+  - cd build
+  # Windows only
+  - cmd: set VCPKG_DEFAULT_TRIPLET=x64-windows
+  - cmd: cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_POLICY_DEFAULT_CMP0074=NEW -DHDF5_ROOT="C:/Tools/vcpkg/installed/x64-windows" -DHDF5_INCLUDE_DIRS="C:/Tools/vcpkg/installed/x64-windows/include" -DHDF5_LIBRARIES="hdf5::hdf5-shared" -DHDF5_HL_LIBRARIES="hdf5::hdf5_hl-shared"
+  - cmd: cmake --build . --target ALL_BUILD
+  # - cmd: cd ..
+  # - cmd: 7z a build_directory.zip build
+  # - cmd: appveyor PushArtifact build_directory.zip
+  # - cmd: cd build
+  - cmd: cmake --build . --target RUN_TESTS
+  # Linux only
+  - sh: cmake ..
+  - sh: cmake --build .
+  - sh: cmake --build . --target test

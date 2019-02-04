@@ -34,5 +34,11 @@ endforeach()
 
 
 # julia tests
-configure_file(copy_test.jl copy_test.jl COPYONLY)
-add_test(julia julia copy_test.jl)
+find_program(JULIA julia)
+IF(EXISTS ${JULIA})
+  MESSAGE(STATUS "Julia found at" ${JULIA} "\n   Corresponding tests were added.")
+  configure_file(copy_test.jl copy_test.jl COPYONLY)
+  add_test(${JULIA} julia copy_test.jl)
+ELSE()
+  MESSAGE(STATUS "Julia not found; no corresponding tests were added.")
+ENDIF()

@@ -359,6 +359,7 @@ void ocl_dev_mgr::initialize()
 
 void ocl_dev_mgr::deinitalize()
 {
-  //TODO: Why?
+  //Deinitialization should be performed automatically, but there seems to be segfaults 
+  //under certain conditions using Windows, hence the vetor is cleared manually
   con_list.clear();
 }

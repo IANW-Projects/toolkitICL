@@ -191,7 +191,7 @@ bool h5_get_content(char const* filename, char const* hdf_dir,
 }
 
 
-uint8_t h5_create_dir(char const* filename, char const* hdf_dir)
+bool h5_create_dir(char const* filename, char const* hdf_dir)
 {
   hid_t h5_file_id, grp;
 
@@ -199,14 +199,14 @@ uint8_t h5_create_dir(char const* filename, char const* hdf_dir)
     h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
   else {
-    return 0;
+    return false;
   }
 
   grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
   H5Gclose(grp);
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }
 
 
@@ -228,7 +228,7 @@ bool h5_read_buffer(char const* filename, char const* varname, TYPE* data)
     return false;
   }
 
-  int err = H5LTread_dataset(h5_file_id, varname, type_to_h5_type<TYPE>(), data);
+  herr_t err = H5LTread_dataset(h5_file_id, varname, type_to_h5_type<TYPE>(), data);
   if (err < 0) {
     std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
     //TODO: Exception? Only error code?
@@ -252,37 +252,6 @@ template bool h5_read_buffer(char const* filename, char const* varname, cl_uint*
 template bool h5_read_buffer(char const* filename, char const* varname, cl_long* data);
 template bool h5_read_buffer(char const* filename, char const* varname, cl_ulong* data);
 
-// other forms
-bool h5_read_buffer_float(char const* filename, char const* varname, float* data)
-{
-  return h5_read_buffer<float>(filename, varname, data);
-}
-
-bool h5_read_buffer_double(char const* filename, char const* varname, double* data)
-{
-  return h5_read_buffer<double>(filename, varname, data);
-}
-
-bool h5_read_buffer_int(char const* filename, char const* varname, cl_int* data)
-{
-  return h5_read_buffer<cl_int>(filename, varname, data);
-}
-
-bool h5_read_buffer_uint(char const* filename, char const* varname, cl_uint* data)
-{
-  return h5_read_buffer<cl_uint>(filename, varname, data);
-}
-
-bool h5_read_buffer_char(char const* filename, char const* varname, cl_char* data)
-{
-  return h5_read_buffer<cl_char>(filename, varname, data);
-}
-
-bool h5_read_buffer_uchar(char const* filename, char const* varname, cl_uchar* data)
-{
-  return h5_read_buffer<cl_uchar>(filename, varname, data);
-}
-
 
 // write a buffer to an HDF5 file using compression
 template<typename TYPE>
@@ -303,7 +272,7 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
   hdf_dims[0] = size;
   hdf_dims[1] = get_vector_size<TYPE>();
 
-  cdims[0] = (int)(hdf_dims[0]/chunk_factor)+1;
+  cdims[0] = (hsize_t)(hdf_dims[0]/chunk_factor) + 1;
   cdims[1] = hdf_dims[1];
 
   plist_id = H5Pcreate(H5P_DATASET_CREATE);
@@ -327,7 +296,7 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
 
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }
 
 // template instantiations
@@ -342,68 +311,11 @@ template bool h5_write_buffer(char const* filename, char const* varname, cl_uint
 template bool h5_write_buffer(char const* filename, char const* varname, cl_long const* data, size_t size);
 template bool h5_write_buffer(char const* filename, char const* varname, cl_ulong const* data, size_t size);
 
-// other forms
-bool h5_write_buffer_float(char const* filename, char const* varname, float const* data, size_t size)
-{
-  return h5_write_buffer<float>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_double(char const* filename, char const* varname, double const* data, size_t size)
-{
-  return h5_write_buffer<double>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_int(char const* filename, char const* varname, cl_int const* data, size_t size)
-{
-  return h5_write_buffer<cl_int>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_uint(char const* filename, char const* varname, cl_uint const* data, size_t size)
-{
-  return h5_write_buffer<cl_uint>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_char(char const* filename, char const* varname, cl_char const* data, size_t size)
-{
-  return h5_write_buffer<cl_char>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_uchar(char const* filename, char const* varname, cl_uchar const* data, size_t size)
-{
-  return h5_write_buffer<cl_uchar>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_float4(char const* filename, char const* varname, cl_float4 const* data, size_t size)
-{
-  return h5_write_buffer<cl_float4>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_double4(char const* filename, char const* varname, cl_double4 const* data, size_t size)
-{
-  return h5_write_buffer<cl_double4>(filename, varname, data, size);
-}
-
-bool h5_write_buffer_uint4(char const* filename, char const* varname, cl_uint4 const* data, size_t size)
-{
-  return h5_write_buffer<cl_uint4>(filename, varname, data, size);
-}
-
 
 // read a single item from an HDF5 file
 // template<typename TYPE>
 // TYPE h5_read_single(char const* filename, char const* varname);
 // is defined in header
-
-// other forms
-float h5_read_single_float(char const* filename, char const* varname)
-{
-  return h5_read_single<float>(filename, varname);
-}
-
-float h5_read_single_double(char const* filename, char const* varname)
-{
-  return h5_read_single<double>(filename, varname);
-}
 
 
 // write a single item to an HDF5 file
@@ -411,24 +323,9 @@ float h5_read_single_double(char const* filename, char const* varname)
 // bool h5_write_single(char const* filename, char const* varname, TYPE data);
 // is defined in header
 
-// other forms
-bool h5_write_single_float(char const* filename, char const* varname, float data)
-{
-  return h5_write_single<float>(filename, varname, data);
-}
-
-bool h5_write_single_double(char const* filename, char const* varname, double data)
-{
-  return h5_write_single<double>(filename, varname, data);
-}
-
-bool h5_write_single_long(char const* filename, char const* varname, cl_long data)
-{
-  return h5_write_single<cl_long>(filename, varname, data);
-}
-
 
 // reading and writing single strings
+//TODO: overload for std::string; check sizes!
 bool h5_read_string(char const* filename, char const* varname, char* buffer)
 {
   if (!fileExists(filename)) {

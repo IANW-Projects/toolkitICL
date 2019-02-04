@@ -19,6 +19,9 @@
 using namespace std;
 
 
+// TODO: Check error codes for all H5... routines?
+
+
 // convert a C type TYPE to the HDF5 identifier of that type
 template<>
 hid_t type_to_h5_type<float>() { return H5T_NATIVE_FLOAT; }
@@ -287,8 +290,6 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
   // The same can be done using H5 High Level API, but without compression
   // H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, type_to_h5_type<TYPE>(), data);
 
-  // TODO: Check error codes?
-
   H5Pclose(plist_id);
   H5Sclose(dataspace_id);
   H5Sclose(memspace_id);
@@ -332,7 +333,6 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
     //TODO: File not found - no idea what error code to use
     return false;
   }
-  //TODO: check if varname was found - no idea what error code to use if not
 
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
@@ -347,7 +347,7 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
 
   H5Dclose(dataset);
 
-  std::vector<char> buffer(datytype_size * npoints);
+  std::vector<char> buffer(datytype_size * npoints, '\0');
   H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
 
   H5Fclose(h5_file_id);
@@ -369,7 +369,6 @@ bool h5_write_string(char const* filename, char const* varname, std::string cons
   }
 
   H5LTmake_dataset_string(h5_file_id, varname, buffer.c_str());
-  //TODO: check if successful
 
   H5Fclose(h5_file_id);
 
@@ -387,73 +386,45 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
     return false;
   }
 
-  //TODO: increase; heap!
-  constexpr size_t buffer_size(900000);
-  constexpr size_t subbuffer_size(65535);
-
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-
-  // get information about the data
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
-  hid_t dataspace = H5Dget_space(dataset);
-  unsigned int ndims = H5Sget_simple_extent_ndims(dataspace);
-  if (ndims != 1) {
-    std::cerr << ERROR_INFO << "Error: Dataset '" << varname << "' in '" << filename << "' has a wrong format." << std::endl;
-    H5Sclose(dataspace);
-    H5Dclose(dataset);
-    H5Fclose(h5_file_id);
-    //TODO: Exception?
-    return false;
-  }
-  hsize_t* dims = new hsize_t[ndims];
-  H5Sget_simple_extent_dims(dataspace, dims, NULL);
-  hid_t datatype = H5Dget_type(dataset);
-  unsigned int line_length = H5Tget_size(datatype);
 
+  hid_t datatype = H5Dget_type(dataset);
+  size_t line_length = H5Tget_size(datatype);
   H5Tclose(datatype);
+
+  hid_t dataspace = H5Dget_space(dataset);
+  hssize_t num_lines = H5Sget_simple_extent_npoints(dataspace);
   H5Sclose(dataspace);
+
   H5Dclose(dataset);
 
-  // load the data
-  char buffer[buffer_size]; //TODO: possible buffer overflow?
+  std::vector<char> buffer(line_length * num_lines, '\0');
+  H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
 
-  H5LTread_dataset_string(h5_file_id, varname, buffer);
-  //TODO: check if varname was found - no idea what error code to use if not
-
-  unsigned int lines_found = 0;
-  unsigned int str_start = 0;
-  for (unsigned int i = 0; i < dims[0]; i++) {
-    char subbuff[subbuffer_size];
-    memcpy(subbuff, &buffer[str_start], line_length);
-    lines.push_back(subbuff);
-    str_start += line_length;
-    lines_found++;
-  }
-
-  delete[] dims; dims = nullptr;
   H5Fclose(h5_file_id);
+
+  size_t lines_found = 0;
+  size_t str_start = 0;
+  for (; lines_found < num_lines; ++lines_found) {
+    lines.push_back(&(buffer[str_start]));
+    str_start += line_length;
+  }
 
   return true;
 }
 
 bool h5_write_strings(char const* filename, char const* varname, std::vector<std::string> const& lines)
 {
-  constexpr size_t buffer_size(900000);
-
   // create single C string using the format of the (deprecated) matlab function
   // `hdf5write` for cell arrays of char arrays (aka strings)
   size_t line_length = std::max_element(
     lines.cbegin(), lines.cend(), [] (std::string s1, std::string s2) { return s1.size() < s2.size(); } )->size() + 1;
 
-  char buffer[buffer_size] = {'\0'};
-  if (line_length >= buffer_size) {
-    std::cerr << ERROR_INFO << "Error: The strings are too long (length = " << line_length << ", buffer size = " << buffer_size << "." << std::endl;
-    return false;
-  }
-
+  std::vector<char> buffer(line_length * lines.size(), '\0');
   size_t str_start = 0;
   for (const string& line : lines) {
-    strcpy(&buffer[str_start], line.c_str());
+    strcpy(&(buffer[str_start]), line.c_str());
     str_start += line_length;
   }
 
@@ -471,7 +442,7 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
   hid_t datatype = H5Tcreate(H5T_STRING, line_length);
   hid_t dataset = H5Dcreate2(h5_file_id, varname, datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  H5Dwrite(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, buffer);
+  H5Dwrite(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
 
   H5Dclose(dataset);
   H5Tclose(datatype);
@@ -479,5 +450,5 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
 
   H5Fclose(h5_file_id);
 
-  return 1;
+  return true;
 }

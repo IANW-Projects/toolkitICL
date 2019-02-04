@@ -37,11 +37,20 @@ install:
   - cmd: start /wait msiexec /i opencl_runtime_16.1.2_x64_setup.msi /qn  /l*v opencl_runtime.log
   - cmd: appveyor DownloadFile "https://boinc.berkeley.edu/dl/clinfo.zip"
   - cmd: 7z e clinfo.zip
+    # Julia
+  - cmd: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/winnt/x64/1.1/julia-1.1.0-win64.exe" -FileName "C:\projects\julia-installer.exe"
+  - cmd: Start-Process -FilePath $julia_installer -ArgumentList "/S /D=C:\julia" -NoNewWindow -Wait
+  - cmd: setx path "%path%;C:\julia\bin\julia"
   # Linux only
   - sh: sudo apt-get update
   - sh: sudo apt-get -y install libhdf5-dev opencl-clhpp-headers opencl-c-headers opencl-dev pocl-opencl-icd clinfo
+      # Julia
+  - sh: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz"
+  - sh: tar xvf julia-1.1.0-linux-x86_64.tar.gz
+  - sh: export PATH=$PATH:$(pwd)/julia-1.1.0/bin
   # Windows and Linux
   - clinfo
+  - julia -e 'using Pkg; Pkg.add("HDF5")'
 
 cache: C:\Tools\vcpkg\installed\
 

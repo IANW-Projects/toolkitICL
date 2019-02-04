@@ -108,14 +108,14 @@ bool h5_write_single_long(char const* filename, char const* varname, cl_long dat
 
 
 // reading and writing single strings
-bool h5_read_string(char const* filename, char const* varname, char* buffer);
-bool h5_write_string(char const* filename, char const* varname, char const* buffer);
+bool h5_read_string(char const* filename, char const* varname, std::string& output);
+bool h5_write_string(char const* filename, char const* varname, std::string const& output);
 
-inline bool h5_read_string(std::string const& filename, char const* varname, char* buffer)
+inline bool h5_read_string(std::string const& filename, char const* varname, std::string& buffer)
 {
   return h5_read_string(filename.c_str(), varname, buffer);
 }
-inline bool h5_write_string(std::string const& filename, char const* varname, char const* buffer)
+inline bool h5_write_string(std::string const& filename, char const* varname, std::string const& buffer)
 {
   return h5_write_string(filename.c_str(), varname, buffer);
 }

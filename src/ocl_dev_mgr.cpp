@@ -275,9 +275,9 @@ void ocl_dev_mgr::execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue& que
 
 
 // Compile kernels and return the number of compiled kernels.
-cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string const& prog_name, char const* options)
+cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string const& prog_name, std::string const& options)
 {
-  std::string compile_options = std::string(" ") + std::string(options);
+  std::string compile_options = std::string(" ") + options;
 
   auto it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
   if (it_p == con_list.at(context_idx).prog_names.end())  {

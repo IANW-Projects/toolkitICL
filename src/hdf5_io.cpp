@@ -325,26 +325,39 @@ template bool h5_write_buffer(char const* filename, char const* varname, cl_ulon
 
 
 // reading and writing single strings
-//TODO: overload for std::string; check sizes!
-bool h5_read_string(char const* filename, char const* varname, char* buffer)
+bool h5_read_string(char const* filename, char const* varname, std::string& output)
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
     //TODO: File not found - no idea what error code to use
     return false;
   }
-
-  hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-
-  H5LTread_dataset_string(h5_file_id, varname, buffer);
   //TODO: check if varname was found - no idea what error code to use if not
 
+  hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
+
+  hid_t datatype = H5Dget_type(dataset);
+  size_t datytype_size = H5Tget_size(datatype);
+  H5Tclose(datatype);
+
+  hid_t dataspace = H5Dget_space(dataset);
+  hssize_t npoints = H5Sget_simple_extent_npoints(dataspace);
+  H5Sclose(dataspace);
+
+  H5Dclose(dataset);
+
+  std::vector<char> buffer(datytype_size * npoints);
+  H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
+
   H5Fclose(h5_file_id);
+
+  output = std::string(begin(buffer), end(buffer));
 
   return true;
 }
 
-bool h5_write_string(char const* filename, char const* varname, char const* buffer)
+bool h5_write_string(char const* filename, char const* varname, std::string const& buffer)
 {
   hid_t h5_file_id;
 
@@ -355,7 +368,7 @@ bool h5_write_string(char const* filename, char const* varname, char const* buff
     h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
 
-  H5LTmake_dataset_string(h5_file_id, varname, buffer);
+  H5LTmake_dataset_string(h5_file_id, varname, buffer.c_str());
   //TODO: check if successful
 
   H5Fclose(h5_file_id);

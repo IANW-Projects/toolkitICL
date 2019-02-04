@@ -42,7 +42,7 @@ public:
   cl_ulong get_context_num();
   ocl_device_info& get_avail_dev_info(cl_uint avail_device_idx);
   ocl_device_info& get_context_dev_info(cl_uint context_idx, cl_uint device_idx);
-  cl_ulong compile_kernel(cl_uint context_idx, std::string const& prog_name, char const* options);
+  cl_ulong compile_kernel(cl_uint context_idx, std::string const& prog_name, std::string const& options);
   cl_ulong get_kernel_names(cl_uint context_idx, std::string const& prog_name, std::vector<std::string>& found_kernels);
   cl_ulong execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue,
                           cl::NDRange global_range, cl::NDRange local_range,

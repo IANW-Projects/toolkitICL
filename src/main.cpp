@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
   cout << "WG limit: "<< dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
   dev_mgr.init_device(deviceIndex);
 
-  char kernel_url[500]; // TODO: possible buffer overflow?
+  string kernel_url;
   if (h5_check_object(filename, "Kernel_URL") == true) {
 	  h5_read_string(filename, "Kernel_URL", kernel_url);
 	  cout << "Reading kernel from file: " << kernel_url << "... " << endl;
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     }
 
     tmp_clfile.close();
-    sprintf(kernel_url, "tmp_kernel.cl");
+    kernel_url = string("tmp_kernel.cl");
   }
   else {
     cerr << "No kernel information found! " << endl;
@@ -107,9 +107,8 @@ int main(int argc, char *argv[]) {
 
   dev_mgr.add_program_url(0, "ocl_Kernel", kernel_url);
 
-	char settings[2048]; //TODO: possible buffer overflow?
+	string settings;
   h5_read_string(filename, "Kernel_Settings", settings);
-
 
 
   uint64_t num_kernels_found = 0;

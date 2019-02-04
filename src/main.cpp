@@ -153,9 +153,8 @@ int main(int argc, char *argv[]) {
   std::vector<cl::Buffer> data_in;
   bool blocking = CL_TRUE;
 
-  double *rw_flags_ptr; //TODO: Why double? Implement functionality!
-  rw_flags_ptr = new double[data_names.size()];
-  std::fill(rw_flags_ptr, rw_flags_ptr + data_names.size(), 0);
+  //TODO: Implement functionality! Allow other integer types instead of cl_int?
+  vector<cl_int> data_rw_flags(data_names.size(), 0);
 
   uint64_t push_time, pull_time;
   push_time = timer.getTimeMicroseconds();
@@ -221,7 +220,7 @@ int main(int argc, char *argv[]) {
           break;
       }
 
-      switch ((uint32_t)round(rw_flags_ptr[i])) {
+      switch (data_rw_flags.at(i)) {
         case 0:
           data_in.push_back(cl::Buffer(dev_mgr.get_context(0), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, var_size));
           dev_mgr.get_queue(0, 0).enqueueWriteBuffer(data_in.back(), blocking, 0, var_size, tmp_data);
@@ -357,7 +356,7 @@ int main(int argc, char *argv[]) {
 
       tmp_data = new uint8_t[var_size];
 
-      switch ((uint32_t)round(rw_flags_ptr[buffer_counter])) {
+      switch (data_rw_flags.at(buffer_counter)) {
         case 0: dev_mgr.get_queue(0, 0).enqueueReadBuffer(data_in.at(buffer_counter), blocking, 0, var_size, tmp_data); break;
         case 1: break;
         case 2: dev_mgr.get_queue(0, 0).enqueueReadBuffer(data_in.at(buffer_counter), blocking, 0, var_size, tmp_data); break;
@@ -390,8 +389,6 @@ int main(int argc, char *argv[]) {
 
   pull_time = timer.getTimeMicroseconds() - pull_time;
   h5_write_single<double>(out_name, "Data_StoreTime", (double)pull_time / 1000.0);
-
-  delete[] rw_flags_ptr; rw_flags_ptr = nullptr;
 
   return 0;
 }

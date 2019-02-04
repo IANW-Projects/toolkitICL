@@ -338,21 +338,35 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
   hid_t datatype = H5Dget_type(dataset);
-  size_t datytype_size = H5Tget_size(datatype);
-  H5Tclose(datatype);
+  bool variable_length = H5Tis_variable_str(datatype);
 
   hid_t dataspace = H5Dget_space(dataset);
-  hssize_t npoints = H5Sget_simple_extent_npoints(dataspace);
+
+  if (variable_length) {
+    int ndims = H5Sget_simple_extent_ndims(dataspace);
+    vector<hsize_t> dims(ndims);
+    H5Sget_simple_extent_dims(dataspace, &(dims[0]), NULL);
+    hsize_t size = accumulate(begin(dims), end(dims), 1, std::multiplies<hsize_t>());
+
+    std::vector<char*> buffer(size * sizeof(char*));
+    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    output = std::string(buffer.at(0));
+
+    H5Dvlen_reclaim(datatype, dataspace, H5P_DEFAULT, &(buffer[0]));
+  }
+  else {
+    size_t datatype_size = H5Tget_size(datatype);
+    hssize_t npoints = H5Sget_simple_extent_npoints(dataspace);
+
+    std::vector<char> buffer(datatype_size * npoints, '\0');
+    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    output = std::string(begin(buffer), end(buffer));
+  }
+
   H5Sclose(dataspace);
-
+  H5Tclose(datatype);
   H5Dclose(dataset);
-
-  std::vector<char> buffer(datytype_size * npoints, '\0');
-  H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
-
   H5Fclose(h5_file_id);
-
-  output = std::string(begin(buffer), end(buffer));
 
   return true;
 }
@@ -390,26 +404,47 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
   hid_t datatype = H5Dget_type(dataset);
-  size_t line_length = H5Tget_size(datatype);
-  H5Tclose(datatype);
+  bool variable_length = H5Tis_variable_str(datatype);
 
   hid_t dataspace = H5Dget_space(dataset);
-  hssize_t num_lines = H5Sget_simple_extent_npoints(dataspace);
-  H5Sclose(dataspace);
 
-  H5Dclose(dataset);
+  if (variable_length) {
+    int ndims = H5Sget_simple_extent_ndims(dataspace);
+    vector<hsize_t> dims(ndims);
+    H5Sget_simple_extent_dims(dataspace, &(dims[0]), NULL);
+    hsize_t size = accumulate(begin(dims), end(dims), 1, std::multiplies<hsize_t>());
 
-  std::vector<char> buffer(line_length * num_lines, '\0');
-  H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
+    std::vector<char*> buffer(size * sizeof(char*));
+    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
 
-  H5Fclose(h5_file_id);
+    for (char const* line : buffer) {
+      if (line == nullptr) {
+        continue;
+      }
+      lines.push_back(string(line));
+    }
 
-  size_t lines_found = 0;
-  size_t str_start = 0;
-  for (; lines_found < num_lines; ++lines_found) {
-    lines.push_back(&(buffer[str_start]));
-    str_start += line_length;
+    H5Dvlen_reclaim(datatype, dataspace, H5P_DEFAULT, &(buffer[0]));
   }
+  else {
+    size_t line_length = H5Tget_size(datatype);
+    hssize_t num_lines = H5Sget_simple_extent_npoints(dataspace);
+
+    std::vector<char> buffer(line_length * num_lines, '\0');
+    H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
+
+    size_t lines_found = 0;
+    size_t str_start = 0;
+    for (; lines_found < num_lines; ++lines_found) {
+      lines.push_back(&(buffer[str_start]));
+      str_start += line_length;
+    }
+  }
+
+  H5Sclose(dataspace);
+  H5Tclose(datatype);
+  H5Dclose(dataset);
+  H5Fclose(h5_file_id);
 
   return true;
 }

@@ -123,7 +123,7 @@ bool h5_get_content(char const* filename, char const* hdf_dir,
   hid_t grp = H5Gopen(h5_file_id, hdf_dir, H5P_DEFAULT);
 
   hsize_t nobj;
-  herr_t err = H5Gget_num_objs(grp, &nobj);
+  H5Gget_num_objs(grp, &nobj);
 
   for (hsize_t obj_idx = 0; obj_idx < nobj; obj_idx++) {
 
@@ -459,9 +459,8 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
     std::vector<char> buffer(line_length * num_lines, '\0');
     H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
 
-    size_t lines_found = 0;
     size_t str_start = 0;
-    for (; lines_found < num_lines; ++lines_found) {
+    for (hssize_t lines_found = 0; lines_found < num_lines; ++lines_found) {
       lines.push_back(&(buffer[str_start]));
       str_start += line_length;
     }

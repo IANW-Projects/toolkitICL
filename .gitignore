@@ -33,8 +33,9 @@
 *.tlog
 *.log
 
-#Ignored directories
+# Ignored directories
 bin/
 build/
 .vs/
 .vscode/
+notebooks/.ipynb_checkpoints/

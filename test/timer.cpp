@@ -23,7 +23,7 @@ int main(void)
   std::mt19937 mersenne_engine {rnd_device()};
   std::uniform_int_distribution<int64_t> dist {1, 52};
   auto gen = [&dist, &mersenne_engine](){ return dist(mersenne_engine); };
-  std::vector<int64_t> random_numbers(5'000'000);
+  std::vector<int64_t> random_numbers(5000000);
   generate(begin(random_numbers), end(random_numbers), gen);
   auto sum = std::accumulate(begin(random_numbers), end(random_numbers), 0);
   std::cout << "The sum is " << sum << "." << std::endl;

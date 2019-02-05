@@ -1,5 +1,4 @@
 using HDF5
-using Printf
 
 type_to_name(::Type{Int8}) = "char"
 type_to_name(::Type{UInt8}) = "uchar"

@@ -20,6 +20,9 @@ notifications:
 # build version format
 version: '{build}'
 
+environment:
+  APPVEYOR_YML_DISABLE_PS_LINUX: true
+
 install:
   # Windows only
   - cmd: set VCPKG_DEFAULT_TRIPLET=x64-windows
@@ -37,10 +40,10 @@ install:
   - cmd: start /wait msiexec /i opencl_runtime_16.1.2_x64_setup.msi /qn  /l*v opencl_runtime.log
   - cmd: appveyor DownloadFile "https://boinc.berkeley.edu/dl/clinfo.zip"
   - cmd: 7z e clinfo.zip
-    # Julia
-  - cmd: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/winnt/x64/1.1/julia-1.1.0-win64.exe" -FileName "C:\projects\julia-installer.exe"
-  - cmd: Start-Process -FilePath $julia_installer -ArgumentList "/S /D=C:\julia" -NoNewWindow -Wait
-  - cmd: setx path "%path%;C:\julia\bin\julia"
+      # Julia
+  - ps: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/winnt/x64/1.1/julia-1.1.0-win64.exe" -FileName "C:\projects\julia-installer.exe"
+  - ps: Start-Process -FilePath C:\projects\julia-installer.exe -ArgumentList "/S /D=C:\julia" -NoNewWindow -Wait
+  - cmd: set PATH=%PATH%;C:\julia\bin\
   # Linux only
   - sh: sudo apt-get update
   - sh: sudo apt-get -y install libhdf5-dev opencl-clhpp-headers opencl-c-headers opencl-dev pocl-opencl-icd clinfo
@@ -50,9 +53,11 @@ install:
   - sh: export PATH=$PATH:$(pwd)/julia-1.1.0/bin
   # Windows and Linux
   - clinfo
-  - julia -e 'using Pkg; Pkg.add("HDF5")'
+  - julia -e "import Pkg; Pkg.add(\"HDF5\"); Pkg.build(\"HDF5\")"
 
-cache: C:\Tools\vcpkg\installed\
+cache:
+  - C:\Tools\vcpkg\installed\
+  - C:\Users\appveyor\.julia
 
 build_script:
   - mkdir build

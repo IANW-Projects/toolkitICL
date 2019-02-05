@@ -1,0 +1,75 @@
+language: c++
+
+os:
+  - linux
+  #- osx # setting up OpenCL with is difficult... cl2.hpp
+
+compiler:
+  - clang
+  - gcc
+
+matrix:
+  exclude:
+    - os: osx
+      compiler: gcc
+
+dist: xenial
+
+notifications:
+  email: false
+
+git:
+  depth: 99999999
+
+addons:
+  apt: # apt-get for linux
+    packages:
+    - libhdf5-dev
+    - opencl-headers
+    - ocl-icd-dev
+    - ocl-icd-opencl-dev
+    - clinfo
+  homebrew: # homebrew for osx
+    packages:
+    - hdf5
+    - clinfo
+
+before_script:
+  # install Intel OpenCL on Linux
+  - if [ $TRAVIS_OS_NAME = linux ]; then sudo bash .travis_install_intel_opencl.sh; fi
+  # osx image does not contain cl.hpp file; download from Khronos
+  - if [ ${TRAVIS_OS_NAME} == "osx" ]; then
+      sudo cp -r /System/Library/Frameworks/OpenCL.framework /Library/Frameworks/OpenCL.framework;
+      pushd /Library/Frameworks/OpenCL.framework/Headers/;
+      sudo wget -w 1 https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp;
+      popd;
+      export OpenCL_ROOT="/Library/Frameworks/OpenCL.framework/";
+      ls $OpenCL_ROOT;
+      ls $OpenCL_ROOT/Headers/;
+    fi
+  - clinfo
+  # install Julia and add HDF5.jl
+  - if [ $TRAVIS_OS_NAME = linux ]; then
+      CURL_USER_AGENT="Travis-CI $(curl --version | head -n 1)";
+      mkdir -p ~/julia;
+      curl -A "$CURL_USER_AGENT" -s -L --retry 7 'https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1-latest-linux-x86_64.tar.gz' | tar -C ~/julia -x -z --strip-components=1 -f -;
+      export PATH="${PATH}:${TRAVIS_HOME}/julia/bin";
+      julia --color=yes -e "VERSION >= v\"0.7.0-DEV.3630\" && using InteractiveUtils; versioninfo()";
+    fi
+  - if [ ${TRAVIS_OS_NAME} == "osx" ]; then
+      CURL_USER_AGENT="Travis-CI $(curl --version | head -n 1)";
+      curl -A "$CURL_USER_AGENT" -s -L --retry 7 -o julia.dmg 'https://julialang-s3.julialang.org/bin/mac/x64/1.1/julia-1.1-latest-mac64.dmg';
+      mkdir juliamnt;
+      hdiutil mount -readonly -mountpoint juliamnt julia.dmg;
+      cp -a juliamnt/*.app/Contents/Resources/julia ~/;
+      export PATH="${PATH}:${TRAVIS_HOME}/julia/bin";
+      julia --color=yes -e "VERSION >= v\"0.7.0-DEV.3630\" && using InteractiveUtils; versioninfo()";
+    fi
+  - julia -e "import Pkg; Pkg.add(\"HDF5\")"
+
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cmake --build .
+  - cmake --build . --target test

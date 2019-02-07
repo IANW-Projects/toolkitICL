@@ -26,5 +26,3 @@ add_executable(toolkitICL ${SOURCES})
 
 #Link libraries
 TARGET_LINK_LIBRARIES(toolkitICL ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
-
-configure_file(../misc/make.sh ${CMAKE_BINARY_DIR}/bin/make.sh COPYONLY)

@@ -1,4 +1,4 @@
-/* TODO: Provide a license note */
+/* This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license. */
 
 #include <algorithm>
 #include <fstream>
@@ -359,7 +359,7 @@ void ocl_dev_mgr::initialize()
 
 void ocl_dev_mgr::deinitalize()
 {
-  //Deinitialization should be performed automatically, but there seems to be segfaults 
+  //Deinitialization should be performed automatically, but there seems to be segfaults
   //under certain conditions using Windows, hence the vetor is cleared manually
   con_list.clear();
 }

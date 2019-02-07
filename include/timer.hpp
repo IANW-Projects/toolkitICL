@@ -1,4 +1,4 @@
-/* TODO: Provide a license note */
+/* This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license. */
 
 #ifndef TIMER_H
 #define TIMER_H
@@ -6,7 +6,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#include <io.h> 
+#include <io.h>
 typedef cl_ulong uint64_t;
 typedef unsigned int uint;
 #else

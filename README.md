@@ -1,7 +1,8 @@
 # toolkitICL
 
 [![License](https://licensebuttons.net/l/by-nc-nd/3.0/88x31.png)](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)
-
+[![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/js729s93vvdwgnjx?svg=true)](https://ci.appveyor.com/project/ranocha/toolkitICL)
+[![Build Status Travis](https://travis-ci.com/IANW-Projects/toolkitICL.svg?branch=master)](https://travis-ci.com/IANW-Projects/toolkitICL)
 
 
 ## License

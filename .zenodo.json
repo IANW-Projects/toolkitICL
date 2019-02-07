@@ -1,0 +1,23 @@
+{
+    "description": "toolkitICL",
+    "license": "other-open",
+    "title": "IANW-Projects/toolkitICL",
+    "version": "vX.Y.Z",
+    "upload_type": "software",
+    "publication_date": "2019-02-XY",
+    "creators": [
+        {
+            "affiliation": "TU Braunschweig",
+            "name": "Philip Heinisch"
+        },
+        {
+            "affiliation": "TU Braunschweig",
+            "name": "Hendrik Ranocha"
+        },
+        {
+            "affiliation": "TU Braunschweig",
+            "name": "Katharina Ostaszewski"
+        }
+    ],
+    "access_right": "open"
+}

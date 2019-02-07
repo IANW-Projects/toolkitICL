@@ -9,7 +9,9 @@ platform:
 # If the build fails on older versions for some reason:
 # matrix:
 #   allow_failures:
-#     - image: Visual Studio 2015
+    # - image: Visual Studio 2015
+    # - image: Visual Studio 2017
+    # - image: Ubuntu1804
 
 notifications:
   - provider: Email
@@ -40,24 +42,25 @@ install:
   - cmd: start /wait msiexec /i opencl_runtime_16.1.2_x64_setup.msi /qn  /l*v opencl_runtime.log
   - cmd: appveyor DownloadFile "https://boinc.berkeley.edu/dl/clinfo.zip"
   - cmd: 7z e clinfo.zip
-      # Julia
-  - ps: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/winnt/x64/1.1/julia-1.1.0-win64.exe" -FileName "C:\projects\julia-installer.exe"
-  - ps: Start-Process -FilePath C:\projects\julia-installer.exe -ArgumentList "/S /D=C:\julia" -NoNewWindow -Wait
-  - cmd: set PATH=%PATH%;C:\julia\bin\
+      # Julia is not used on Window because it takes forever to build HDF5.jl
+  # - ps: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/winnt/x64/1.1/julia-1.1.0-win64.exe" -FileName "C:\projects\julia-installer.exe"
+  # - ps: Start-Process -FilePath C:\projects\julia-installer.exe -ArgumentList "/S /D=C:\julia" -NoNewWindow -Wait
+  # - cmd: set PATH=%PATH%;C:\julia\bin\
   # Linux only
   - sh: sudo apt-get update
-  - sh: sudo apt-get -y install libhdf5-dev opencl-clhpp-headers opencl-c-headers opencl-dev pocl-opencl-icd clinfo
+  - sh: sudo apt-get -y install libhdf5-dev opencl-clhpp-headers opencl-c-headers opencl-dev clinfo
+  - sh: sudo bash .travis_install_intel_opencl.sh # pocl may be installed via apt-get but has some problems sometimes...
       # Julia
   - sh: appveyor DownloadFile "https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz"
   - sh: tar xvf julia-1.1.0-linux-x86_64.tar.gz
   - sh: export PATH=$PATH:$(pwd)/julia-1.1.0/bin
+  - sh: julia -e "import Pkg; Pkg.add(\"HDF5\"); Pkg.build(\"HDF5\")"
   # Windows and Linux
   - clinfo
-  - julia -e "import Pkg; Pkg.add(\"HDF5\"); Pkg.build(\"HDF5\")"
 
 cache:
   - C:\Tools\vcpkg\installed\
-  - C:\Users\appveyor\.julia
+  - C:\Users\appveyor\.julia\
 
 build_script:
   - mkdir build
@@ -66,14 +69,22 @@ build_script:
   - cmd: set VCPKG_DEFAULT_TRIPLET=x64-windows
   - cmd: cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_POLICY_DEFAULT_CMP0074=NEW -DHDF5_ROOT="C:/Tools/vcpkg/installed/x64-windows" -DHDF5_INCLUDE_DIRS="C:/Tools/vcpkg/installed/x64-windows/include" -DHDF5_LIBRARIES="hdf5::hdf5-shared" -DHDF5_HL_LIBRARIES="hdf5::hdf5_hl-shared"
   - cmd: cmake --build . --target ALL_BUILD
+  - cmd: set PATH=%PATH%;%cd%\bin;%cd%\bin\Release;%cd%\bin\Debug
+  - cmd: echo %PATH%
   # - cmd: cd ..
-  # - cmd: 7z a build_directory.zip build
-  # - cmd: appveyor PushArtifact build_directory.zip
+  # - cmd: 7z a build_directory_windows.zip build
+  # - cmd: appveyor PushArtifact build_directory_windows.zip
   # - cmd: cd build
-  - cmd: set PATH=%PATH%;%cd%\bin
+  - cmd: toolkitICL -h
   - cmd: cmake --build . --target RUN_TESTS
   # Linux only
   - sh: cmake ..
   - sh: cmake --build .
   - sh: export PATH=$PATH:$(pwd)/bin
+  - sh: echo $PATH
+  # - sh: cd ..
+  # - sh: 7z a build_directory_linux.zip build
+  # - sh: appveyor PushArtifact build_directory_linux.zip
+  # - sh: cd build
+  - sh: toolkitICL -h
   - sh: cmake --build . --target test

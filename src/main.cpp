@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
   if (cmdOptionExists(argv, argv + argc, "-h") || !cmdOptionExists(argv, argv + argc, "-c")) {
     print_help();
-    return -1;
+    return 0;
   }
   char const* filename = getCmdOption(argv, argv + argc, "-c");
 

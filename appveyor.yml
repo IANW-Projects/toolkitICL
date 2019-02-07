@@ -70,8 +70,10 @@ build_script:
   # - cmd: 7z a build_directory.zip build
   # - cmd: appveyor PushArtifact build_directory.zip
   # - cmd: cd build
+  - cmd: set PATH=%PATH%;%cd%\bin
   - cmd: cmake --build . --target RUN_TESTS
   # Linux only
   - sh: cmake ..
   - sh: cmake --build .
+  - sh: export PATH=$PATH:$(pwd)/bin
   - sh: cmake --build . --target test

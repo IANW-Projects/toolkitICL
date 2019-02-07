@@ -7,8 +7,8 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <io.h>
+#include "opencl_include.hpp"
 typedef cl_ulong uint64_t;
-typedef unsigned int uint;
 #else
 #include <stdint.h>
 #include <unistd.h>

@@ -1,9 +1,11 @@
 /* This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license. */
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <math.h>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -13,9 +15,6 @@
 #include "hdf5_io.hpp"
 #include "ocl_dev_mgr.hpp"
 #include "timer.hpp"
-#include <chrono>
-#include <sstream> 
-#include <fstream>
 
 using namespace std;
 
@@ -27,21 +26,21 @@ typedef LONG NTSTATUS, *PNTSTATUS;
 typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOEXW);
 
 RTL_OSVERSIONINFOEXW GetRealOSVersion() {
-	HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
-	if (hMod) {
-		RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
-		if (fxPtr != nullptr) {
-			RTL_OSVERSIONINFOEXW  rovi = { 0 };
-			rovi.dwOSVersionInfoSize = sizeof(rovi);
-			if (STATUS_SUCCESS == fxPtr(&rovi)) {
-				return rovi;
-			}
-				
-			}
-		}
+  HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+  if (hMod) {
+    RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+    if (fxPtr != nullptr) {
+      RTL_OSVERSIONINFOEXW  rovi = { 0 };
+      rovi.dwOSVersionInfoSize = sizeof(rovi);
+      if (STATUS_SUCCESS == fxPtr(&rovi)) {
+        return rovi;
+      }
 
-	RTL_OSVERSIONINFOEXW rovi = { 0 };
-	return rovi;
+      }
+    }
+
+  RTL_OSVERSIONINFOEXW rovi = { 0 };
+  return rovi;
 }
 #else
 #include <sys/utsname.h>
@@ -49,19 +48,17 @@ RTL_OSVERSIONINFOEXW GetRealOSVersion() {
 
 std::string getOS()
 {
-	std::stringstream version;
+  std::stringstream version;
 #if defined(_WIN32)
 
-	version<<"Windows " << GetRealOSVersion().dwMajorVersion<<"."<< GetRealOSVersion().dwMinorVersion;
-	
-	if (GetRealOSVersion().wProductType == VER_NT_WORKSTATION) {
-		version << " Workstation";
-	}
-	else {
-		version << " Server";
-	}
+  version<<"Windows " << GetRealOSVersion().dwMajorVersion<<"."<< GetRealOSVersion().dwMinorVersion;
 
-
+  if (GetRealOSVersion().wProductType == VER_NT_WORKSTATION) {
+    version << " Workstation";
+  }
+  else {
+    version << " Server";
+  }
 
 #else
 
@@ -75,21 +72,21 @@ version<<unameData.sysname<<" ";
   if (rel_file.is_open())
   {
   for ( unsigned int i=0; i<5;i++)
-   { 
+   {
      getline (rel_file,line);
      }
-     
+
       version << line.substr(13,line.length()-14);
-    
+
     rel_file.close();
   }
 version<<"/"<<unameData.release<<"/"<<unameData.version;
 
 #endif
 
-	return version.str();
-
+  return version.str();
 }
+
 
 // command line arguments
 char const* getCmdOption(char** begin, char** end, std::string const& option)
@@ -154,8 +151,8 @@ int main(int argc, char *argv[]) {
 
   string kernel_url;
   if (h5_check_object(filename, "Kernel_URL") == true) {
-	  h5_read_string(filename, "Kernel_URL", kernel_url);
-	  cout << "Reading kernel from file: " << kernel_url << "... " << endl;
+    h5_read_string(filename, "Kernel_URL", kernel_url);
+    cout << "Reading kernel from file: " << kernel_url << "... " << endl;
   }
   else if (h5_check_object(filename, "Kernel_Source") == true) {
     cout << "Reading kernel from HDF5 file... " << endl;
@@ -178,9 +175,17 @@ int main(int argc, char *argv[]) {
   std::vector<std::string> kernel_list;
   h5_read_strings(filename, "Kernels", kernel_list);
 
+  cl_ulong kernel_repetitions = 1;
+  if (h5_check_object(filename, "Kernel_Repetitions")) {
+    kernel_repetitions = h5_read_single<cl_ulong>(filename, "Kernel_Repetitions");
+  }
+  if (kernel_repetitions <= 0) {
+    cout << "Warning: Setting `kernel_repetitions = " << kernel_repetitions << "` implies that no kernels are executed." << endl;
+  }
+
   dev_mgr.add_program_url(0, "ocl_Kernel", kernel_url);
 
-	string settings;
+  string settings;
   h5_read_string(filename, "Kernel_Settings", settings);
 
 
@@ -199,7 +204,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  cout << "Number of Kernels to execute: " << kernel_list.size() << endl;
+  cout << "Number of Kernels to execute: " << kernel_list.size() * kernel_repetitions << endl;
 
   //TODO: Clean up; debug mode?
   // for (uint32_t kernel_idx = 0; kernel_idx < kernel_list.size(); kernel_idx++) {
@@ -372,10 +377,12 @@ int main(int argc, char *argv[]) {
 
   uint64_t total_exec_time = timer.getTimeMicroseconds();
 
-  for (string const& kernel_name : kernel_list) {
-    exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_name)),
-                                                     dev_mgr.get_queue(0, 0), range_start, global_range, local_range);
-    kernels_run++;
+  for (cl_ulong repetition = 0; repetition < kernel_repetitions; ++repetition) {
+    for (string const& kernel_name : kernel_list) {
+      exec_time = exec_time + dev_mgr.execute_kernelNA(*(dev_mgr.getKernelbyName(0, "ocl_Kernel", kernel_name)),
+                                                       dev_mgr.get_queue(0, 0), range_start, global_range, local_range);
+      kernels_run++;
+    }
   }
 
   total_exec_time = timer.getTimeMicroseconds() - total_exec_time;

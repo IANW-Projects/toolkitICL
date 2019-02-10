@@ -1,3 +1,5 @@
+# This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license.
+
 using HDF5
 
 type_to_name(::Type{Int8}) = "char"

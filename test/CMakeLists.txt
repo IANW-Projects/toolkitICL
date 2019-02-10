@@ -24,8 +24,15 @@ foreach(TEST ${TIMER_TEST})
 endforeach()
 
 
+# kernel repetition test
+set(KERNEL_REPETITION_TEST repetition_test)
+foreach(TEST ${KERNEL_REPETITION_TEST})
+  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp ../src/hdf5_io.cpp)
+endforeach()
+
+
 # all tests
-set(TESTS ${COPY_TESTS} ${TIMER_TEST})
+set(TESTS ${COPY_TESTS} ${TIMER_TEST} ${KERNEL_REPETITION_TEST})
 
 foreach(TEST ${TESTS})
   target_link_libraries(${TEST} ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})

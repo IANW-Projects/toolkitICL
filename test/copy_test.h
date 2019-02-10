@@ -1,4 +1,4 @@
-/* TODO: Provide a license note */
+/* This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license. */
 
 #ifndef COPY_TEST_H
 #define COPY_TEST_H

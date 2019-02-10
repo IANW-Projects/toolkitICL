@@ -13,10 +13,83 @@
 #include "hdf5_io.hpp"
 #include "ocl_dev_mgr.hpp"
 #include "timer.hpp"
-
+#include <chrono>
+#include <sstream> 
+#include <fstream>
 
 using namespace std;
 
+
+#if defined(_WIN32)
+typedef LONG NTSTATUS, *PNTSTATUS;
+#define STATUS_SUCCESS (0x00000000)
+
+typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOEXW);
+
+RTL_OSVERSIONINFOEXW GetRealOSVersion() {
+	HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+	if (hMod) {
+		RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+		if (fxPtr != nullptr) {
+			RTL_OSVERSIONINFOEXW  rovi = { 0 };
+			rovi.dwOSVersionInfoSize = sizeof(rovi);
+			if (STATUS_SUCCESS == fxPtr(&rovi)) {
+				return rovi;
+			}
+				
+			}
+		}
+
+	RTL_OSVERSIONINFOEXW rovi = { 0 };
+	return rovi;
+}
+#else
+#include <sys/utsname.h>
+#endif
+
+std::string getOS()
+{
+	std::stringstream version;
+#if defined(_WIN32)
+
+	version<<"Windows " << GetRealOSVersion().dwMajorVersion<<"."<< GetRealOSVersion().dwMinorVersion;
+	
+	if (GetRealOSVersion().wProductType == VER_NT_WORKSTATION) {
+		version << " Workstation";
+	}
+	else {
+		version << " Server";
+	}
+
+
+
+#else
+
+struct utsname unameData;
+uname(&unameData);
+string line;
+
+version<<unameData.sysname<<" ";
+
+ ifstream rel_file ("/etc/os-release");
+  if (rel_file.is_open())
+  {
+  for ( unsigned int i=0; i<5;i++)
+   { 
+     getline (rel_file,line);
+     }
+     
+      version << line.substr(13,line.length()-14);
+    
+    rel_file.close();
+  }
+version<<"/"<<unameData.release<<"/"<<unameData.version;
+
+#endif
+
+	return version.str();
+
+}
 
 // command line arguments
 char const* getCmdOption(char** begin, char** end, std::string const& option)
@@ -147,6 +220,7 @@ int main(int argc, char *argv[]) {
     remove(out_name.c_str());
     cout << "Old HDF5 data file found and deleted!" << endl;
   }
+  h5_write_string(out_name.c_str(), "Host_OS", getOS().c_str());
 
   h5_write_string(out_name.c_str(), "Kernel_Settings", settings);
 

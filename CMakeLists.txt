@@ -51,5 +51,7 @@ ENDIF(OpenCL_FOUND)
 ADD_SUBDIRECTORY(src)
 
 # tests
-enable_testing()
-ADD_SUBDIRECTORY(test)
+IF(TESTS)
+  enable_testing()
+  ADD_SUBDIRECTORY(test)
+ENDIF()

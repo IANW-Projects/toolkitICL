@@ -76,6 +76,12 @@ build_script:
   # - cmd: appveyor PushArtifact build_directory_windows.zip
   # - cmd: cd build
   - cmd: toolkitICL -h
+  - cmd: cd ..
+  - cmd: rd /s /q build
+  - cmd: mkdir build
+  - cmd: cd build
+  - cmd: cmake -DTESTS=ON .. -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_POLICY_DEFAULT_CMP0074=NEW -DHDF5_ROOT="C:/Tools/vcpkg/installed/x64-windows" -DHDF5_INCLUDE_DIRS="C:/Tools/vcpkg/installed/x64-windows/include" -DHDF5_LIBRARIES="hdf5::hdf5-shared" -DHDF5_HL_LIBRARIES="hdf5::hdf5_hl-shared"
+  - cmd: cmake --build . --target ALL_BUILD
   - cmd: cmake --build . --target RUN_TESTS
   # Linux only
   - sh: cmake ..
@@ -87,4 +93,10 @@ build_script:
   # - sh: appveyor PushArtifact build_directory_linux.zip
   # - sh: cd build
   - sh: toolkitICL -h
+  - sh: cd ..
+  - sh: rm -rf build
+  - sh: mkdir build
+  - sh: cd build
+  - sh: cmake -DTESTS=ON ..
+  - sh: cmake --build .
   - sh: cmake --build . --target test

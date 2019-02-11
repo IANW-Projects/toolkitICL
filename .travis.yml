@@ -73,4 +73,11 @@ script:
   - cmake ..
   - cmake --build .
   - export PATH=$PATH:$(pwd)/bin
+  - toolkitICL
+  - cd ..
+  - rm -rf build
+  - mkdir build
+  - cd build
+  - cmake -DTESTS=ON ..
+  - cmake --build .
   - cmake --build . --target test

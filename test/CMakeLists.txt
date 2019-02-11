@@ -13,7 +13,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 set(COPY_TESTS copy_float copy_double copy_char copy_uchar copy_short copy_ushort copy_int copy_uint copy_long copy_ulong)
 
 foreach(TEST ${COPY_TESTS})
-  add_executable(${TEST} ${TEST}.cpp copy_test.h ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp ../src/hdf5_io.cpp)
+  add_executable(${TEST} ${TEST}.cpp copy_test.h ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp $<TARGET_OBJECTS:hdf5_io>)
 endforeach()
 
 
@@ -27,14 +27,14 @@ endforeach()
 # kernel repetition test
 set(KERNEL_REPETITION_TEST repetition_test)
 foreach(TEST ${KERNEL_REPETITION_TEST})
-  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp ../src/hdf5_io.cpp)
+  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp $<TARGET_OBJECTS:hdf5_io>)
 endforeach()
 
 
 # output test
 set(OUTPUT_TEST output_test)
 foreach(TEST ${OUTPUT_TEST})
-  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp ../src/hdf5_io.cpp)
+  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp $<TARGET_OBJECTS:hdf5_io>)
 endforeach()
 
 

@@ -1,5 +1,6 @@
 /* This project is licensed under the terms of the Creative Commons CC BY-NC-ND 4.0 license. */
 
+
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -20,6 +21,7 @@ using namespace std;
 
 
 // TODO: Check error codes for all H5... routines?
+// TODO: Add HDF append functions
 
 
 // convert a C type TYPE to the HDF5 identifier of that type
@@ -311,6 +313,8 @@ template bool h5_write_buffer(char const* filename, char const* varname, cl_int 
 template bool h5_write_buffer(char const* filename, char const* varname, cl_uint const* data, size_t size);
 template bool h5_write_buffer(char const* filename, char const* varname, cl_long const* data, size_t size);
 template bool h5_write_buffer(char const* filename, char const* varname, cl_ulong const* data, size_t size);
+
+
 
 
 // read a single item from an HDF5 file

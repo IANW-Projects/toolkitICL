@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <time.h>
 #include <vector>
 
 #include "opencl_include.hpp"
@@ -16,7 +17,109 @@
 #include "ocl_dev_mgr.hpp"
 #include "timer.hpp"
 
+
+#if defined(_WIN32)
+#include <windows.h>
+#include <sys/timeb.h>
+
+int gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+  static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+  SYSTEMTIME  system_time;
+  FILETIME    file_time;
+  uint64_t    time;
+
+  GetSystemTime(&system_time);
+  SystemTimeToFileTime(&system_time, &file_time);
+  time = ((uint64_t)file_time.dwLowDateTime);
+  time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+  tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+  tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+  return 0;
+}
+
+#else
+#include <sys/time.h>
+#endif
+
 using namespace std;
+
+#if defined(USENVML)
+#include <nvml.h>
+bool nv_log_pwr = false;
+bool nv_log_tmp = false;
+cl_uint nv_p_rate=0;
+cl_uint nv_t_rate=0;
+
+std::vector<cl_ushort> nv_tmp;
+std::vector<timeval> nv_tmp_time;
+
+std::vector<cl_uint> nv_pwr;
+std::vector<timeval> nv_pwr_time;
+
+void nv_log_pwr_func()
+{
+  if (nv_p_rate>0) {
+    unsigned int temp;
+    nvmlReturn_t result;
+    timeval rawtime;
+
+    nv_pwr.clear();
+    nv_pwr_time.clear();
+
+    result = nvmlInit();
+    if (NVML_SUCCESS == result)
+    {
+      nvmlDevice_t device;
+      nvmlDeviceGetHandleByIndex(0, &device);
+
+      while (nv_log_pwr== true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(nv_p_rate));
+
+        nvmlDeviceGetPowerUsage(device, &temp);
+        //time(&rawtime);
+        gettimeofday(&rawtime, NULL);
+        nv_pwr_time.push_back(rawtime);
+        nv_pwr.push_back(temp);
+      }
+
+      nvmlShutdown();
+    }
+  }
+}
+
+void nv_log_tmp_func()
+{
+  if (nv_t_rate>0) {
+    unsigned int temp;
+    nvmlReturn_t result;
+    timeval rawtime;
+
+    nv_tmp.clear();
+    nv_tmp_time.clear();
+
+    result = nvmlInit();
+    if (NVML_SUCCESS == result)
+    {
+      nvmlDevice_t device;
+      nvmlDeviceGetHandleByIndex(0, &device);
+
+      while (nv_log_tmp == true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(nv_t_rate));
+        result = nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &temp);
+        gettimeofday(&rawtime, NULL);
+        nv_tmp_time.push_back(rawtime);
+        nv_tmp.push_back(temp);
+      }
+
+      nvmlShutdown();
+    }
+  }
+}
+
+#endif
 
 
 #if defined(_WIN32)
@@ -36,8 +139,8 @@ RTL_OSVERSIONINFOEXW GetRealOSVersion() {
         return rovi;
       }
 
-      }
     }
+  }
 
   RTL_OSVERSIONINFOEXW rovi = { 0 };
   return rovi;
@@ -62,25 +165,23 @@ std::string getOS()
 
 #else
 
-struct utsname unameData;
-uname(&unameData);
-string line;
+  struct utsname unameData;
+  uname(&unameData);
+  string line;
 
-version<<unameData.sysname<<" ";
+  version << unameData.sysname << " ";
 
- ifstream rel_file ("/etc/os-release");
-  if (rel_file.is_open())
-  {
-  for ( unsigned int i=0; i<5;i++)
-   {
-     getline (rel_file,line);
-     }
+  ifstream rel_file ("/etc/os-release");
+  if (rel_file.is_open()) {
+    for (unsigned int i = 0; i < 5; i++) {
+      getline (rel_file,line);
+    }
 
-      version << line.substr(13,line.length()-14);
+    version << line.substr(13,line.length()-14);
 
     rel_file.close();
   }
-version<<"/"<<unameData.release<<"/"<<unameData.version;
+  version << "/" << unameData.release << "/" << unameData.version;
 
 #endif
 
@@ -110,6 +211,10 @@ void print_help()
        << "  -d device_id: " << "Use the device specified by `device_id`." << endl
        << "  -b          : " << "Activate the benchmark mode (additional delay before & after runs)." << endl
        << "  -c config.h5: " << "Specify the URL `config.h5` of the HDF5 configuration file." << endl
+#if defined(USENVML)
+       << "  -np sample_rate: " << "Log Nvidia GPU power consumption with sample_rate (ms)" << endl
+       << "  -nt sample_rate: " << "Log Nvidia GPU temperature with sample_rate (ms)" << endl
+#endif
        << endl;
 }
 
@@ -138,7 +243,19 @@ int main(int argc, char *argv[]) {
   }
   char const* filename = getCmdOption(argv, argv + argc, "-c");
 
+#if defined(USENVML)
+  if (cmdOptionExists(argv, argv + argc, "-np")) {
+    char const* tmp = getCmdOption(argv, argv + argc, "-np");
+    nv_p_rate = atoi(tmp);
+     nv_log_pwr = true;
+  }
 
+  if (cmdOptionExists(argv, argv + argc, "-nt")) {
+    char const* tmp = getCmdOption(argv, argv + argc, "-nt");
+    nv_t_rate = atoi(tmp);
+     nv_log_tmp = true;
+  }
+#endif
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
   cl_uint devices_availble=dev_mgr.get_avail_dev_num();
 
@@ -355,6 +472,11 @@ int main(int argc, char *argv[]) {
     local_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
   }
 
+#if defined(USENVML)
+  cout << "Using NVML interface..." << endl << endl;
+  std::thread nv_log_pwr_thread(nv_log_pwr_func);
+  std::thread nv_log_tmp_thread(nv_log_tmp_func);
+#endif
 
   if (benchmark_mode == true) {
     cout << "Sleeping for 4s" << endl << endl;
@@ -399,7 +521,53 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(timespan);
   }
 
-  cout << "Saving results... " << endl;
+ cout << "Saving results... " << endl;
+
+#if defined(USENVML)
+  nv_log_pwr = false;
+  nv_log_tmp = false;
+  nv_log_pwr_thread.join();
+  nv_log_tmp_thread.join();
+
+  std::vector<std::string> time_strings;
+
+  h5_create_dir(out_name, "/NV_HK");
+
+  if (nv_p_rate>0) {
+
+    h5_write_buffer<cl_uint>(out_name, "/NV_HK/NV_Power", nv_pwr.data(), nv_pwr.size());
+
+    for(size_t i = 0; i < nv_pwr_time.size(); i++) {
+      char time_buffer[100];
+      time_t temp = nv_pwr_time.at(i).tv_sec;
+      timeinfo = localtime(&temp);
+      strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
+      sprintf(time_buffer, "%s:%03ld", time_buffer, nv_pwr_time.at(i).tv_usec / 1000);
+      time_strings.push_back(time_buffer);
+    }
+
+    h5_write_strings(out_name, "/NV_HK/NV_Power_Time", time_strings);
+    time_strings.clear();
+  }
+
+  if (nv_t_rate>0) {
+
+    h5_write_buffer<cl_ushort>(out_name, "/NV_HK/NV_Temperature", nv_tmp.data(), nv_tmp.size());
+
+    for(size_t i = 0; i < nv_tmp_time.size(); i++) {
+      char time_buffer[100];
+      time_t temp = nv_tmp_time.at(i).tv_sec;
+      timeinfo = localtime(&temp);
+      strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
+      sprintf(time_buffer, "%s:%03ld", time_buffer, nv_tmp_time.at(i).tv_usec / 1000);
+      time_strings.push_back(time_buffer);
+    }
+
+    h5_write_strings(out_name, "/NV_HK/NV_Temperature_Time", time_strings);
+    time_strings.clear();
+  }
+#endif
+
 
   char time_buffer[80];
   strftime(time_buffer, sizeof(time_buffer), "%d-%m-%Y %H:%M:%S", timeinfo);

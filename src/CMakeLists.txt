@@ -19,6 +19,13 @@ add_library(hdf5_io OBJECT ../include/hdf5_io.hpp hdf5_io.cpp)
 
 # Specifiy library paths for linker
 link_directories (${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
+IF(USENVML)
+if (MSVC)
+link_directories(${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES} ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
+ELSE(MSVC)
+link_directories(${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES} ${CUDA_TOOLKIT_ROOT_DIR}/lib/x86_64-linux-gnu/stubs/)
+ENDIF(MSVC)
+ENDIF(USENVML)
 
 #set output directory for executable
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -28,3 +35,13 @@ add_executable(toolkitICL ${SOURCES} $<TARGET_OBJECTS:hdf5_io>)
 
 #Link libraries
 TARGET_LINK_LIBRARIES(toolkitICL ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
+
+IF(USENVML)
+if (MSVC)
+#Link libraries
+TARGET_LINK_LIBRARIES(toolkitICL ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES} nvml.lib)
+ELSE(MSVC)
+TARGET_LINK_LIBRARIES(toolkitICL ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES} libnvidia-ml.so)
+ENDIF(MSVC)
+ENDIF(USENVML)
+

@@ -11,12 +11,13 @@ data handling. The list of kernels to be executed, all variables and the workgro
 the input HDF5 file. After execution, the output data, data copy- and runtime is written to the
 output HDF5 file. The GPU power consumption and temperature for supported Nvidia GPUs can also be logged automatically to the output HDF file.
 
-## Usage
-To use toolkitCL the following needs to be installed:
+
+## Setup
+To build toolkitCL the following needs to be installed:
 - OpenCL (headers and drivers)
 - HDF5
 - CMake
-- CUDA Toolkit (only for GPU power/temperature logging)
+- CUDA Toolkit (only for NVidia GPU power/temperature logging)
 
 In case some of the OpenCL headers are missing, they can be obtained directly from Khronos:
 [https://github.com/KhronosGroup](https://github.com/KhronosGroup).
@@ -24,13 +25,35 @@ On some compute cluster systems, it might be necessary to explicitly define the 
 cmake configuration files. If no icd loader is available, the path to the OpenCL vendor library hast
 to be defined manually.
 
-To compile the code using Linux, create a build directory and run `cmake ..` followed by `make`.
+This project uses the common CMake build system. Thus, the following commands can be used on Linux.
+```bash
+mkdir build && cd build
+cmake .. # if you want to build only the main executable toolkitICL
+make
+```
+If you want to build the tests, you can run
+```bash
+mkdir build && cd build
+cmake -DTESTS=ON .. # if you want to build also the tests
+make
+make test
+```
+If you want to change the default compiler, the usual CMake workflow is supported, i.e. you can use something like
+```bash
+mkdir build && cd build
+cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+make
+```
+
 Recent versions of Visual Studio should automatically detect the cmake configuration files and build
 toolkitICL automatically. Otherwise `cmake-gui` can be used on Windows systems to create Visul Studio
 project files.
 
 If the CUDA toolkit is detected, CMake will enable CUDA support for power and temperature logging automatically.
-It can also be controlled manually using the 'USENVML' define.
+It can also be controlled manually (in the source code) using the `USENVML` define.
+
+
+## Usage
 
 Examples on how to create the input HDF5 files are provided in the directory
 [`notebooks`](https://github.com/IANW-Projects/toolkitICL/tree/master/notebooks).

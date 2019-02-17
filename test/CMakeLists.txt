@@ -3,10 +3,10 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${HDF5_INCLUDE_DIRS} ../include)
 
 # specifiy library paths for linker
-link_directories (${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
+link_directories(${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 
 # set output directory for executable
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 
 # copy tests

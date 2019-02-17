@@ -2,7 +2,7 @@ language: c++
 
 os:
   - linux
-  #- osx # setting up OpenCL with is difficult... cl2.hpp
+  - osx
 
 compiler:
   - clang
@@ -38,17 +38,22 @@ before_script:
   # install Intel OpenCL on Linux
   - if [ $TRAVIS_OS_NAME = linux ]; then sudo bash .travis_install_intel_opencl.sh; fi
   # osx image does not contain cl.hpp file; download from Khronos
+  # Because of the System Integrity Protection, we cannot write to /System/Library/Frameworks/OpenCL.framework.
+  # -> Download the headers using cmake automatically.
+  # - if [ ${TRAVIS_OS_NAME} == "osx" ]; then
+  #     sudo cp -r /System/Library/Frameworks/OpenCL.framework /Library/Frameworks/OpenCL.framework;
+  #     pushd /Library/Frameworks/OpenCL.framework/Headers/;
+  #     sudo wget -w 1 https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp;
+  #     popd;
+  #     export OpenCL_INCLUDE_DIRS=/Library/Frameworks/OpenCL.framework/Headers;
+  #   fi
+  # - export OpenCL_ROOT="/Library/Frameworks/OpenCL.framework/";
+  # - ls -R $OpenCL_ROOT;
   - if [ ${TRAVIS_OS_NAME} == "osx" ]; then
-      sudo cp -r /System/Library/Frameworks/OpenCL.framework /Library/Frameworks/OpenCL.framework;
-      pushd /Library/Frameworks/OpenCL.framework/Headers/;
-      sudo wget -w 1 https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp;
-      popd;
-      export OpenCL_ROOT="/Library/Frameworks/OpenCL.framework/";
-      ls $OpenCL_ROOT;
-      ls $OpenCL_ROOT/Headers/;
+      ls -R /System/Library/Frameworks/OpenCL.framework;
     fi
   - clinfo
-  # install Julia and add HDF5.jl
+  # install Julia and add HDF5.jl;
   - if [ $TRAVIS_OS_NAME = linux ]; then
       CURL_USER_AGENT="Travis-CI $(curl --version | head -n 1)";
       mkdir -p ~/julia;
@@ -71,6 +76,9 @@ script:
   - mkdir build
   - cd build
   - cmake ..
+  - if [ ${TRAVIS_OS_NAME} == "osx" ]; then
+      ls -lhR ../include;
+    fi
   - cmake --build .
   - export PATH=$PATH:$(pwd)/bin
   - toolkitICL
@@ -81,3 +89,4 @@ script:
   - cmake -DTESTS=ON ..
   - cmake --build .
   - cmake --build . --target test
+  - cat Testing/Temporary/LastTest.log

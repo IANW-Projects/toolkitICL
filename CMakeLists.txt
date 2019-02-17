@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.5)
 PROJECT(toolkitICL)
 
 find_package(CUDA)
- 
+
 IF(CUDA_FOUND)
   option(USENVML "Use NVML" ON)
 ELSE()
@@ -21,6 +21,7 @@ SET(CMAKE_VERBOSE_MAKEFILE "false")
 # Includes modules to find OCL
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
+# compiler flags
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   MESSAGE(STATUS "Microsoft Visual Studio detected. Corresponding compiler flags have been set.")
   SET(CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB")
@@ -31,19 +32,26 @@ ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   MESSAGE(STATUS "LLVM Clang detected.  Corresponding compiler flags have been set.")
   SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2  -mavx -mavx2 -fPIC -Wall")
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  MESSAGE(STATUS "Apple Clang detected.  Corresponding compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
 ELSE()
   MESSAGE(STATUS "Compiler ${CMAKE_CXX_COMPILER_ID} unknown. Simple compiler flags have been set.")
   SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
 ENDIF()
 
+# Apple does not distribute a cl2.hpp include file
 IF(APPLE)
+  FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  FILE(DOWNLOAD https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp ${CMAKE_CURRENT_SOURCE_DIR}/include/OpenCL/cl2.hpp)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework OpenCL")
 ENDIF()
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
+# NVML: NVIDIA Management Library, used to query GPU power and temperature
 IF(USENVML)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_TOOLKIT_INCLUDE})
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include ${CUDA_TOOLKIT_INCLUDE})
+ELSE()
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 ENDIF(USENVML)
 
 # Check for HDF5
@@ -57,7 +65,7 @@ ENDIF(HDF5_FOUND)
 # Check for OpenCL
 find_package(OpenCL REQUIRED)
 IF(OpenCL_FOUND)
-  MESSAGE(STATUS "Looking for OpenCL - found at\n   ${OpenCL_INCLUDE_DIRS}\n  ${OpenCL_LIBRARY}")
+  MESSAGE(STATUS "Looking for OpenCL - found at\n   ${OpenCL_INCLUDE_DIRS}\n   ${OpenCL_LIBRARY}")
 ELSE(OpenCL_FOUND)
   MESSAGE(STATUS "Looking for OpenCL - not found")
 ENDIF(OpenCL_FOUND)

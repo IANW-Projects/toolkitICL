@@ -163,7 +163,25 @@ std::string getOS()
     version << " Server";
   }
 
-#else
+#elif defined(__APPLE__)
+
+  char line[256];
+  string product_name, product_version;
+  FILE* sw_vers = popen("sw_vers", "r");
+  while (fgets(&line[0], sizeof(line), sw_vers) != nullptr) {
+    if (strncmp(line, "ProductName:", 12) == 0) {
+      product_name = string(&line[13]);
+      product_name.pop_back(); // erase the newline
+    }
+    else if (strncmp(line, "ProductVersion:", 15) == 0) {
+      product_version = string(&line[16]);
+      product_version.pop_back(); // erase the newline
+    }
+  }
+  pclose(sw_vers);
+  version << product_name << " " << product_version;
+
+#else // linux
 
   struct utsname unameData;
   uname(&unameData);
@@ -184,8 +202,8 @@ std::string getOS()
     rel_file.close();
   }
   else {
-       version << "Unknown Distribution";
-       }
+    version << "Unknown Distribution";
+  }
 
   version << "/" << unameData.release << "/" << unameData.version;
 
@@ -315,7 +333,7 @@ int main(int argc, char *argv[]) {
   uint64_t num_kernels_found = 0;
   num_kernels_found = dev_mgr.compile_kernel(0, "ocl_Kernel", settings);
   if (num_kernels_found == 0) {
-    cerr << "Error: No valid kernels found" << endl;
+    cerr << ERROR_INFO << "No valid kernels found" << endl;
     return -1;
   }
 
@@ -323,7 +341,7 @@ int main(int argc, char *argv[]) {
   dev_mgr.get_kernel_names(0, "ocl_Kernel", found_kernels);
   cout << "Found Kernels: " << found_kernels.size() << endl;
   if (found_kernels.size() == 0) {
-    cerr << "Error: No valid kernels found." << endl;
+    cerr << ERROR_INFO << "No valid kernels found." << endl;
     return -1;
   }
 

@@ -40,12 +40,21 @@ ELSE()
   SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
 ENDIF()
 
-# Apple does not distribute a cl2.hpp include file
+# Get cl2.hpp header file
+OPTION(GET_CL2HPP "Download cl2.hpp from Khronos" OFF)
+SET(CL2_URL https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp)
+
+IF(GET_CL2HPP)
+  # download to default directory
+  FILE(DOWNLOAD ${CL2_URL} ${CMAKE_CURRENT_SOURCE_DIR}/include/CL/cl2.hpp)
+ENDIF()
+
 IF(APPLE)
-  FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  FILE(DOWNLOAD https://github.com/KhronosGroup/OpenCL-CLHPP/releases/download/v2.0.10/cl2.hpp ${CMAKE_CURRENT_SOURCE_DIR}/include/OpenCL/cl2.hpp)
+  # Apple does not distribute a cl2.hpp include file and uses another default path for OpenCL
+  FILE(DOWNLOAD ${CL2_URL} ${CMAKE_CURRENT_SOURCE_DIR}/include/OpenCL/cl2.hpp)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework OpenCL")
 ENDIF()
+
 
 # NVML: NVIDIA Management Library, used to query GPU power and temperature
 IF(USENVML)

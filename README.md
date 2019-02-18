@@ -19,12 +19,6 @@ To build toolkitCL the following needs to be installed:
 - CMake
 - CUDA Toolkit (only for NVidia GPU power/temperature logging)
 
-In case some of the OpenCL headers are missing, they can be obtained directly from Khronos:
-[https://github.com/KhronosGroup](https://github.com/KhronosGroup).
-On some compute cluster systems, it might be necessary to explicitly define the library path in the
-cmake configuration files. If no icd loader is available, the path to the OpenCL vendor library hast
-to be defined manually.
-
 This project uses the common CMake build system. Thus, the following commands can be used on Linux.
 ```bash
 mkdir build && cd build
@@ -48,6 +42,14 @@ make
 Recent versions of Visual Studio should automatically detect the cmake configuration files and build
 toolkitICL automatically. Otherwise `cmake-gui` can be used on Windows systems to create Visul Studio
 project files.
+
+In case some of the OpenCL headers are missing, they can be obtained directly from Khronos:
+[https://github.com/KhronosGroup](https://github.com/KhronosGroup). To automate this process,
+you can add the command line switch `-DGET_CL2HPP=ON` to CMake.
+
+On some compute cluster systems, it might be necessary to explicitly define the library path in the
+cmake configuration files. If no ICD loader is available, the path to the OpenCL vendor library has
+to be defined manually.
 
 If the CUDA toolkit is detected, CMake will enable CUDA support for power and temperature logging automatically.
 It can also be controlled manually (in the source code) using the `USENVML` define.

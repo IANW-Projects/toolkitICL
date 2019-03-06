@@ -21,6 +21,7 @@ public:
     cl::Device device;
     std::string name;
     cl::Platform platform;
+    std::string platform_name;
     cl_device_type type;
     std::string ocl_version;
     cl_ulong max_mem;

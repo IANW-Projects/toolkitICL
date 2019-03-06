@@ -353,6 +353,9 @@ void ocl_dev_mgr::initialize()
     available_devices.at(i).device.getInfo(CL_DEVICE_VERSION,                  &available_devices.at(i).ocl_version);
     available_devices.at(i).device.getInfo(CL_DEVICE_TYPE,                     &available_devices.at(i).type);
     available_devices.at(i).device.getInfo(CL_DEVICE_MAX_COMPUTE_UNITS,        &available_devices.at(i).compute_units);
+
+    available_devices.at(i).device.getInfo(CL_DEVICE_PLATFORM, &available_devices.at(i).platform);
+    available_devices.at(i).platform.getInfo(CL_PLATFORM_NAME, &available_devices.at(i).platform_name);
   }
 }
 

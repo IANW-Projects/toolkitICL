@@ -602,6 +602,7 @@ int main(int argc, char *argv[]) {
 
   h5_write_string(out_name, "Kernel_ExecStart", time_buffer);
   h5_write_string(out_name, "OpenCL_Device", dev_mgr.get_avail_dev_info(deviceIndex).name.c_str());
+  h5_write_string(out_name, "OpenCL_Platform", dev_mgr.get_avail_dev_info(deviceIndex).platform_name.c_str());
   h5_write_string(out_name, "OpenCL_Version", dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str());
   h5_write_single<double>(out_name, "Kernel_ExecTime", (double)exec_time/1000.0,
                           "Time in milliseconds of the kernel execution (no host code).");

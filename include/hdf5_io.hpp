@@ -45,12 +45,12 @@ inline bool h5_read_buffer(std::string const& filename, char const* varname, TYP
 
 // write a buffer to an HDF5 file using compression
 template<typename TYPE>
-bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size);
+bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size, std::string const& description="");
 
 template<typename TYPE>
-inline bool h5_write_buffer(std::string const& filename, char const* varname, TYPE const* data, size_t size)
+inline bool h5_write_buffer(std::string const& filename, char const* varname, TYPE const* data, size_t size, std::string const& description="")
 {
-  return h5_write_buffer<TYPE>(filename.c_str(), varname, data, size);
+  return h5_write_buffer<TYPE>(filename.c_str(), varname, data, size, description);
 }
 
 
@@ -71,12 +71,12 @@ inline TYPE h5_read_single(std::string const& filename, char const* varname)
 
 // write a single item to an HDF5 file
 template<typename TYPE>
-bool h5_write_single(char const* filename, char const* varname, TYPE data);
+bool h5_write_single(char const* filename, char const* varname, TYPE data, std::string const& description="");
 
 template<typename TYPE>
-inline bool h5_write_single(std::string const& filename, char const* varname, TYPE data)
+inline bool h5_write_single(std::string const& filename, char const* varname, TYPE data, std::string const& description="")
 {
-  return h5_write_single<TYPE>(filename.c_str(), varname, data);
+  return h5_write_single<TYPE>(filename.c_str(), varname, data, description);
 }
 
 

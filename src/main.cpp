@@ -481,14 +481,17 @@ int main(int argc, char *argv[]) {
   cl_int tmp_range[3];
   h5_read_buffer<cl_int>(filename, "Global_Range", tmp_range);
   global_range = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
-  h5_write_buffer<cl_int>(out_name, "Global_Range", tmp_range, 3);
+  h5_write_buffer<cl_int>(out_name, "Global_Range", tmp_range, 3,
+                          "Argument `global_work_size` of the OpenCL function `clEnqueueNDRangeKernel`.");
 
   h5_read_buffer<cl_int>(filename, "Range_Start", tmp_range);
   range_start = cl::NDRange(tmp_range[0], tmp_range[1], tmp_range[2]);
-  h5_write_buffer<cl_int>(out_name, "Range_Start", tmp_range, 3);
+  h5_write_buffer<cl_int>(out_name, "Range_Start", tmp_range, 3,
+                          "Argument `global_work_offset` of the OpenCL function `clEnqueueNDRangeKernel`.");
 
   h5_read_buffer<cl_int>(filename, "Local_Range", tmp_range);
-  h5_write_buffer<cl_int>(out_name, "Local_Range", tmp_range, 3);
+  h5_write_buffer<cl_int>(out_name, "Local_Range", tmp_range, 3,
+                          "Argument `local_work_size` of the OpenCL function `clEnqueueNDRangeKernel`.");
   if ((tmp_range[0]==0) && (tmp_range[1]==0) && (tmp_range[2]==0)) {
     local_range = cl::NullRange;
   }
@@ -532,7 +535,8 @@ int main(int argc, char *argv[]) {
   }
 
   total_exec_time = timer.getTimeMicroseconds() - total_exec_time;
-  h5_write_single<double>(out_name, "Total_ExecTime", (double)total_exec_time / 1000.0);
+  h5_write_single<double>(out_name, "Total_ExecTime", (double)total_exec_time / 1000.0,
+                          "Time in milliseconds of the total execution (data transfer, kernel, and host code).");
 
 
   cout << "Kernels executed: " << kernels_run << endl;
@@ -599,8 +603,10 @@ int main(int argc, char *argv[]) {
   h5_write_string(out_name, "Kernel_ExecStart", time_buffer);
   h5_write_string(out_name, "OpenCL_Device", dev_mgr.get_avail_dev_info(deviceIndex).name.c_str());
   h5_write_string(out_name, "OpenCL_Version", dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str());
-  h5_write_single<double>(out_name,"Kernel_ExecTime", (double)exec_time/1000.0);
-  h5_write_single<double>(out_name, "Data_LoadTime", (double)push_time/1000.0);
+  h5_write_single<double>(out_name, "Kernel_ExecTime", (double)exec_time/1000.0,
+                          "Time in milliseconds of the kernel execution (no host code).");
+  h5_write_single<double>(out_name, "Data_LoadTime", (double)push_time/1000.0,
+                          "Time in milliseconds of the data transfer: hdf5 input file -> host -> device.");
 
   h5_create_dir(out_name, "/Data");
 
@@ -661,7 +667,8 @@ int main(int argc, char *argv[]) {
   }
 
   pull_time = timer.getTimeMicroseconds() - pull_time;
-  h5_write_single<double>(out_name, "Data_StoreTime", (double)pull_time / 1000.0);
+  h5_write_single<double>(out_name, "Data_StoreTime", (double)pull_time / 1000.0,
+                          "Time in milliseconds of the data transfer: device -> host -> hdf5 output file.");
 
   return 0;
 }

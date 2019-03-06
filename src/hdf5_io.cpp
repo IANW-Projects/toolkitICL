@@ -260,7 +260,7 @@ template bool h5_read_buffer(char const* filename, char const* varname, cl_ulong
 
 // write a buffer to an HDF5 file using compression
 template<typename TYPE>
-bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size)
+bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size, std::string const& description)
 {
   hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
   hsize_t hdf_dims[2];
@@ -292,6 +292,10 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
   // The same can be done using H5 High Level API, but without compression
   // H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, type_to_h5_type<TYPE>(), data);
 
+  if (!description.empty()) {
+    H5LTset_attribute_string(h5_file_id, varname, "description", description.c_str());
+  }
+
   H5Pclose(plist_id);
   H5Sclose(dataspace_id);
   H5Sclose(memspace_id);
@@ -303,16 +307,16 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
 }
 
 // template instantiations
-template bool h5_write_buffer(char const* filename, char const* varname, float const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, double const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_char const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_uchar const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_short const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_ushort const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_int const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_uint const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_long const* data, size_t size);
-template bool h5_write_buffer(char const* filename, char const* varname, cl_ulong const* data, size_t size);
+template bool h5_write_buffer(char const* filename, char const* varname, float const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, double const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_char const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_uchar const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_short const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_ushort const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_int const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_uint const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_long const* data, size_t size, std::string const& description);
+template bool h5_write_buffer(char const* filename, char const* varname, cl_ulong const* data, size_t size, std::string const& description);
 
 
 
@@ -325,7 +329,7 @@ template bool h5_write_buffer(char const* filename, char const* varname, cl_ulon
 
 // write a single item to an HDF5 file
 template<typename TYPE>
-bool h5_write_single(char const* filename, char const* varname, TYPE data)
+bool h5_write_single(char const* filename, char const* varname, TYPE data, std::string const& description)
 {
   hid_t h5_file_id;
 
@@ -338,22 +342,26 @@ bool h5_write_single(char const* filename, char const* varname, TYPE data)
 
   H5LTmake_dataset(h5_file_id, varname, 0, NULL, type_to_h5_type<TYPE>(), &data);
 
+  if (!description.empty()) {
+    H5LTset_attribute_string(h5_file_id, varname, "description", description.c_str());
+  }
+
   H5Fclose(h5_file_id);
 
   return true;
 }
 
 // template instantiations
-template bool h5_write_single(char const* filename, char const* varname, float data);
-template bool h5_write_single(char const* filename, char const* varname, double data);
-template bool h5_write_single(char const* filename, char const* varname, cl_char data);
-template bool h5_write_single(char const* filename, char const* varname, cl_uchar data);
-template bool h5_write_single(char const* filename, char const* varname, cl_short data);
-template bool h5_write_single(char const* filename, char const* varname, cl_ushort data);
-template bool h5_write_single(char const* filename, char const* varname, cl_int data);
-template bool h5_write_single(char const* filename, char const* varname, cl_uint data);
-template bool h5_write_single(char const* filename, char const* varname, cl_long data);
-template bool h5_write_single(char const* filename, char const* varname, cl_ulong data);
+template bool h5_write_single(char const* filename, char const* varname, float data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, double data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_char data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_uchar data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_short data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_ushort data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_int data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_uint data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_long data, std::string const& description);
+template bool h5_write_single(char const* filename, char const* varname, cl_ulong data, std::string const& description);
 
 
 // reading and writing single strings

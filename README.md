@@ -67,6 +67,8 @@ ToolkitICL can be controlled by the following command line options:
 - `-np sample_rate`: Log Nvidia GPU power consumption with sample_rate (ms).
 - `-nt sample_rate`: Log Nvidia GPU temperature with sample_rate (ms).
 
+Additional domumentation will be provided in the directory [`doc`](https://github.com/IANW-Projects/toolkitICL/tree/master/doc).
+
 A useful tool to view and edit HDF5 files is [HDFView](https://www.hdfgroup.org/downloads/hdfview/).
 
 ## License

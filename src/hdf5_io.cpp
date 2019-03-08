@@ -262,10 +262,11 @@ template bool h5_read_buffer(char const* filename, char const* varname, cl_ulong
 template<typename TYPE>
 bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data, size_t size, std::string const& description)
 {
-  hid_t   h5_file_id, dataset_id, dataspace_id, memspace_id;
+  hid_t   h5_file_id, dataset_id, dataspace_id;
   hsize_t hdf_dims[2];
   hid_t   plist_id;
-  hsize_t cdims[2]; //chunk size used for compression
+  hsize_t chunk_dims[2]; //chunk size used for compression
+  int ndims;
 
   if (!fileExists(filename)) {
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -277,29 +278,34 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
   hdf_dims[0] = size;
   hdf_dims[1] = get_vector_size<TYPE>();
 
-  cdims[0] = (hsize_t)(hdf_dims[0]/chunk_factor) + 1;
-  cdims[1] = hdf_dims[1];
+  if (hdf_dims[1] == 1) {
+    ndims = 1;
+  }
+  else {
+    ndims = 2;
+  }
+
+  chunk_dims[0] = (hsize_t)(hdf_dims[0]/chunk_factor) + 1;
+  chunk_dims[1] = hdf_dims[1];
 
   plist_id = H5Pcreate(H5P_DATASET_CREATE);
-  H5Pset_chunk(plist_id, 2, cdims);
+  H5Pset_chunk(plist_id, ndims, chunk_dims);
   H5Pset_deflate(plist_id, 9);
 
-  dataspace_id = H5Screate_simple(2, hdf_dims, NULL);
-  memspace_id = H5Screate_simple(2, hdf_dims, NULL);
+  dataspace_id = H5Screate_simple(ndims, hdf_dims, NULL);
   dataset_id = H5Dcreate2(h5_file_id, varname , type_to_h5_type<TYPE>(), dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
 
-  H5Dwrite(dataset_id, type_to_h5_type<TYPE>(), memspace_id, dataspace_id, H5P_DEFAULT, data);
+  H5Dwrite(dataset_id, type_to_h5_type<TYPE>(), dataspace_id, dataspace_id, H5P_DEFAULT, data);
   // The same can be done using H5 High Level API, but without compression
-  // H5LTmake_dataset(h5_file_id, varname, 2, hdf_dims, type_to_h5_type<TYPE>(), data);
+  // H5LTmake_dataset(h5_file_id, varname, ndims, hdf_dims, type_to_h5_type<TYPE>(), data);
 
   if (!description.empty()) {
     H5LTset_attribute_string(h5_file_id, varname, "description", description.c_str());
   }
 
   H5Pclose(plist_id);
-  H5Sclose(dataspace_id);
-  H5Sclose(memspace_id);
   H5Dclose(dataset_id);
+  H5Sclose(dataspace_id);
 
   H5Fclose(h5_file_id);
 
@@ -510,15 +516,22 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
   }
 
   hsize_t hdf_dims[1] = {lines.size()};
-  hid_t dataspace = H5Screate_simple(1, hdf_dims, NULL);
-  hid_t datatype = H5Tcreate(H5T_STRING, line_length);
-  hid_t dataset = H5Dcreate2(h5_file_id, varname, datatype, dataspace, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hsize_t chunk_dims[1] = {(hsize_t)(hdf_dims[0]/chunk_factor) + 1};
 
-  H5Dwrite(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+  hid_t plist_id = H5Pcreate(H5P_DATASET_CREATE);
+  H5Pset_chunk(plist_id, 1, chunk_dims);
+  H5Pset_deflate(plist_id, 9);
 
-  H5Dclose(dataset);
-  H5Tclose(datatype);
-  H5Sclose(dataspace);
+  hid_t dataspace_id = H5Screate_simple(1, hdf_dims, NULL);
+  hid_t datatype_id = H5Tcreate(H5T_STRING, line_length);
+  hid_t dataset_id = H5Dcreate2(h5_file_id, varname, datatype_id, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+
+  H5Dwrite(dataset_id, datatype_id, dataspace_id, dataspace_id, H5P_DEFAULT, &(buffer[0]));
+
+  H5Pclose(plist_id);
+  H5Dclose(dataset_id);
+  H5Tclose(datatype_id);
+  H5Sclose(dataspace_id);
 
   H5Fclose(h5_file_id);
 

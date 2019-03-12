@@ -41,21 +41,22 @@ kernel void add_one(global REAL* values)\n\
 " << endl;
   kernel_file.close();
 
-  h5_write_string(filename.c_str(), "Kernel_Settings", "-DREAL=ulong");
-  h5_write_string(filename.c_str(), "Kernel_URL", kernel_url.c_str());
+  h5_create_dir(filename, "settings");
+  h5_write_string(filename, "/settings/kernel_settings", "-DREAL=ulong");
+  h5_write_string(filename, "kernel_url", kernel_url.c_str());
   vector<string> kernels(1, string("add_one"));
-  h5_write_strings(filename.c_str(), "Kernels", kernels);
+  h5_write_strings(filename, "kernels", kernels);
   cl_ulong kernel_repetitions = 5;
-  h5_write_single<cl_ulong>(filename.c_str(), "Kernel_Repetitions", kernel_repetitions);
+  h5_write_single<cl_ulong>(filename, "settings/kernel_repetitions", kernel_repetitions);
 
   // ranges
   cl_int tmp_range[3];
   tmp_range[0] = LENGTH; tmp_range[1] = 1; tmp_range[2] = 1;
-  h5_write_buffer<cl_int>(filename.c_str(), "Global_Range", tmp_range, 3);
+  h5_write_buffer<cl_int>(filename.c_str(), "/settings/global_range", tmp_range, 3);
 
   tmp_range[0] = 0; tmp_range[1] = 0; tmp_range[2] = 0;
-  h5_write_buffer<cl_int>(filename.c_str(), "Local_Range", tmp_range, 3);
-  h5_write_buffer<cl_int>(filename.c_str(), "Range_Start", tmp_range, 3);
+  h5_write_buffer<cl_int>(filename, "/settings/local_range", tmp_range, 3);
+  h5_write_buffer<cl_int>(filename, "/settings/range_start", tmp_range, 3);
 
   // data
   vector<cl_ulong> values(LENGTH);
@@ -63,8 +64,8 @@ kernel void add_one(global REAL* values)\n\
     values.at(i) = i;
   }
 
-  h5_create_dir(filename.c_str(), "/Data");
-  h5_write_buffer<cl_ulong>(filename.c_str(), "Data/values", &values[0], LENGTH);
+  h5_create_dir(filename, "/data");
+  h5_write_buffer<cl_ulong>(filename, "/data/values", &values[0], LENGTH);
 
 
   // call toolkitICL
@@ -87,7 +88,7 @@ kernel void add_one(global REAL* values)\n\
     return 1;
   }
 
-  h5_read_buffer<cl_ulong>(out_filename.c_str(), "Data/values", &values_test[0]);
+  h5_read_buffer<cl_ulong>(out_filename, "/data/values", &values_test[0]);
   for (size_t idx = 0; idx < LENGTH; ++idx) {
     if (values_test[idx] != values[idx] + kernel_repetitions) {
       cerr << "Error: Result 'values[" << idx << "] == " << values_test[idx] << "' is not as expected [" << values[idx] + kernel_repetitions << "]." << endl;
@@ -95,7 +96,7 @@ kernel void add_one(global REAL* values)\n\
     }
   }
 
-  //TODO: possible cleanup?
+  // TODO: possible cleanup?
   // if (fileExists(kernel_url)) {
   //   remove(kernel_url.c_str());
   // }

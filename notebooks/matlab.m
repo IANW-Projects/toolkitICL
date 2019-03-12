@@ -30,31 +30,31 @@ output = zeros(size(input));
 filename = 'copy_double_test_jl.h5';
 
 % compiler arguments for OpenCL
-hdf5write(filename, '/Kernel_Settings', '-DCOPYTYPE=double');
+hdf5write(filename, '/settings/kernel_settings', '-DCOPYTYPE=double');
 
 % URL of the file containing the kernels
-hdf5write(filename, '/Kernel_URL', kernel_url, 'WriteMode', 'append');
+hdf5write(filename, '/kernel_url', kernel_url, 'WriteMode', 'append');
 % Instead, you could also write(io, "Kernel_Source", copy_kernel).
 
 % kernels to be executed
-hdf5write(filename, '/Kernels', {'copy'}, 'WriteMode', 'append');
+hdf5write(filename, '/kernels', {'copy'}, 'WriteMode', 'append');
 
 % OpenCL ranges
-h5create(filename, '/Global_Range', [1 3], 'Datatype', 'int32');
-h5write(filename, '/Global_Range', [LENGTH,1,1]);
+h5create(filename, '/settings/global_range', [1 3], 'Datatype', 'int32');
+h5write(filename, '/settings/global_range', [LENGTH,1,1]);
 
-h5create(filename, '/Range_Start', [1 3], 'Datatype', 'int32');
-h5write(filename, '/Range_Start', [0 0 0]);
+h5create(filename, '/settings/range_start', [1 3], 'Datatype', 'int32');
+h5write(filename, '/settings/range_start', [0 0 0]);
 
-h5create(filename, '/Local_Range', [1 3], 'Datatype', 'int32');
-h5write(filename, '/Local_Range', [0,0,0]);
+h5create(filename, '/settings/local_range', [1 3], 'Datatype', 'int32');
+h5write(filename, '/settings/local_range', [0,0,0]);
 
 % data
-h5create(filename, '/Data/in', [1 LENGTH], 'Datatype', 'double')
-h5write(filename, '/Data/in', input)
+h5create(filename, '/data/in', [1 LENGTH], 'Datatype', 'double')
+h5write(filename, '/data/in', input)
 
-h5create(filename, '/Data/out', [1 LENGTH], 'Datatype', 'double')
-h5write(filename, '/Data/out', output)
+h5create(filename, '/data/out', [1 LENGTH], 'Datatype', 'double')
+h5write(filename, '/data/out', output)
 
 
 % call toolkitICL
@@ -63,13 +63,13 @@ system(['toolkitICL -c ' filename]);
 
 % check results
 out_filename = ['out_' filename];
-in_test = h5read(out_filename, '/Data/in');
-if ~all(in_test == input)
+in_test = h5read(out_filename, '/data/in');
+if ~all(in_test == input(:))
     fprintf('Wrong result for "in"\n')
 end
 
-out_test = h5read(out_filename, '/Data/out');
-if ~all(out_test == input)
+out_test = h5read(out_filename, '/data/out');
+if ~all(out_test == input(:))
     fprintf('Wrong result for "out"\n')
 end
 
@@ -87,4 +87,3 @@ end
 if exist(out_filename, 'file')==2
   delete(out_filename);
 end
-

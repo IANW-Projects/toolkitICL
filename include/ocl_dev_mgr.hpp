@@ -46,13 +46,13 @@ public:
   cl_ulong compile_kernel(cl_uint context_idx, std::string const& prog_name, std::string const& options);
   cl_ulong get_kernel_names(cl_uint context_idx, std::string const& prog_name, std::vector<std::string>& found_kernels);
   cl_ulong execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue,
-                          cl::NDRange global_range, cl::NDRange local_range,
-                          std::vector<cl::Buffer*>& dev_Buffers);
+  cl::NDRange global_range, cl::NDRange local_range,
+  std::vector<cl::Buffer*>& dev_Buffers);
   cl_ulong execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& queue,
-                            cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range);
+  cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range);
   void execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue& queue,
-                            cl::NDRange global_range, cl::NDRange local_range,
-                            std::vector<cl::Buffer*>& dev_Buffers);
+  cl::NDRange global_range, cl::NDRange local_range,
+  std::vector<cl::Buffer*>& dev_Buffers);
   bool add_program_url(cl_uint context_idx, std::string prog_name, std::string const& url);
   bool add_program_str(cl_uint context_idx, std::string prog_name, std::string kernel);
   cl::Kernel* getKernelbyName(cl_uint context_idx, std::string const& prog_name, std::string const& kernel_name);

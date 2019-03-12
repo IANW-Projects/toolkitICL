@@ -40,24 +40,24 @@ kernel void copy(global COPYTYPE const* in, global COPYTYPE* out)
   filename = "copy_" * type_to_name(T) * "_test_jl.h5"
 
   h5open(filename, "w") do io
-    write(io, "Kernel_Settings", "-DCOPYTYPE="*type_to_name(T))
-    write(io, "Kernel_URL", kernel_url)
-    write(io, "Kernels", ["copy"])
+    write(io, "settings/kernel_settings", "-DCOPYTYPE="*type_to_name(T))
+    write(io, "kernel_url", kernel_url)
+    write(io, "kernels", ["copy"])
 
     # ranges
     tmp_range = Int32[length, 1, 1]
-    write(io, "Global_Range", tmp_range)
+    write(io, "settings/global_range", tmp_range)
 
     tmp_range .= 0
-    write(io, "Local_Range", tmp_range)
-    write(io, "Range_Start", tmp_range)
+    write(io, "settings/local_range", tmp_range)
+    write(io, "settings/range_start", tmp_range)
 
     # data
-    write(io, "Data/in", in)
-    write(io, "Data/out", out)
+    write(io, "data/in", in)
+    write(io, "data/out", out)
 
     # single vales
-    write(io, "Single_Value", single_value)
+    write(io, "single_value", single_value)
   end
 
   # call toolkitICL
@@ -70,13 +70,13 @@ kernel void copy(global COPYTYPE const* in, global COPYTYPE* out)
 
   # check result
   out_filename = "out_" * filename
-  in_test = h5read(out_filename, "Data/in")
+  in_test = h5read(out_filename, "data/in")
   vec(in_test) == in || return false
 
-  out_test = h5read(out_filename, "Data/out")
+  out_test = h5read(out_filename, "data/out")
   vec(out_test) == in || return false
 
-  single_value_test = h5read(filename, "Single_Value")
+  single_value_test = h5read(filename, "single_value")
   single_value_test == single_value || return false
 
   return true

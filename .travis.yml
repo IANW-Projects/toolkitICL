@@ -24,14 +24,22 @@ git:
 addons:
   apt: # apt-get for linux
     packages:
+    # needed to build toolkitICL
     - libhdf5-dev
     - opencl-headers
     - ocl-icd-dev
     - ocl-icd-opencl-dev
+    # get additional OpenCL info to debug tests
     - clinfo
+    # # needed to log power on Intel CPUs/GPUs
+    # - msr-tools
+    # # get content of HDF5 files to test power logging
+    # - hdf5-tools
   homebrew: # homebrew for osx
     packages:
+    # needed to build toolkitICL
     - hdf5
+    # get additional OpenCL info to debug tests
     - clinfo
 
 before_script:
@@ -73,6 +81,7 @@ before_script:
   - julia -e "import Pkg; Pkg.add(\"HDF5\")"
 
 script:
+  # build without tests
   - mkdir build
   - cd build
   - cmake ..
@@ -82,11 +91,29 @@ script:
   - cmake --build .
   - export PATH=$PATH:$(pwd)/bin
   - toolkitICL
+  # build with tests
   - cd ..
   - rm -rf build
   - mkdir build
   - cd build
   - cmake -DTESTS=ON ..
   - cmake --build .
+  # run CMake tests
   - cmake --build . --target test
+  # # test power logging
+  # # instead of `sudo toolkitICL ...`, `sudo chmod o+rw /dev/cpu/0/msr` could be run once
+  # - if [ $TRAVIS_OS_NAME = linux ]; then
+  #     sudo modprobe msr;
+  #     cd test;
+  #     sudo ../bin/toolkitICL -b -isp 1000 -c repetition_test.h5;
+  #     h5ls out_repetition_test.h5/Intel_HK || exit 1;
+  #     h5dump -d Intel_HK/Cores0 out_repetition_test.h5 || exit 1;
+  #     h5dump -d Intel_HK/DRAM0 out_repetition_test.h5 || exit 1;
+  #     h5dump -d Intel_HK/GT0 out_repetition_test.h5 || exit 1;
+  #     h5dump -d Intel_HK/Package0 out_repetition_test.h5 || exit 1;
+  #     h5dump -d Intel_HK/Power_Time out_repetition_test.h5 || exit 1;
+  #     h5dump -d Intel_HK/TDP out_repetition_test.h5 || exit 1;
+  #     cd ..;
+  #   fi
+  # display test log
   - cat Testing/Temporary/LastTest.log

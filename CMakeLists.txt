@@ -3,12 +3,45 @@
 cmake_minimum_required (VERSION 3.5)
 PROJECT(toolkitICL)
 
+if(DEFINED ENV{AMDPROFILERPATH})
+    message(STATUS "Found AMD profiling driver")
+    option(USEAMDP "Use AMD Profiling" ON)
+    add_definitions(-DUSEAMDP)
+ELSE()
+    option(USEAMDP "Use AMD Profiling" OFF)
+endif()
+
 find_package(CUDA)
 
 IF(CUDA_FOUND)
   option(USENVML "Use NVML" ON)
 ELSE()
   option(USENVML "Use NVML" OFF)
+ENDIF()
+
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+option(USEIRAPL "Use RAPL" OFF)
+ELSE()
+option(USEIRAPL "Use RAPL" ON)
+ENDIF()
+
+if(DEFINED ENV{IPG_Dir})
+    message(STATUS "Found Intel Power Gadget Driver")
+	option(USEIPG "Use Intel Power Gadget" ON)
+	option(USEIRAPL "Use RAPL" OFF)
+ELSE()
+	option(USEIPG "Use Intel Power Gadget" OF)
+endif()
+
+IF(USEIPG)
+  MESSAGE(STATUS "Using Intel Power Gadget")
+  add_definitions(-DUSEIPG)
+ENDIF()
+
+
+IF(USEIRAPL)
+  MESSAGE(STATUS "Using Intel RAPL")
+  add_definitions(-DUSEIRAPL)
 ENDIF()
 
 IF(USENVML)

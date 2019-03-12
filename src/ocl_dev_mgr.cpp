@@ -121,11 +121,11 @@ cl_ulong ocl_dev_mgr::init_device(cl_uint avail_device_idx)
   tmp_devices.push_back(available_devices.at(avail_device_idx).device);
 
   cl::Context context(tmp_devices, NULL);
-  tmp_context.context=context;
+  tmp_context.context = context;
 
-  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
+  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context, CL_QUEUE_PROFILING_ENABLE));
   //push second queue for async copy
-  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context,CL_QUEUE_PROFILING_ENABLE));
+  tmp_context.queues.push_back(cl::CommandQueue(tmp_context.context, CL_QUEUE_PROFILING_ENABLE));
 
   con_list.push_back(tmp_context);
 
@@ -175,7 +175,7 @@ bool ocl_dev_mgr::add_program_str(cl_uint context_idx, std::string prog_name, st
 cl::Program& ocl_dev_mgr::get_program(cl_uint context_idx, std::string const& prog_name)
 {
   auto it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-  if (it_p != con_list.at(context_idx).prog_names.end())  {
+  if (it_p != con_list.at(context_idx).prog_names.end()) {
     return con_list.at(context_idx).programs.at(distance(con_list.at(context_idx).prog_names.begin(), it_p));
   }
   else {
@@ -192,7 +192,7 @@ ocl_dev_mgr::ocl_device_info& ocl_dev_mgr::get_avail_dev_info(cl_uint avail_devi
 }
 
 
-ocl_dev_mgr::ocl_device_info& ocl_dev_mgr::get_context_dev_info(cl_uint context_idx,cl_uint device_idx)
+ocl_dev_mgr::ocl_device_info& ocl_dev_mgr::get_context_dev_info(cl_uint context_idx, cl_uint device_idx)
 {
   return con_list.at(context_idx).devices.at(device_idx);
 }
@@ -200,8 +200,8 @@ ocl_dev_mgr::ocl_device_info& ocl_dev_mgr::get_context_dev_info(cl_uint context_
 
 // return execution time in µs
 cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue,
-                                     cl::NDRange global_range, cl::NDRange local_range,
-                                     std::vector<cl::Buffer*>& dev_Buffers)
+  cl::NDRange global_range, cl::NDRange local_range,
+  std::vector<cl::Buffer*>& dev_Buffers)
 {
   cl::Event event;
   cl_ulong time_start, time_end;
@@ -230,7 +230,7 @@ cl_ulong ocl_dev_mgr::execute_kernel(cl::Kernel& kernel, cl::CommandQueue& queue
 
 // return execution time in µs
 cl_ulong ocl_dev_mgr::execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& queue,
-                                       cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range)
+  cl::NDRange range_start, cl::NDRange global_range, cl::NDRange local_range)
 {
   cl::Event event;
   cl_ulong time_start, time_end;
@@ -254,10 +254,10 @@ cl_ulong ocl_dev_mgr::execute_kernelNA(cl::Kernel& kernel, cl::CommandQueue& que
 
 // don't return execution time in µs
 void ocl_dev_mgr::execute_kernel_async(cl::Kernel& kernel, cl::CommandQueue& queue,
-                                       cl::NDRange global_range, cl::NDRange local_range,
-                                       std::vector<cl::Buffer*>& dev_Buffers)
+  cl::NDRange global_range, cl::NDRange local_range,
+  std::vector<cl::Buffer*>& dev_Buffers)
 {
-  try{
+  try {
     for (cl_uint i = 0; i < dev_Buffers.size(); i++) {
       kernel.setArg(i, *dev_Buffers[i]);
     }
@@ -280,7 +280,7 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string const& pro
   std::string compile_options = std::string(" ") + options;
 
   auto it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-  if (it_p == con_list.at(context_idx).prog_names.end())  {
+  if (it_p == con_list.at(context_idx).prog_names.end()) {
     std::cerr << ERROR_INFO << "Program '" << prog_name << "' not found." << std::endl;
     //TODO: Exception?
     return 0;
@@ -314,7 +314,7 @@ cl_ulong ocl_dev_mgr::compile_kernel(cl_uint context_idx, std::string const& pro
 cl_ulong ocl_dev_mgr::get_kernel_names(cl_uint context_idx, std::string const& prog_name, std::vector<std::string>& found_kernels)
 {
   auto it_p = find(con_list.at(context_idx).prog_names.begin(), con_list.at(context_idx).prog_names.end(), prog_name);
-  if (it_p == con_list.at(context_idx).prog_names.end())  {
+  if (it_p == con_list.at(context_idx).prog_names.end()) {
     std::cerr << ERROR_INFO << "Program '" << prog_name << "' not found." << std::endl;
     //TODO: Exception?
     return 0;

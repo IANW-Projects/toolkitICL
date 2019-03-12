@@ -93,7 +93,7 @@ constexpr size_t get_vector_size() { return 1; };
 
 bool h5_check_object(char const* filename, char const* varname)
 {
-	hid_t h5_file_id;
+  hid_t h5_file_id;
 
   if (fileExists(filename)) {
     h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -114,7 +114,7 @@ bool h5_check_object(char const* filename, char const* varname)
 
 
 bool h5_get_content(char const* filename, char const* hdf_dir,
-                    std::vector<std::string>& data_names, std::vector<HD5_Type>& data_types, std::vector<size_t>& data_sizes)
+  std::vector<std::string>& data_names, std::vector<HD5_Type>& data_types, std::vector<size_t>& data_sizes)
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
@@ -135,8 +135,8 @@ bool h5_get_content(char const* filename, char const* hdf_dir,
     }
 
     ssize_t len = H5Gget_objname_by_idx(grp, obj_idx, NULL, 0);
-    vector<char> object_name(len+1, '\0');
-    H5Gget_objname_by_idx(grp, obj_idx, &(object_name[0]), len+1);
+    vector<char> object_name(len + 1, '\0');
+    H5Gget_objname_by_idx(grp, obj_idx, &(object_name[0]), len + 1);
 
     data_names.push_back(string(hdf_dir) + string(object_name.begin(), object_name.end()));
 
@@ -204,11 +204,13 @@ bool h5_create_dir(char const* filename, char const* hdf_dir)
     h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
   else {
-    return false;
+    h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
 
-  grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
-  H5Gclose(grp);
+  if (H5LTpath_valid(h5_file_id, hdf_dir, true) <= 0) {
+    grp = H5Gcreate1(h5_file_id, hdf_dir, 0);
+    H5Gclose(grp);
+  }
   H5Fclose(h5_file_id);
 
   return true;
@@ -285,7 +287,7 @@ bool h5_write_buffer(char const* filename, char const* varname, TYPE const* data
     ndims = 2;
   }
 
-  chunk_dims[0] = (hsize_t)(hdf_dims[0]/chunk_factor) + 1;
+  chunk_dims[0] = (hsize_t)(hdf_dims[0] / chunk_factor) + 1;
   chunk_dims[1] = hdf_dims[1];
 
   plist_id = H5Pcreate(H5P_DATASET_CREATE);
@@ -347,6 +349,10 @@ bool h5_write_single(char const* filename, char const* varname, TYPE data, std::
   }
 
   H5LTmake_dataset(h5_file_id, varname, 0, NULL, type_to_h5_type<TYPE>(), &data);
+
+  if (!description.empty()) {
+    H5LTset_attribute_string(h5_file_id, varname, "description", description.c_str());
+  }
 
   if (!description.empty()) {
     H5LTset_attribute_string(h5_file_id, varname, "description", description.c_str());
@@ -496,8 +502,8 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
 {
   // create single C string using the format of the (deprecated) matlab function
   // `hdf5write` for cell arrays of char arrays (aka strings)
-  size_t line_length = std::max_element(
-    lines.cbegin(), lines.cend(), [] (std::string s1, std::string s2) { return s1.size() < s2.size(); } )->size() + 1;
+  size_t line_length = std::max_element(lines.cbegin(), lines.cend(),
+    [] (std::string s1, std::string s2) { return s1.size() < s2.size(); } )->size() + 1;
 
   std::vector<char> buffer(line_length * lines.size(), '\0');
   size_t str_start = 0;
@@ -512,11 +518,11 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
     h5_file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   }
   else {
-    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR , H5P_DEFAULT);
+    h5_file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
   }
 
-  hsize_t hdf_dims[1] = {lines.size()};
-  hsize_t chunk_dims[1] = {(hsize_t)(hdf_dims[0]/chunk_factor) + 1};
+  hsize_t hdf_dims[1] = { lines.size() };
+  hsize_t chunk_dims[1] = { (hsize_t)(hdf_dims[0] / chunk_factor) + 1 };
 
   hid_t plist_id = H5Pcreate(H5P_DATASET_CREATE);
   H5Pset_chunk(plist_id, 1, chunk_dims);
@@ -526,7 +532,7 @@ bool h5_write_strings(char const* filename, char const* varname, std::vector<std
   hid_t datatype_id = H5Tcreate(H5T_STRING, line_length);
   hid_t dataset_id = H5Dcreate2(h5_file_id, varname, datatype_id, dataspace_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
 
-  H5Dwrite(dataset_id, datatype_id, dataspace_id, dataspace_id, H5P_DEFAULT, &(buffer[0]));
+  H5Dwrite(dataset_id, datatype_id, dataspace_id, dataspace_id, H5P_DEFAULT, buffer.data());
 
   H5Pclose(plist_id);
   H5Dclose(dataset_id);

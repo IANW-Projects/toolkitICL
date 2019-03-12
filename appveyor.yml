@@ -55,6 +55,8 @@ install:
   - sh: tar xvf julia-1.1.0-linux-x86_64.tar.gz
   - sh: export PATH=$PATH:$(pwd)/julia-1.1.0/bin
   - sh: julia -e "import Pkg; Pkg.add(\"HDF5\"); Pkg.build(\"HDF5\")"
+      # msr-tools, hdf5-tools to test power logging
+  - sh: sudo apt-get -y install msr-tools hdf5-tools
   # Windows and Linux
   - clinfo
 
@@ -84,6 +86,7 @@ build_script:
   - cmd: cmake --build . --target ALL_BUILD
   - cmd: cmake --build . --target RUN_TESTS
   # Linux only
+    # build without tests
   - sh: cmake ..
   - sh: cmake --build .
   - sh: export PATH=$PATH:$(pwd)/bin
@@ -93,10 +96,33 @@ build_script:
   # - sh: appveyor PushArtifact build_directory_linux.zip
   # - sh: cd build
   - sh: toolkitICL -h
+    # build with tests
   - sh: cd ..
   - sh: rm -rf build
   - sh: mkdir build
   - sh: cd build
   - sh: cmake -DTESTS=ON ..
   - sh: cmake --build .
+    # run CMake tests
   - sh: cmake --build . --target test
+    # test power logging
+    # instead of `sudo toolkitICL ...`, `sudo chmod o+rw /dev/cpu/0/msr` could be run once
+  - sh: sudo modprobe msr
+  - sh: cd test
+  - sh: sudo ../bin/toolkitICL -b -intel_power 1000 -c repetition_test.h5
+  - sh: h5ls out_repetition_test.h5/housekeeping
+  - sh: h5ls out_repetition_test.h5/housekeeping/intel
+  - sh: h5dump -d housekeeping/intel/cores0 out_repetition_test.h5
+  - sh: h5dump -d housekeeping/intel/DRAM0 out_repetition_test.h5
+  # - sh: h5dump -d housekeeping/intel/GT0 out_repetition_test.h5 # not required on all machines
+  - sh: h5dump -d housekeeping/intel/package0 out_repetition_test.h5
+  - sh: h5dump -d housekeeping/intel/power_time out_repetition_test.h5
+  - sh: h5dump -d housekeeping/intel/TDP out_repetition_test.h5
+  - sh: sudo ../bin/toolkitICL -b -intel_temp 1000 -c repetition_test.h5
+  - sh: h5ls out_repetition_test.h5/housekeeping
+  - sh: h5ls out_repetition_test.h5/housekeeping/intel
+  - sh: h5dump -d housekeeping/intel/package0_temperature out_repetition_test.h5
+  - sh: h5dump -d housekeeping/intel/temperature_time out_repetition_test.h5
+  - sh: cd ..
+    # display test log
+  - sh: cat Testing/Temporary/LastTest.log

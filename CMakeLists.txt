@@ -1,7 +1,9 @@
 # Select compiler, supports gcc, clang
-
 cmake_minimum_required (VERSION 3.5)
+
 PROJECT(toolkitICL)
+
+option(BUILDREL "Official release build" OFF)
 
 if(DEFINED ENV{AMDPROFILERPATH})
     message(STATUS "Found AMD profiling driver")
@@ -30,7 +32,7 @@ if(DEFINED ENV{IPG_Dir})
 	option(USEIPG "Use Intel Power Gadget" ON)
 	option(USEIRAPL "Use RAPL" OFF)
 ELSE()
-	option(USEIPG "Use Intel Power Gadget" OF)
+	option(USEIPG "Use Intel Power Gadget" OFF)
 endif()
 
 IF(USEIPG)
@@ -49,29 +51,51 @@ IF(USENVML)
   add_definitions(-DUSENVML)
 ENDIF()
 
-# Because Makefiles are shit to read
+set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+
 SET(CMAKE_VERBOSE_MAKEFILE "false")
 # Includes modules to find OCL
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/")
 
 # compiler flags
+IF(BUILDREL)
+MESSAGE(STATUS "Building release version")
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   MESSAGE(STATUS "Microsoft Visual Studio detected. Corresponding compiler flags have been set.")
   SET(CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB")
   SET(CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   MESSAGE(STATUS "GNU Compiler Collection detected. Corresponding compiler flags have been set.")
-  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -fPIC -Wall -mfpmath=sse -Wcast-align -Wl,-E")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -fPIC -Wall -mfpmath=sse -Wcast-align -Wl,-E")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   MESSAGE(STATUS "LLVM Clang detected.  Corresponding compiler flags have been set.")
-  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -msse3 -mssse3 -msse4.1 -msse4.2  -mavx -mavx2 -fPIC -Wall")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -fPIC -Wall")
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  MESSAGE(STATUS "Apple Clang detected.  Corresponding compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -msse2 -fPIC -Wall")
+ELSE()
+  MESSAGE(STATUS "Compiler ${CMAKE_CXX_COMPILER_ID} unknown. Simple compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -fstrict-aliasing -fPIC -Wall")
+  ENDIF()
+ELSE(BUILDREL)
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  MESSAGE(STATUS "Microsoft Visual Studio detected. Corresponding compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB")
+  SET(CMAKE_C_FLAGS " /std=c++11 /O2 /DH5_BUILT_AS_DYNAMIC_LIB")
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  MESSAGE(STATUS "GNU Compiler Collection detected. Corresponding compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall -mfpmath=sse -Wcast-align -Wl,-E")
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  MESSAGE(STATUS "LLVM Clang detected.  Corresponding compiler flags have been set.")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   MESSAGE(STATUS "Apple Clang detected.  Corresponding compiler flags have been set.")
   SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
 ELSE()
   MESSAGE(STATUS "Compiler ${CMAKE_CXX_COMPILER_ID} unknown. Simple compiler flags have been set.")
-  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -funroll-loops -fstrict-aliasing -march=native -fPIC -Wall")
+  SET(CMAKE_CXX_FLAGS " -std=c++11 -O2 -fstrict-aliasing -march=native -fPIC -Wall")
 ENDIF()
+ENDIF(BUILDREL)
 
 # Get cl2.hpp header file
 OPTION(GET_CL2HPP "Download cl2.hpp from Khronos" OFF)
@@ -116,6 +140,7 @@ ENDIF(OpenCL_FOUND)
 ADD_SUBDIRECTORY(src)
 
 # tests
+OPTION(TESTS "Build unit tests" OFF)
 IF(TESTS)
   enable_testing()
   ADD_SUBDIRECTORY(test)

@@ -70,7 +70,7 @@ build_script:
   # Windows only
   - cmd: set VCPKG_DEFAULT_TRIPLET=x64-windows
   - cmd: cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_POLICY_DEFAULT_CMP0074=NEW -DHDF5_ROOT="C:/Tools/vcpkg/installed/x64-windows" -DHDF5_INCLUDE_DIRS="C:/Tools/vcpkg/installed/x64-windows/include" -DHDF5_LIBRARIES="hdf5::hdf5-shared" -DHDF5_HL_LIBRARIES="hdf5::hdf5_hl-shared"
-  - cmd: cmake --build . --target ALL_BUILD
+  - cmd: cmake --build . --target ALL_BUILD --config Release
   - cmd: set PATH=%PATH%;%cd%\bin;%cd%\bin\Release;%cd%\bin\Debug
   - cmd: echo %PATH%
   # - cmd: cd ..
@@ -83,8 +83,8 @@ build_script:
   - cmd: mkdir build
   - cmd: cd build
   - cmd: cmake -DTESTS=ON .. -DCMAKE_TOOLCHAIN_FILE=C:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_POLICY_DEFAULT_CMP0074=NEW -DHDF5_ROOT="C:/Tools/vcpkg/installed/x64-windows" -DHDF5_INCLUDE_DIRS="C:/Tools/vcpkg/installed/x64-windows/include" -DHDF5_LIBRARIES="hdf5::hdf5-shared" -DHDF5_HL_LIBRARIES="hdf5::hdf5_hl-shared"
-  - cmd: cmake --build . --target ALL_BUILD
-  - cmd: cmake --build . --target RUN_TESTS
+  - cmd: cmake --build . --target ALL_BUILD --config Release
+  - cmd: cmake --build . --target RUN_TESTS --config Release
   # Linux only
     # build without tests
   - sh: cmake ..
@@ -107,22 +107,22 @@ build_script:
   - sh: cmake --build . --target test
     # test power logging
     # instead of `sudo toolkitICL ...`, `sudo chmod o+rw /dev/cpu/0/msr` could be run once
-  - sh: sudo modprobe msr
-  - sh: cd test
-  - sh: sudo ../bin/toolkitICL -b -intel_power 1000 -c repetition_test.h5
-  - sh: h5ls out_repetition_test.h5/housekeeping
-  - sh: h5ls out_repetition_test.h5/housekeeping/intel
-  - sh: h5dump -d housekeeping/intel/cores0 out_repetition_test.h5
-  - sh: h5dump -d housekeeping/intel/DRAM0 out_repetition_test.h5
-  # - sh: h5dump -d housekeeping/intel/GT0 out_repetition_test.h5 # not required on all machines
-  - sh: h5dump -d housekeeping/intel/package0 out_repetition_test.h5
-  - sh: h5dump -d housekeeping/intel/power_time out_repetition_test.h5
-  - sh: h5dump -d housekeeping/intel/TDP out_repetition_test.h5
-  - sh: sudo ../bin/toolkitICL -b -intel_temp 1000 -c repetition_test.h5
-  - sh: h5ls out_repetition_test.h5/housekeeping
-  - sh: h5ls out_repetition_test.h5/housekeeping/intel
-  - sh: h5dump -d housekeeping/intel/package0_temperature out_repetition_test.h5
-  - sh: h5dump -d housekeeping/intel/temperature_time out_repetition_test.h5
-  - sh: cd ..
+  # - sh: sudo modprobe msr
+  # - sh: cd test
+  # - sh: sudo ../bin/toolkitICL -b -intel_power 1000 -c repetition_test.h5
+  # - sh: h5ls out_repetition_test.h5/housekeeping
+  # - sh: h5ls out_repetition_test.h5/housekeeping/intel
+  # - sh: h5dump -d housekeeping/intel/cores0 out_repetition_test.h5
+  # - sh: h5dump -d housekeeping/intel/DRAM0 out_repetition_test.h5
+  # # - sh: h5dump -d housekeeping/intel/GT0 out_repetition_test.h5 # not required on all machines
+  # - sh: h5dump -d housekeeping/intel/package0 out_repetition_test.h5
+  # - sh: h5dump -d housekeeping/intel/power_time out_repetition_test.h5
+  # - sh: h5dump -d housekeeping/intel/TDP out_repetition_test.h5
+  # - sh: sudo ../bin/toolkitICL -b -intel_temp 1000 -c repetition_test.h5
+  # - sh: h5ls out_repetition_test.h5/housekeeping
+  # - sh: h5ls out_repetition_test.h5/housekeeping/intel
+  # - sh: h5dump -d housekeeping/intel/package0_temperature out_repetition_test.h5
+  # - sh: h5dump -d housekeeping/intel/temperature_time out_repetition_test.h5
+  # - sh: cd ..
     # display test log
   - sh: cat Testing/Temporary/LastTest.log

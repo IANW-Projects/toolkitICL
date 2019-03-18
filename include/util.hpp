@@ -19,14 +19,10 @@
 
 
 // file system functions
-inline bool fileExists(char const* filename)
-{
-  return access(filename, 0) == 0;
-}
 
 inline bool fileExists(std::string const& filename)
 {
-  return fileExists(filename.c_str());
+  return access(filename.c_str(), 0) == 0;
 }
 
 

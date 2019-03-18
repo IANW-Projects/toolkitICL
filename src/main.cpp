@@ -19,11 +19,11 @@
 #include "ocl_dev_mgr.hpp"
 #include "timer.hpp"
 
-
 #if defined(_WIN32)
 #pragma once
 #include <windows.h>
 #include <sys/timeb.h>
+#include "shlobj.h"
 
 int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
@@ -333,14 +333,11 @@ void intel_log_temp_func()
       if (rapl->detect_socket1() == true)
       {
         temp1 = rapl->get_temp1();
+		intel_temp1.push_back(temp1);
       }
 
       intel_temp_time.push_back(timeval2storage(rawtime));
       intel_temp0.push_back(temp0);
-      if (rapl->detect_socket1() == true)
-      {
-        intel_temp1.push_back(temp1);
-      }
     }
   }
 }
@@ -451,9 +448,6 @@ void nvidia_log_power_func()
     nvidia_power.clear();
     nvidia_power_time.clear();
 
-    result = nvmlInit();
-    if (NVML_SUCCESS == result)
-    {
       nvmlDevice_t device;
       nvmlDeviceGetHandleByIndex(0, &device);
 
@@ -469,7 +463,6 @@ void nvidia_log_power_func()
       }
 
       nvmlShutdown();
-    }
   }
 }
 
@@ -484,9 +477,6 @@ void nvidia_log_temp_func()
     nvidia_temp.clear();
     nvidia_temp_time.clear();
 
-    result = nvmlInit();
-    if (NVML_SUCCESS == result)
-    {
       nvmlDevice_t device;
       nvmlDeviceGetHandleByIndex(0, &device);
 
@@ -500,7 +490,7 @@ void nvidia_log_temp_func()
       }
 
       nvmlShutdown();
-    }
+
   }
 }
 
@@ -652,6 +642,11 @@ int main(int argc, char *argv[]) {
 
   cl_uint deviceIndex = 0; // set default OpenCL Device
 
+  ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
+  cl_uint devices_availble = dev_mgr.get_avail_dev_num();
+
+  cout << "Available OpenCL devices: " << devices_availble << endl;
+
   // parse command line arguments
   bool benchmark_mode = false;
   if (cmdOptionExists(argv, argv + argc, "-b")) {
@@ -712,11 +707,8 @@ int main(int argc, char *argv[]) {
   }
 
 #endif
-  ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
-  cl_uint devices_availble = dev_mgr.get_avail_dev_num();
 
-  cout << "Available devices: " << devices_availble << endl
-       << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
+  cout << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
   cout << "OpenCL version: " << dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str() << endl;
   cout << "Memory limit: " << dev_mgr.get_avail_dev_info(deviceIndex).max_mem << endl;
   cout << "WG limit: " << dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
@@ -942,11 +934,47 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if defined(USENVML)
+#if defined(_WIN32)
   if (nvidia_log_power || nvidia_log_temp)
   {
-    cout << "Using NVML interface..." << endl;
-    h5_create_dir(out_name, "/housekeeping");
-    h5_create_dir(out_name, "/housekeeping/nvidia");
+      //Get Program Files path from system
+      TCHAR pf[MAX_PATH];
+      SHGetSpecialFolderPath(0,pf,CSIDL_PROGRAM_FILES,FALSE);
+      std::string nvsmi_path;
+      nvsmi_path.append(pf);
+      nvsmi_path.append("/NVIDIA Corporation/NVSMI/nvml.dll");
+      if (fileExists(nvsmi_path)) {
+          LoadLibraryEx(nvsmi_path.c_str(), NULL, 0);
+      }else {
+          if (fileExists("nvml.dll")) {
+              LoadLibraryEx("nvml.dll", NULL, 0);
+          }
+          else {
+              //No NVML found abort
+              cout << "NVML library not found..." << endl;
+              nvidia_log_temp = false;
+              nvidia_log_power = false;
+              nvidia_power_rate = 0;
+              nvidia_temp_rate = 0;
+          }
+           }
+  }
+#endif
+  if (nvidia_log_power || nvidia_log_temp)
+  {
+      nvmlReturn_t result;
+      result = nvmlInit();
+      if (NVML_SUCCESS == result)
+      {
+        cout << "Using NVML interface..." << endl;
+        h5_create_dir(out_name, "/housekeeping");
+        h5_create_dir(out_name, "/housekeeping/nvidia");
+      }
+      else {
+          cout << "NVML failure..." << endl;
+          nvidia_log_temp = false;
+          nvidia_log_power = false;
+      }
   }
   std::thread nvidia_log_power_thread(nvidia_log_power_func);
   std::thread nvidia_log_temp_thread(nvidia_log_temp_func);
@@ -957,13 +985,12 @@ int main(int argc, char *argv[]) {
   {
     cout << "Using Intel Power Gadget interface..." << endl;
     h5_create_dir(out_name, "/housekeeping");
-    h5_create_dir(out_name, "/housekeeping/intel");
+    h5_create_dir(out_name, "/housekeeping/intel"); 
+    rapl = new Rapl();
   }
 
   if (intel_log_power)
   {
-
-    rapl = new Rapl();
     h5_write_single<float>(out_name, "/housekeeping/intel/TDP" , (float)rapl->get_TDP(),
                            "Thermal Design Power in watt");
 
@@ -1084,7 +1111,10 @@ int main(int argc, char *argv[]) {
   amd_log_power_thread.join();
   //amd_log_temp_thread.join();
 
-  AMDTPwrStopProfiling();
+  if ((amd_power_rate > 0) || (amd_temp_rate > 0)) {
+
+    AMDTPwrStopProfiling();
+  }
 
   if (amd_power_rate > 0)
   {
@@ -1218,6 +1248,11 @@ int main(int argc, char *argv[]) {
   nvidia_log_temp = false;
   nvidia_log_power_thread.join();
   nvidia_log_temp_thread.join();
+
+  if ((nvidia_power_rate > 0)||(nvidia_temp_rate > 0))
+  {
+      nvmlShutdown();
+  }
 
   if (nvidia_power_rate > 0) {
 

@@ -69,6 +69,8 @@ During execution, power and temperture loggin is only available, if the `EnergyL
 Depending on the architecture, the power consumption is determined by the system based on a heuristic algorithm and not measured directly.
 The necessary drivers and additional information are available at [Intel]( https://software.intel.com/en-us/articles/intel-power-gadget-20).
 
+The default path will be used to search for the necessary libraries (HDF5, Intel Power Gadget, AMD µProf, CUDA). It is also possible to place the libraries together with the executable in the same folder.
+
 ## Usage
 
 Examples on how to create the input HDF5 files are provided in the directory

@@ -59,10 +59,13 @@ add_executable(toolkitICL ${SOURCES} $<TARGET_OBJECTS:hdf5_io>)
 
 set(LIBRARIES "${OpenCL_LIBRARIES};${HDF5_HL_LIBRARIES};${HDF5_LIBRARIES}")
 
+#set(MSVC_LINK_FLAGS "/DELAYLOAD:")
+
 # link libraries
 IF(USENVML)
   if(MSVC)
     list(APPEND LIBRARIES "nvml.lib")
+    set(MSVC_LINK_FLAGS "${MSVC_LINK_FLAGS}/DELAYLOAD:nvml.dll ")
   ELSE()
     list(APPEND LIBRARIES "libnvidia-ml.so")
   ENDIF()
@@ -71,6 +74,7 @@ ENDIF(USENVML)
 IF(USEAMDP)
   if(MSVC)
     list(APPEND LIBRARIES "AMDPowerProfileAPI.lib")
+    set(MSVC_LINK_FLAGS "${MSVC_LINK_FLAGS}/DELAYLOAD:AMDPowerProfileAPI.dll ")
   ELSE()
     list(APPEND LIBRARIES "libAMDPowerProfileAPI.so")
   ENDIF()
@@ -78,4 +82,12 @@ ENDIF(USEAMDP)
 
 MESSAGE(STATUS "Used libs: ${LIBRARIES}")
 
+if(MSVC)
+MESSAGE(STATUS "Used linker flags: ${MSVC_LINK_FLAGS}")
+set_target_properties(toolkitICL PROPERTIES LINK_FLAGS "${MSVC_LINK_FLAGS}")
+ENDIF()
+
+
 TARGET_LINK_LIBRARIES(toolkitICL ${LIBRARIES})
+
+

@@ -131,7 +131,7 @@ Rapl::Rapl(){
     pGetNumNodes(&numCPUnodes);
     if (numCPUnodes > 1)
     {
-        pp1_supported = true;
+		socket1_detected = true;
     }
 }
 

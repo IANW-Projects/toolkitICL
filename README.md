@@ -1,6 +1,7 @@
 # toolkitICL
 
 [![License](https://licensebuttons.net/l/by-nc-nd/3.0/88x31.png)](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2597653.svg)](https://doi.org/10.5281/zenodo.2597653)
 [![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/js729s93vvdwgnjx?svg=true)](https://ci.appveyor.com/project/ranocha/toolkitICL)
 [![Build Status Travis](https://travis-ci.com/IANW-Projects/toolkitICL.svg?branch=master)](https://travis-ci.com/IANW-Projects/toolkitICL)
 
@@ -90,6 +91,22 @@ ToolkitICL can be controlled by the following command line options:
 Additional domumentation will be provided in the directory [`doc`](https://github.com/IANW-Projects/toolkitICL/tree/master/doc).
 
 A useful tool to view and edit HDF5 files is [HDFView](https://www.hdfgroup.org/downloads/hdfview/).
+
+
+## Reference
+
+This software can be cited as:
+```
+@misc{heinisch2019toolkitICL,
+  title={{toolkitICL}. {A}n open source tool for automated {OpenCL} kernel execution.},
+  author={Heinisch, Philip and Ostaszewski, Katharina and Ranocha, Hendrik},
+  month={03},
+  year={2019},
+  howpublished={\url{https://github.com/IANW-Projects/toolkitICL}},
+  doi={10.5281/zenodo.2597653}
+}
+```
+
 
 ## License
 

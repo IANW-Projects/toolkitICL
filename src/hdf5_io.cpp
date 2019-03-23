@@ -381,11 +381,18 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
 {
   if (!fileExists(filename)) {
     std::cerr << ERROR_INFO << "File '" << filename << "' not found." << std::endl;
-    //TODO: File not found - no idea what error code to use
+    //TODO: Exception? Only error code?
     return false;
   }
 
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (H5LTpath_valid(h5_file_id, varname, true) <= 0) {
+    std::cerr << ERROR_INFO << "Variable '" << varname << "' not found in file '" << filename << "'." << std::endl;
+    //TODO: Exception? Only error code?
+    H5Fclose(h5_file_id);
+    return false;
+  }
+
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
   hid_t datatype = H5Dget_type(dataset);
@@ -400,7 +407,13 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
     hsize_t size = accumulate(begin(dims), end(dims), 1, std::multiplies<hsize_t>());
 
     std::vector<char*> buffer(size * sizeof(char*));
-    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    herr_t err = H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    if (err < 0) {
+      std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+      //TODO: Exception? Only error code?
+      H5Fclose(h5_file_id);
+      return false;
+    }
     output = std::string(buffer.at(0));
 
     H5Dvlen_reclaim(datatype, dataspace, H5P_DEFAULT, &(buffer[0]));
@@ -410,7 +423,13 @@ bool h5_read_string(char const* filename, char const* varname, std::string& outp
     hssize_t npoints = H5Sget_simple_extent_npoints(dataspace);
 
     std::vector<char> buffer(datatype_size * npoints, '\0');
-    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    herr_t err = H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    if (err < 0) {
+      std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+      //TODO: Exception? Only error code?
+      H5Fclose(h5_file_id);
+      return false;
+    }
     output = std::string(begin(buffer), end(buffer));
   }
 
@@ -451,6 +470,13 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
   }
 
   hid_t h5_file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (H5LTpath_valid(h5_file_id, varname, true) <= 0) {
+    std::cerr << ERROR_INFO << "Variable '" << varname << "' not found in file '" << filename << "'." << std::endl;
+    //TODO: Exception? Only error code?
+    H5Fclose(h5_file_id);
+    return false;
+  }
+
   hid_t dataset = H5Dopen(h5_file_id, varname, H5P_DEFAULT);
 
   hid_t datatype = H5Dget_type(dataset);
@@ -465,7 +491,13 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
     hsize_t size = accumulate(begin(dims), end(dims), 1, std::multiplies<hsize_t>());
 
     std::vector<char*> buffer(size * sizeof(char*));
-    H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    herr_t err = H5Dread(dataset, datatype, dataspace, dataspace, H5P_DEFAULT, &(buffer[0]));
+    if (err < 0) {
+      std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+      //TODO: Exception? Only error code?
+      H5Fclose(h5_file_id);
+      return false;
+    }
 
     for (char const* line : buffer) {
       if (line == nullptr) {
@@ -481,7 +513,13 @@ bool h5_read_strings(char const* filename, char const* varname, std::vector<std:
     hssize_t num_lines = H5Sget_simple_extent_npoints(dataspace);
 
     std::vector<char> buffer(line_length * num_lines, '\0');
-    H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
+    herr_t err = H5LTread_dataset_string(h5_file_id, varname, &(buffer[0]));
+    if (err < 0) {
+      std::cerr << ERROR_INFO << "Reading variable '" << varname << "' in file '" << filename << "' not possible." << std::endl;
+      //TODO: Exception? Only error code?
+      H5Fclose(h5_file_id);
+      return false;
+    }
 
     size_t str_start = 0;
     for (hssize_t lines_found = 0; lines_found < num_lines; ++lines_found) {

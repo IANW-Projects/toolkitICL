@@ -90,7 +90,7 @@ script:
     fi
   - cmake --build .
   - export PATH=$PATH:$(pwd)/bin
-  - toolkitICL
+  - toolkitICL -h
   # build with tests
   - cd ..
   - rm -rf build

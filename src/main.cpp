@@ -587,21 +587,6 @@ std::string getOS()
 }
 
 
-// command line arguments
-char const* getCmdOption(char** begin, char** end, std::string const& option)
-{
-  char** itr = find(begin, end, option);
-  if (itr != end && ++itr != end) {
-    return *itr;
-  }
-  return 0;
-}
-
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
-{
-  return find(begin, end, option) != end;
-}
-
 
 void print_help()
 {
@@ -640,73 +625,134 @@ int main(int argc, char *argv[]) {
 
   Timer timer; //used to track performance
 
-  cl_uint deviceIndex = 0; // set default OpenCL Device
-
   ocl_dev_mgr& dev_mgr = ocl_dev_mgr::getInstance();
   cl_uint devices_availble = dev_mgr.get_avail_dev_num();
 
   cout << "Available OpenCL devices: " << devices_availble << endl;
 
-  // parse command line arguments
+  // default options
+  cl_uint deviceIndex = 0;
   bool benchmark_mode = false;
-  if (cmdOptionExists(argv, argv + argc, "-b")) {
-    benchmark_mode = true;
-    cout << "Benchmark mode" << endl << endl;
-  }
+  char const* filename = nullptr;
 
-  if (cmdOptionExists(argv, argv + argc, "-d")) {
-    char const* dev_id = getCmdOption(argv, argv + argc, "-d");
-    deviceIndex = atoi(dev_id);
-  }
-
-  if (cmdOptionExists(argv, argv + argc, "-h") || !cmdOptionExists(argv, argv + argc, "-c")) {
-    print_help();
-    return 0;
-  }
-  char const* filename = getCmdOption(argv, argv + argc, "-c");
-
+  // parse command line arguments starting at index 1 (because toolkitICL is the 0th argument)
+  for (int option_idx = 1; option_idx < argc; ++option_idx)
+  {
+    if (argv[option_idx] == string("-h")) {
+      print_help();
+      return 0;
+    }
+    else if (argv[option_idx] == string("-b")) {
+      benchmark_mode = true;
+      cout << "Benchmark mode" << endl << endl;
+    }
+    else if (argv[option_idx] == string("-d")) {
+      ++option_idx;
+      try {
+        deviceIndex = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+    }
+    else if (argv[option_idx] == string("-c")) {
+      ++option_idx;
+      filename = argv[option_idx];
+    }
 #if defined(USENVML)
-  if (cmdOptionExists(argv, argv + argc, "-nvidia_power")) {
-    char const* tmp = getCmdOption(argv, argv + argc, "-nvidia_power");
-    nvidia_power_rate = atoi(tmp);
-    nvidia_log_power = true;
-  }
-
-  if (cmdOptionExists(argv, argv + argc, "-nvidia_temp")) {
-    char const* tmp = getCmdOption(argv, argv + argc, "-nvidia_temp");
-    nvidia_temp_rate = atoi(tmp);
-    nvidia_log_temp = true;
-  }
-#endif
+    else if (argv[option_idx] == string("-nvidia_power")) {
+      ++option_idx;
+      try {
+        nvidia_power_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+      nvidia_log_power = true;
+    }
+    else if (argv[option_idx] == string("-nvidia_temp") || argv[option_idx] == string("-nvidia_temperature")) {
+      ++option_idx;
+      try {
+        nvidia_temp_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+      nvidia_log_temp = true;
+    }
+#endif // defined(USENVML)
 #if defined(USEIPG) || defined(USEIRAPL)
-  if (cmdOptionExists(argv, argv + argc, "-intel_power")) {
-    char const* tmp = getCmdOption(argv, argv + argc, "-intel_power");
-    intel_power_rate = atoi(tmp);
-    intel_log_power = true;
-  }
-  if (cmdOptionExists(argv, argv + argc, "-intel_temp")) {
-    char const* tmp = getCmdOption(argv, argv + argc, "-intel_temp");
-    intel_temp_rate = atoi(tmp);
-    intel_log_temp = true;
-  }
-#endif
+    else if (argv[option_idx] == string("-intel_power")) {
+      ++option_idx;
+      try {
+        intel_power_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+      intel_log_power = true;
+    }
+    else if (argv[option_idx] == string("-intel_temp") || argv[option_idx] == string("-intel_temperature")) {
+      ++option_idx;
+      try {
+        intel_temp_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+      intel_log_temp = true;
+    }
+#endif // defined(USEIPG) || defined(USEIRAPL)
 #if defined(USEAMDP)
-  if (cmdOptionExists(argv, argv + argc, "-amd_cpu_power")) {
-    char const* tmp = getCmdOption(argv, argv + argc, "-amd_cpu_power");
-    amd_power_rate = atoi(tmp);
-    amd_log_power = true;
-  }
-  if (cmdOptionExists(argv, argv + argc, "-amd_cpu_temp")) {
-      char const* tmp = getCmdOption(argv, argv + argc, "-amd_cpu_temp");
-      amd_temp_rate = atoi(tmp);
+    else if (argv[option_idx] == string("-amd_cpu_power")) {
+      ++option_idx;
+      try {
+        amd_power_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
+      amd_log_power = true;
+    }
+    else if (argv[option_idx] == string("-amd_cpu_temp") || argv[option_idx] == string("-amd_cpu_temperature")) {
+      ++option_idx;
+      try {
+        amd_temp_rate = stoi(argv[option_idx]);
+      }
+      catch (const std::exception& e) {
+        cerr << "Error: Could not convert '" << argv[option_idx] << "' to an integer." << endl;
+        throw(e);
+      }
       amd_log_temp = true;
-}
-
-  if ((amd_log_temp == true) && (amd_log_power == true)) {
-      cout<<endl<<"Concurrent logging on AMD systems is not suported, yet!"<<endl<<endl;
+    }
+#endif // defined(USEAMDP)
+    else {
+      cerr << "Error: Unknown command line option '" << argv[option_idx] << "'." << endl;
+      print_help();
+      return -1;
+    }
   }
 
-#endif
+  // check necessary/incompatible command line arguments
+  if (filename == nullptr) {
+    cerr << "Error: A configuration file must be given as command line argument." << endl;
+    print_help();
+    return -1;
+  }
+
+#if defined(USEAMDP)
+  if (amd_log_temp && amd_log_power) {
+    cerr << endl << "Error: Concurrent logging on AMD systems is not suported, yet!" << endl;
+    return -1;
+  }
+#endif // defined(USEAMDP)
+
 
   cout << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
   cout << "OpenCL version: " << dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str() << endl;
@@ -784,7 +830,8 @@ int main(int argc, char *argv[]) {
   h5_get_content(filename, "/data/", data_names, data_types, data_sizes);
 
   cout << "Creating output HDF5 file..." << endl;
-  string out_name = "out_" + string(filename);
+  string out_name = filename;
+  out_name = "out_" + out_name.substr(out_name.find_last_of("/\\") + 1);
 
   if (fileExists(out_name)) {
     remove(out_name.c_str());
@@ -985,7 +1032,7 @@ int main(int argc, char *argv[]) {
   {
     cout << "Using Intel Power Gadget interface..." << endl;
     h5_create_dir(out_name, "/housekeeping");
-    h5_create_dir(out_name, "/housekeeping/intel"); 
+    h5_create_dir(out_name, "/housekeeping/intel");
     rapl = new Rapl();
   }
 

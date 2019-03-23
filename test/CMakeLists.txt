@@ -38,8 +38,15 @@ foreach(TEST ${OUTPUT_TEST})
 endforeach()
 
 
+# parsing test
+set(PARSING_TESTS parsing_test)
+foreach(TEST ${PARSING_TESTS})
+  add_executable(${TEST} ${TEST}.cpp ../include/opencl_include.hpp ../include/util.hpp ../include/hdf5_io.hpp $<TARGET_OBJECTS:hdf5_io>)
+endforeach()
+
+
 # all tests
-set(TESTS ${COPY_TESTS} ${TIMER_TEST} ${KERNEL_REPETITION_TEST} ${OUTPUT_TEST})
+set(TESTS ${COPY_TESTS} ${TIMER_TEST} ${KERNEL_REPETITION_TEST} ${OUTPUT_TEST} ${PARSING_TESTS})
 
 foreach(TEST ${TESTS})
   target_link_libraries(${TEST} ${OpenCL_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})

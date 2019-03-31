@@ -215,8 +215,7 @@ void amd_log_power_func()
 void amd_log_temp_func()
 {
 
-    while (amd_log_temp == true)
-    {
+    while (amd_log_temp == true) {
         timeval rawtime;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(amd_temp_rate));
@@ -228,8 +227,7 @@ void amd_log_temp_func()
         gettimeofday(&rawtime, NULL);
         hResult = AMDTPwrReadAllEnabledCounters(&nbrSamples, &pSampleData);
 
-        if ((nullptr != pSampleData) && (nbrSamples > 0))
-        {
+        if ((nullptr != pSampleData) && (nbrSamples > 0)) {
             for (size_t i = 0; i < pSampleData[0].m_numOfCounter; i++) //hardcoded to use the first sample returned
             {
 
@@ -267,8 +265,7 @@ std::vector<cl_ushort> intel_temp1;
 
 Rapl *rapl;
 
-void intel_log_power_func()
-{
+void intel_log_power_func() {
   timeval rawtime;
 
   if (intel_power_rate > 0)
@@ -288,8 +285,7 @@ void intel_log_power_func()
     intel_power1[3].clear();
     intel_power_time.clear();
 
-    while (intel_log_power == true)
-    {
+    while (intel_log_power == true) {
       rapl->sample();
       std::this_thread::sleep_for(std::chrono::milliseconds(intel_power_rate / 2));
       gettimeofday(&rawtime, NULL);
@@ -302,8 +298,7 @@ void intel_log_power_func()
       intel_power0[2].push_back(dram);
       intel_power0[3].push_back(pp1);
 
-      if (rapl->detect_socket1() == true)
-      {
+      if (rapl->detect_socket1() == true) {
         rapl->get_socket1_data(pkg, pp0, pp1, dram);
         intel_power1[0].push_back(pkg);
         intel_power1[1].push_back(pp0);
@@ -319,8 +314,7 @@ void intel_log_temp_func()
   uint32_t temp0 = 0, temp1 = 0;
   timeval rawtime;
 
-  if (intel_temp_rate > 0)
-  {
+  if (intel_temp_rate > 0) {
     intel_temp0.clear();
     intel_temp1.clear();
     intel_temp_time.clear();
@@ -374,13 +368,11 @@ void intel_log_temp_func()
  // int temp;
   timeval rawtime;
 
-  if (intel_temp_rate > 0)
-  {
+  if (intel_temp_rate > 0) {
     intel_temp.clear();
     intel_temp_time.clear();
 
-    while (intel_log_temp == true)
-    {
+    while (intel_log_temp == true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(intel_temp_rate));
       intel_temp.push_back(rapl->get_temp0());
       gettimeofday(&rawtime, NULL);
@@ -403,8 +395,7 @@ void intel_log_power_func()
 	}
     intel_power_time.clear();
 
-    while (intel_log_power == true)
-    {
+    while (intel_log_power == true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(intel_power_rate));
       rapl->sample();
       gettimeofday(&rawtime, NULL);
@@ -424,13 +415,14 @@ void intel_log_power_func()
 
 
 
+
 #if defined(USENVML)
 #include <nvml.h>
 bool nvidia_log_power = false;
 bool nvidia_log_temp = false;
 cl_uint nvidia_power_rate = 0;
 cl_uint nvidia_temp_rate = 0;
-
+nvmlDevice_t device;
 std::vector<cl_ushort> nvidia_temp;
 std::vector<double> nvidia_temp_time;
 
@@ -439,59 +431,48 @@ std::vector<double> nvidia_power_time;
 
 void nvidia_log_power_func()
 {
-  if (nvidia_power_rate > 0)
-  {
-    unsigned int temp;
-    nvmlReturn_t result;
-    timeval rawtime;
+    if (nvidia_power_rate > 0) {
+        unsigned int temp;
+        timeval rawtime;
 
-    nvidia_power.clear();
-    nvidia_power_time.clear();
+        nvidia_power.clear();
+        nvidia_power_time.clear();
 
-      nvmlDevice_t device;
-      nvmlDeviceGetHandleByIndex(0, &device);
+        while (nvidia_log_power == true) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(nvidia_power_rate));
 
-      while (nvidia_log_power == true)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(nvidia_power_rate));
+            nvmlDeviceGetPowerUsage(device, &temp);
+            gettimeofday(&rawtime, NULL);
+            nvidia_power_time.push_back(timeval2storage(rawtime));
+            // convert milliwatt to watt
+            nvidia_power.push_back(1.e-3f * (float)(temp));
+        }
 
-        nvmlDeviceGetPowerUsage(device, &temp);
-        gettimeofday(&rawtime, NULL);
-        nvidia_power_time.push_back(timeval2storage(rawtime));
-        // convert milliwatt to watt
-        nvidia_power.push_back(1.e-3f * (float)(temp));
-      }
-
-      nvmlShutdown();
-  }
+        nvmlShutdown();
+    }
 }
 
-void nvidia_log_temp_func()
-{
-  if (nvidia_temp_rate > 0)
-  {
-    unsigned int temp;
-    nvmlReturn_t result;
-    timeval rawtime;
+void nvidia_log_temp_func() {
+    if (nvidia_temp_rate > 0)
+    {
+        unsigned int temp;
+        timeval rawtime;
 
-    nvidia_temp.clear();
-    nvidia_temp_time.clear();
+        nvidia_temp.clear();
+        nvidia_temp_time.clear();
 
-      nvmlDevice_t device;
-      nvmlDeviceGetHandleByIndex(0, &device);
+        while (nvidia_log_temp == true)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(nvidia_temp_rate));
+            result = nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &temp);
+            gettimeofday(&rawtime, NULL);
+            nvidia_temp_time.push_back(timeval2storage(rawtime));
+            nvidia_temp.push_back(temp);
+        }
 
-      while (nvidia_log_temp == true)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(nvidia_temp_rate));
-        result = nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &temp);
-        gettimeofday(&rawtime, NULL);
-        nvidia_temp_time.push_back(timeval2storage(rawtime));
-        nvidia_temp.push_back(temp);
-      }
+        nvmlShutdown();
 
-      nvmlShutdown();
-
-  }
+    }
 }
 
 #endif // USENVML
@@ -755,18 +736,24 @@ int main(int argc, char *argv[]) {
 
 
   cout << dev_mgr.get_avail_dev_info(deviceIndex).name.c_str() << endl;
-  cout << "OpenCL version: " << dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str() << endl;
-  cout << "Memory limit: " << dev_mgr.get_avail_dev_info(deviceIndex).max_mem << endl;
-  cout << "WG limit: " << dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
+  if (benchmark_mode == false) {
+      cout << "OpenCL version: " << dev_mgr.get_avail_dev_info(deviceIndex).ocl_version.c_str() << endl;
+      cout << "Memory limit: " << dev_mgr.get_avail_dev_info(deviceIndex).max_mem << endl;
+      cout << "WG limit: " << dev_mgr.get_avail_dev_info(deviceIndex).wg_size << endl << endl;
+  }
   dev_mgr.init_device(deviceIndex);
 
   string kernel_url;
   if (h5_check_object(filename, "kernel_url") == true) {
-    h5_read_string(filename, "kernel_url", kernel_url);
-    cout << "Reading kernel from file: " << kernel_url << "... " << endl;
+      h5_read_string(filename, "kernel_url", kernel_url);
+      if (benchmark_mode == false) {
+          cout << "Reading kernel from file: " << kernel_url << "... " << endl;
+      }
   }
   else if (h5_check_object(filename, "kernel_source") == true) {
-    cout << "Reading kernel from HDF5 file... " << endl;
+      if (benchmark_mode == false) {
+          cout << "Reading kernel from HDF5 file... " << endl;
+      }
     std::vector<std::string> kernel_source;
     h5_read_strings(filename, "kernel_source", kernel_source);
     ofstream tmp_clfile;
@@ -809,7 +796,9 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::string> found_kernels;
   dev_mgr.get_kernel_names(0, "ocl_Kernel", found_kernels);
-  cout << "Found Kernels: " << found_kernels.size() << endl;
+  if (benchmark_mode == false) {
+      cout << "Found Kernels: " << found_kernels.size() << endl;
+  }
   if (found_kernels.size() == 0) {
     cerr << ERROR_INFO << "No valid kernels found." << endl;
     return -1;
@@ -943,7 +932,9 @@ int main(int argc, char *argv[]) {
 
   push_time = timer.getTimeMicroseconds() - push_time;
 
-  cout << "Setting range..." << endl;
+  if (benchmark_mode == false) {
+      cout << "Setting range..." << endl;
+  }
 
   cl::NDRange range_start;
   cl::NDRange global_range;
@@ -1022,6 +1013,40 @@ int main(int argc, char *argv[]) {
           nvidia_log_temp = false;
           nvidia_log_power = false;
       }
+  }
+  if (nvidia_log_power || nvidia_log_temp)
+  {
+      nvmlPciInfo_t nv_pciinfo;
+      cl_uint nvml_devnum;
+      cl_int nvml_devid = -1;
+
+      nvmlDeviceGetCount(&nvml_devnum);
+
+      for (cl_uint i = 0; i < nvml_devnum; i++)
+      {
+          nvmlDeviceGetHandleByIndex(i, &device);
+          nvmlDeviceGetPciInfo(device, &nv_pciinfo);
+
+          std::ostringstream tmp_devid;
+          tmp_devid << nv_pciinfo.domain << ":" << nv_pciinfo.bus << ":" << nv_pciinfo.device;
+          //cout<< tmp_devid.str() <<endl;
+          std::size_t found = dev_mgr.getDevicePCIeID(deviceIndex).find(tmp_devid.str());
+          if (found != std::string::npos) {
+              nvml_devid = i;
+              if (benchmark_mode == false) {
+                  cout << "NVidia OpenCL device " << tmp_devid.str() << " found in NVML device list." << endl;
+              }
+              break;
+          }
+      }
+      if (nvml_devid < 0)
+      {
+          cout << "NVidia OpenCL device " << dev_mgr.getDevicePCIeID(deviceIndex) << " not found in NVML device list! Aborting!" << endl;
+          nvmlShutdown();
+          exit(EXIT_FAILURE);
+      }
+
+      nvmlDeviceGetHandleByIndex(nvml_devid, &device);
   }
   std::thread nvidia_log_power_thread(nvidia_log_power_func);
   std::thread nvidia_log_temp_thread(nvidia_log_temp_func);

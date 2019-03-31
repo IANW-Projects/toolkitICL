@@ -22,6 +22,7 @@ public:
     std::string name;
     cl::Platform platform;
     std::string platform_name;
+    std::string vendor;
     cl_device_type type;
     std::string ocl_version;
     cl_ulong max_mem;
@@ -35,6 +36,7 @@ public:
     cl_uint float_perf;
   };
 
+  std::string getDevicePCIeID(cl_uint avail_device_idx);
   cl_ulong init_device(cl_uint avail_device_idx);
   cl::CommandQueue& get_queue(cl_uint context_idx, cl_uint queue_idx);
   cl::Context& get_context(cl_uint context_idx);

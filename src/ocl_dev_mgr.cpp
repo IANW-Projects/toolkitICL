@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <sstream> 
+#include <sstream>
 #include "util.hpp"
 #include "ocl_dev_mgr.hpp"
 
@@ -114,7 +114,7 @@ typedef union
     available_devices.at(avail_device_idx).device.getInfo(CL_DEVICE_PCI_BUS_ID_NV,&bus_id);
 	  available_devices.at(avail_device_idx).device.getInfo(CL_DEVICE_PCI_SLOT_ID_NV, &slot_id);
 
-	  cl_uint domain, bus, dev, func;
+	  cl_uint domain, bus;
 	  domain = bus_id >> 8;
 	  bus = bus_id & 0xff;
 	  tmp_stream << domain << ":" << bus << ":" << slot_id;
@@ -128,7 +128,7 @@ typedef union
     }
   }
 
-	
+
 	return tmp_stream.str();
 }
 
@@ -137,7 +137,7 @@ cl_int slot_id;
 
 cl_ulong ocl_dev_mgr::getDeviceList(std::vector<cl::Device>& devices)
 {
-  // Get list of platforms 
+  // Get list of platforms
   std::vector<cl::Platform> platforms;
   cl::Platform::get(&platforms);
 

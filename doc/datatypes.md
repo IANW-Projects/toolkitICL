@@ -38,8 +38,8 @@ time in seconds since 1970-01-01T00:00.000 with a resolution of microseconds.
 Here are some examples using high level languages to read timestamps.
 - Julia
 
-  You need the package (`HDF5.jl`)[https://github.com/JuliaIO/HDF5.jl] and the
-  standard library package (`Dates.jl`)[https://docs.julialang.org/en/v1/stdlib/Dates/index.html].
+  You need the package [HDF5.jl](https://github.com/JuliaIO/HDF5.jl) and the
+  standard library package [Dates.jl](https://docs.julialang.org/en/v1/stdlib/Dates/index.html).
   ```julia
   julia> using Dates, HDF5
 

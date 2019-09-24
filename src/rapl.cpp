@@ -115,8 +115,8 @@ Rapl::Rapl(){
     {
         g_lastError = L"LoadLibrary failed on " + utf8ToUtf16(strLocation);
         return;
-    } 
-    
+    }
+
     IGetNumNodes pGetNumNodes = (IGetNumNodes)GetProcAddress(g_hModule, "GetNumNodes");
     IIsGTAvailable pIsGTAvailable = (IIsGTAvailable)GetProcAddress(g_hModule, "IsGTAvailable");
     IInitialize pInitialize = (IInitialize)GetProcAddress(g_hModule, "IntelEnergyLibInitialize");
@@ -270,15 +270,9 @@ Rapl::Rapl() {
 
 
 bool Rapl::detect_igp() {
-  uint32_t eax_input = 1;
-  uint32_t eax;
-  __asm__("cpuid;"
-      :"=a"(eax)               // EAX into b (output)
-      :"0"(eax_input)          // 1 into EAX (input)
-      :"%ebx","%ecx","%edx");  // clobbered registers
+  uint64_t data;
 
-  uint32_t cpu_signature = eax & SIGNATURE_MASK;
-  if (cpu_signature == SANDYBRIDGE_E || cpu_signature == IVYBRIDGE_E) {
+  if (pread(fd0, &data, sizeof(data), MSR_PP1_ENERGY_STATUS) != sizeof(data)) {
     return false;
   }
   return true;

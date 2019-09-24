@@ -14,6 +14,7 @@ matrix:
       compiler: gcc
 
 dist: xenial
+osx_image: xcode11 # for older versions, homebrew fails "Error: Your Homebrew is outdated. Please run `brew update`. Error: Kernel.exit"
 
 notifications:
   email: false

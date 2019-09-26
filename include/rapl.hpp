@@ -52,7 +52,30 @@ public:
     bool GetPowerData(int iNode, int iMSR, double *results, int *nResult);
 };
 
-#else
+#elif defined(USEIPG) /* Mac OS */
+
+#include <unistd.h>
+
+class Rapl {
+private:
+  bool pp1_supported = false;
+  bool socket1_detected = false;
+
+public:
+  Rapl();
+  bool detect_igp();
+  bool detect_socket1();
+  uint32_t get_TDP();
+  int32_t get_NumMSR();
+  bool GetMsrName(int iMsr, char *pszName);
+  bool GetMsrFunc(int iMsr, int *funcID);
+  void sample();
+  int32_t get_temp0();
+  int32_t get_temp1();
+  bool GetPowerData(int iNode, int iMSR, double *results, int *nResult);
+};
+
+#else /* probably Linux */
 
 #include <unistd.h>
 #include <cstdint>

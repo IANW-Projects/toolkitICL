@@ -339,17 +339,24 @@ void intel_log_temp_func()
 #endif // USEIRAPL
 
 
-#if defined(_WIN32)
 #if defined(USEIPG)
 #include "rapl.hpp"
 
 Rapl *rapl;
 
+#if defined(_WIN32)
 std::string utf16ToUtf8(const std::wstring& utf16Str)
 {
- std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
- return conv.to_bytes(utf16Str);
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
+  return conv.to_bytes(utf16Str);
 }
+#else
+#define MAX_PATH 260 /* defined by windows and used below */
+std::string utf16ToUtf8(const std::string& utf16Str)
+{
+  return utf16Str;
+}
+#endif
 
 std::vector<double> intel_power_time;
 std::vector<double> intel_temp_time;
@@ -410,7 +417,6 @@ void intel_log_power_func()
 }
 
 
-#endif
 #endif // USEIPG
 
 
@@ -1053,64 +1059,67 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if defined(USEIPG)
- if (intel_log_power || intel_log_temp)
- {
-  cout << "Using Intel Power Gadget interface..." << endl;
-  h5_create_dir(out_name, "/housekeeping");
-  h5_create_dir(out_name, "/housekeeping/intel");
-  rapl = new Rapl();
- }
-
- if (intel_log_power)
- {
-  h5_write_single<float>(out_name, "/housekeeping/intel/TDP" , (float)rapl->get_TDP(),
-              "Thermal Design Power in watt");
-
-  int numMsrs = rapl->get_NumMSR();
-
-  //This is necesarry for initalization
-  rapl->sample();
-  rapl->sample();
-  rapl->sample();
-
-  for (int j = 0; j < numMsrs; j++)
-  {
-   int funcID;
-   double data[3];
-   int nData;
-   wchar_t szName[MAX_PATH];
-
-   rapl->GetMsrFunc(j, &funcID);
-   rapl->GetMsrName(j, szName);
-
-   if ((funcID == 1)) {
-    MSR.push_back(j);
-    if (utf16ToUtf8(szName) == "Processor") {
-     MSR_names.push_back("package");
-    }
-    else {
-     if (utf16ToUtf8(szName) == "IA") {
-      MSR_names.push_back("cores");
-     }
-     else {
-      MSR_names.push_back(utf16ToUtf8(szName));
-     }
-    }
-   }
-
-   //Get Package Power Limit
-   if ((funcID == 3) ) {
-    double data[3];
-    int nData;
-    rapl->GetPowerData(0, j, data, &nData);
-    std::string varname = "/housekeeping/intel/" + utf16ToUtf8(szName) + "_power_limit";
-    h5_write_single<double>(out_name, varname.c_str() , data[0]);
-   }
-
+  if (intel_log_power || intel_log_temp) {
+    cout << "Using Intel Power Gadget interface..." << endl;
+    h5_create_dir(out_name, "/housekeeping");
+    h5_create_dir(out_name, "/housekeeping/intel");
+    rapl = new Rapl();
   }
- }
- std::thread intel_log_power_thread(intel_log_power_func);
- std::thread intel_log_temp_thread(intel_log_temp_func);
+
+  if (intel_log_power)
+  {
+    h5_write_single<float>(out_name, "/housekeeping/intel/TDP" , (float)rapl->get_TDP(),
+                           "Thermal Design Power in watt");
+
+    int numMsrs = rapl->get_NumMSR();
+
+    //This is necesarry for initalization
+    rapl->sample();
+    rapl->sample();
+    rapl->sample();
+
+    for (int j = 0; j < numMsrs; j++)
+    {
+      int funcID;
+      double data[3];
+      int nData;
+#if defined(_WIN32)
+      wchar_t szName[MAX_PATH];
+#else
+      char szName[MAX_PATH];
+#endif
+
+      rapl->GetMsrFunc(j, &funcID);
+      rapl->GetMsrName(j, szName);
+
+      if ((funcID == 1)) {
+        MSR.push_back(j);
+        if (utf16ToUtf8(szName) == "Processor") {
+          MSR_names.push_back("package");
+        }
+        else {
+          if (utf16ToUtf8(szName) == "IA") {
+            MSR_names.push_back("cores");
+          }
+          else {
+            MSR_names.push_back(utf16ToUtf8(szName));
+          }
+        }
+      }
+
+      //Get Package Power Limit
+      if ((funcID == 3) ) {
+        double data[3];
+        int nData;
+        rapl->GetPowerData(0, j, data, &nData);
+        std::string varname = "/housekeeping/intel/" + utf16ToUtf8(szName) + "_power_limit";
+        h5_write_single<double>(out_name, varname.c_str() , data[0]);
+      }
+
+    }
+  }
+  std::thread intel_log_power_thread(intel_log_power_func);
+  std::thread intel_log_temp_thread(intel_log_temp_func);
 #endif
 
 #if defined(USEIRAPL)

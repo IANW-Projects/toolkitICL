@@ -66,15 +66,14 @@
 #define IVYBRIDGE_E                    0x306F0
 #define SANDYBRIDGE_E                  0x206D0
 
-#if defined(_WIN32)
 
+#if defined(_WIN32)
 
 #pragma once
 #include <Windows.h>
 #include <vector>
 #include <tchar.h>
 #include <codecvt>
-
 
 
 std::wstring Rapl::utf8ToUtf16(const std::string& utf8Str)
@@ -198,7 +197,81 @@ bool Rapl::GetMsrFunc(int iMsr, int *funcID)
     return pGetMsrFunc(iMsr, funcID);
 }
 
-#else
+#elif defined(USEIPG) /* Mac OS */
+
+#include <unistd.h>
+
+#include <IntelPowerGadget/EnergyLib.h>
+
+Rapl::Rapl()
+{
+  if (IntelEnergyLibInitialize() == false) {
+    std::cout << "Library error!" << std::endl;
+    return;
+  }
+
+  pp1_supported = true; /* TODO: Is this assumption reasonable? How can we chack it? */
+  int numCPUnodes = 99;
+  GetNumNodes(&numCPUnodes);
+  if (numCPUnodes > 1) {
+    socket1_detected = true;
+  }
+}
+
+bool Rapl::detect_igp() {
+  return pp1_supported;
+}
+
+bool Rapl::detect_socket1() {
+  return socket1_detected;
+}
+
+uint32_t Rapl::get_TDP() {
+  double CPU_TDP=0;
+  GetTDP(0, &CPU_TDP); /* hardcoded to Socket 0 */
+  return (uint32_t)round(CPU_TDP);
+}
+
+int32_t Rapl::get_NumMSR() {
+  int32_t nMsrs = 0;
+  GetNumMsrs(&nMsrs);
+  return nMsrs;
+}
+
+
+void Rapl::sample() {
+  ReadSample();
+}
+
+
+int32_t Rapl::get_temp0() {
+  int degC;
+  GetTemperature(0, &degC);
+  return degC;
+}
+
+int32_t Rapl::get_temp1() {
+  int degC;
+  GetTemperature(1, &degC);
+  return degC;
+}
+
+bool Rapl::GetPowerData(int iNode, int iMSR, double *results, int *nResult)
+{
+  return GetPowerData(iNode, iMSR, results, nResult);
+}
+
+bool Rapl::GetMsrName(int iMsr, char *pszName)
+{
+  return GetMsrName(iMsr, pszName);
+}
+
+bool Rapl::GetMsrFunc(int iMsr, int *funcID)
+{
+  return GetMsrFunc(iMsr, funcID);
+}
+
+#else /* probably Linux */
 
 #include <unistd.h>
 #include <sys/time.h>

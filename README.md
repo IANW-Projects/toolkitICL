@@ -22,7 +22,7 @@ To build toolkitCL the following needs to be installed:
 
 For optional power and temperature logging, the following is needed:
 - CUDA Toolkit (only for NVidia GPU power/temperature logging)
-- Intel Power Gadget (only for Intel CPU/GPU power/temperature logging on Windows systems)
+- Intel Power Gadget (only for Intel CPU/GPU power/temperature logging on Windows and Mac OS X systems)
 - AMD µProf (only for AMD CPU/GPU power/temperature logging on Windows and Linux systems)
 
 This project uses the common CMake build system. Thus, the following commands can be used on Linux.

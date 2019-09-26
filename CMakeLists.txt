@@ -6,11 +6,11 @@ PROJECT(toolkitICL)
 option(BUILDREL "Official release build" OFF)
 
 if(DEFINED ENV{AMDPROFILERPATH})
-    message(STATUS "Found AMD profiling driver")
-    option(USEAMDP "Use AMD Profiling" ON)
-    add_definitions(-DUSEAMDP)
+  message(STATUS "Found AMD profiling driver")
+  option(USEAMDP "Use AMD Profiling" ON)
+  add_definitions(-DUSEAMDP)
 ELSE()
-    option(USEAMDP "Use AMD Profiling" OFF)
+  option(USEAMDP "Use AMD Profiling" OFF)
 endif()
 
 find_package(CUDA)
@@ -21,23 +21,24 @@ ELSE()
   option(USENVML "Use NVML" OFF)
 ENDIF()
 
-IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-option(USEIRAPL "Use RAPL" OFF)
+
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR APPLE)
+  option(USEIRAPL "Use RAPL" OFF)
 ELSE()
-option(USEIRAPL "Use RAPL" ON)
+  option(USEIRAPL "Use RAPL" ON)
 ENDIF()
 
-if(DEFINED ENV{IPG_Dir})
-    message(STATUS "Found Intel Power Gadget Driver")
+IF(DEFINED ENV{IPG_Dir} OR EXISTS "/Library/Frameworks/IntelPowerGadget.framework")
+  message(STATUS "Found Intel Power Gadget Driver")
 	option(USEIPG "Use Intel Power Gadget" ON)
-	option(USEIRAPL "Use RAPL" OFF)
 ELSE()
 	option(USEIPG "Use Intel Power Gadget" OFF)
-endif()
+ENDIF()
 
 IF(USEIPG)
   MESSAGE(STATUS "Using Intel Power Gadget")
   add_definitions(-DUSEIPG)
+	option(USEIRAPL "Use RAPL" OFF)
 ENDIF()
 
 
@@ -110,6 +111,10 @@ IF(APPLE)
   # Apple does not distribute a cl2.hpp include file and uses another default path for OpenCL
   FILE(DOWNLOAD ${CL2_URL} ${CMAKE_CURRENT_SOURCE_DIR}/include/OpenCL/cl2.hpp)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework OpenCL")
+
+  IF(USEIPG)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F/Library/Frameworks -framework IntelPowerGadget")
+  ENDIF()
 ENDIF()
 
 

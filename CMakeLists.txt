@@ -6,7 +6,7 @@ PROJECT(toolkitICL)
 option(BUILDREL "Official release build" OFF)
 
 if(DEFINED ENV{AMDPROFILERPATH})
-  message(STATUS "Found AMD profiling driver")
+  message(STATUS "Found AMD profiling driver at: $ENV{AMDPROFILERPATH}")
   option(USEAMDP "Use AMD Profiling" ON)
   add_definitions(-DUSEAMDP)
 ELSE()

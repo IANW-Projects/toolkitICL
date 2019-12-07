@@ -89,17 +89,18 @@ bool initAMDPP(uint32_t sample_rate) {
  // cout << endl << nbrCounters << endl;
  for (AMDTUInt32 idx = 0; idx < nbrCounters; idx++)
  {
+   //cout << endl << pCounters[idx].m_description <<"    :"<< pCounters[idx].m_category << endl;
   //get only power - for now
-  if ((pCounters[idx].m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER) && (amd_power_rate > 0))
+  if (((pCounters[idx].m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER)|| (pCounters[idx].m_category == AMDT_PWR_CATEGORY_POWER)) && (amd_power_rate > 0))
   {
    hResult = AMDTPwrEnableCounter(pCounters[idx].m_counterID);
   }
   if ((pCounters[idx].m_category == AMDT_PWR_CATEGORY_TEMPERATURE) && (amd_temp_rate > 0)) {
    hResult = AMDTPwrEnableCounter(pCounters[idx].m_counterID);
   }
-
+  
  }
- AMDTPwrSetTimerSamplingPeriod(100);
+ AMDTPwrSetTimerSamplingPeriod(50);
 
  //dry profiling run, to see which counter are available for real sampling
 
@@ -114,8 +115,10 @@ bool initAMDPP(uint32_t sample_rate) {
  std::vector<AMDTUInt32> usable_power_counters;
  std::vector<AMDTUInt32> usable_temp_counters;
 
+
  if ((nullptr != pSampleData) && (nbrSamples > 0))
  {
+
    for (size_t j = 0; j < nbrSamples; j++)
    {
 
@@ -123,14 +126,14 @@ bool initAMDPP(uint32_t sample_rate) {
   {
    AMDTPwrCounterDesc counterDesc;
    AMDTPwrGetCounterDesc(pSampleData[0].m_counterValues->m_counterID, &counterDesc);
-
-   if ((counterDesc.m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER) )
+ //  cout << counterDesc.m_name << endl;
+   if (((counterDesc.m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER) || (counterDesc.m_category == AMDT_PWR_CATEGORY_POWER)))
    {
 
      if (std::find(usable_power_counters.begin(), usable_power_counters.end(), pSampleData[0].m_counterValues->m_counterID) != usable_power_counters.end() == false) {
        AMDP_names.push_back(counterDesc.m_name);
        usable_power_counters.push_back(pSampleData[0].m_counterValues->m_counterID);
-      // cout << counterDesc.m_name << " P " << pSampleData[0].m_counterValues->m_counterID << pSampleData[0].m_counterValues->m_counterID << endl;
+     //  cout << counterDesc.m_name << " P " << pSampleData[0].m_counterValues->m_counterID << pSampleData[0].m_counterValues->m_counterID << endl;
      }
    }
      if ((counterDesc.m_category == AMDT_PWR_CATEGORY_TEMPERATURE) )
@@ -195,7 +198,7 @@ void amd_log_power_func()
 
     AMDTPwrCounterDesc counterDesc;
     AMDTPwrGetCounterDesc(pSampleData[0].m_counterValues->m_counterID, &counterDesc);
-    if ((counterDesc.m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER))
+    if (((counterDesc.m_category == AMDT_PWR_CATEGORY_CORRELATED_POWER) || (counterDesc.m_category == AMDT_PWR_CATEGORY_POWER)))
     {
       amd_power[i].push_back(pSampleData[0].m_counterValues->m_data);
     }

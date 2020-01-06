@@ -5,12 +5,12 @@
 [![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/js729s93vvdwgnjx?svg=true)](https://ci.appveyor.com/project/ranocha/toolkitICL)
 [![Build Status Travis](https://travis-ci.com/IANW-Projects/toolkitICL.svg?branch=master)](https://travis-ci.com/IANW-Projects/toolkitICL)
 
-`toolkitICL` is an open source tool for automated OpenCL kernel execution. It can be used as an easy
+`toolkitICL` is an open source tool for automated OpenCL kernel execution with minimal overhead. It can be used as an easy
 to use cross platform tool to execute a set of kernels for example on compute clusters, run automated
 OpenCL benchmarks or test and validate kernels. HDF5 files are used for the entire configuration and
 data handling. The list of kernels to be executed, all variables and the workgroup size is defined in
-the input HDF5 file. After execution, the output data, data copy- and runtime is written to the
-output HDF5 file. The power consumption and temperature for supported Nvidia GPUs and Intel CPUs/GPUS can also be logged.
+the input HDF5 file. After execution, the output data, memory copy- and runtime is written to the
+output HDF5 file. The power consumption and temperature for supported Nvidia GPUs or Intel and AMD CPUs and GPUs can also be logged.
 Which housekeeping data is logged during execution can be selected by individual command line options.
 
 

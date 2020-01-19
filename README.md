@@ -90,6 +90,8 @@ ToolkitICL can be controlled by the following command line options:
 
 Additional domumentation will be provided in the directory [`doc`](https://github.com/IANW-Projects/toolkitICL/tree/master/doc).
 
+A set of example testcases is available as part of the [release](https://github.com/IANW-Projects/toolkitICL/releases) files.  
+
 A useful tool to view and edit HDF5 files is [HDFView](https://www.hdfgroup.org/downloads/hdfview/).
 
 

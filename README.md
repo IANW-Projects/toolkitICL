@@ -1,11 +1,11 @@
-# toolkitICL
+# ToolkitICL
 
 [![License](https://licensebuttons.net/l/by-nc-nd/3.0/88x31.png)](https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2597653.svg)](https://doi.org/10.5281/zenodo.2597653)
-[![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/js729s93vvdwgnjx?svg=true)](https://ci.appveyor.com/project/ranocha/toolkitICL)
-[![Build Status Travis](https://travis-ci.com/IANW-Projects/toolkitICL.svg?branch=master)](https://travis-ci.com/IANW-Projects/toolkitICL)
+[![Build Status Appveyor](https://ci.appveyor.com/api/projects/status/js729s93vvdwgnjx?svg=true)](https://ci.appveyor.com/project/ranocha/ToolkitICL)
+[![Build Status Travis](https://travis-ci.com/IANW-Projects/ToolkitICL.svg?branch=master)](https://travis-ci.com/IANW-Projects/ToolkitICL)
 
-`toolkitICL` is an open source tool for automated OpenCL kernel execution with minimal overhead. It can be used as an easy
+ToolkitICL is an open source tool for automated OpenCL kernel execution with minimal overhead. It can be used as an easy
 to use cross platform tool to execute a set of kernels for example on compute clusters, run automated
 OpenCL benchmarks or test and validate kernels. HDF5 files are used for the entire configuration and
 data handling. The list of kernels to be executed, all variables and the workgroup size is defined in
@@ -15,7 +15,7 @@ Which housekeeping data is logged during execution can be selected by individual
 
 
 ## Setup
-To build toolkitCL the following needs to be installed:
+To build ToolkitICL the following needs to be installed:
 - OpenCL (headers and drivers)
 - HDF5
 - CMake
@@ -23,6 +23,7 @@ To build toolkitCL the following needs to be installed:
 For optional power and temperature logging, the following is needed:
 - CUDA Toolkit (only for NVidia GPU power/temperature logging)
 - Intel Power Gadget (only for Intel CPU/GPU power/temperature logging on Windows and Mac OS X systems)
+- `msr-tools` (only for Intel CPU/GPU power/temperature logging on Linux systems)
 - AMD µProf (only for AMD CPU/GPU power/temperature logging on Windows and Linux systems)
 
 This project uses the common CMake build system. Thus, the following commands can be used on Linux.
@@ -46,7 +47,7 @@ make
 ```
 
 Recent versions of Visual Studio should automatically detect the cmake configuration files and build
-toolkitICL automatically. Otherwise `cmake-gui` can be used on Windows systems to create Visul Studio
+ToolkitICL automatically. Otherwise `cmake-gui` can be used on Windows systems to create Visul Studio
 project files.
 
 In case some of the OpenCL headers are missing, they can be obtained directly from Khronos:
@@ -75,7 +76,7 @@ The default path will be used to search for the necessary libraries (HDF5, Intel
 ## Usage
 
 Examples on how to create the input HDF5 files are provided in the directory
-[`notebooks`](https://github.com/IANW-Projects/toolkitICL/tree/master/notebooks).
+[`notebooks`](https://github.com/IANW-Projects/ToolkitICL/tree/master/notebooks).
 
 ToolkitICL can be controlled by the following command line options:
 - `-d device_id`: Use the device specified by `device_id`.
@@ -88,9 +89,9 @@ ToolkitICL can be controlled by the following command line options:
 - `-amd_cpu_power sample_rate`: Log AMD CPU power consumption with `sample_rate` (ms).
 - `-amd_cpu_temp sample_rate`: Log AMD CPU temperature with `sample_rate` (ms).
 
-Additional domumentation will be provided in the directory [`doc`](https://github.com/IANW-Projects/toolkitICL/tree/master/doc).
+Additional domumentation will be provided in the directory [`doc`](https://github.com/IANW-Projects/ToolkitICL/tree/master/doc).
 
-A set of example testcases is available as part of the [release](https://github.com/IANW-Projects/toolkitICL/releases) files.  
+A set of example testcases is available as part of the [release](https://github.com/IANW-Projects/ToolkitICL/releases) files.
 
 A useful tool to view and edit HDF5 files is [HDFView](https://www.hdfgroup.org/downloads/hdfview/).
 
@@ -99,13 +100,26 @@ A useful tool to view and edit HDF5 files is [HDFView](https://www.hdfgroup.org/
 
 This software can be cited as:
 ```
-@misc{heinisch2019toolkitICL,
-  title={{toolkitICL}. {A}n open source tool for automated {OpenCL} kernel execution.},
+@misc{heinisch2019ToolkitICL,
+  title={{ToolkitICL}. {A}n open source tool for automated {OpenCL} kernel execution.},
   author={Heinisch, Philip and Ostaszewski, Katharina and Ranocha, Hendrik},
   month={03},
   year={2019},
-  howpublished={\url{https://github.com/IANW-Projects/toolkitICL}},
+  howpublished={\url{https://github.com/IANW-Projects/ToolkitICL}},
   doi={10.5281/zenodo.2597653}
+}
+```
+ToolkitICL has been used in the publication
+```
+@online{heinisch2020towards,
+  title={Towards Green Computing: {A} Survey of Performance and Energy
+         Efficiency of Different Platforms using {OpenCL}},
+  author={Heinisch, Philip and Ostaszewski, Katharina and Ranocha, Hendrik},
+  year={2020},
+  month={03},
+  eprint={2003.03794},
+  eprinttype={arxiv},
+  eprintclass={CS.PF}
 }
 ```
 
